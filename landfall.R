@@ -16,10 +16,21 @@ gps$animal <- as.character(gps$animal)
 gps@data[gps$animal=="pb_20492",] #testing whether selection works
 gps[gps$animal=="pb_20492",] #not sure what the difference is between these...one has spatial data AND attribute data?
 
-gps[gps$animal=="pb_06810" & gps$datetime == "2008-08-29 03:00:00",]
+
+condition <- 
+
+
+
+output= matrix(nrow = 38, ncol = 16){
+  for(i in 1:nrows{
+    
+  })
+}
+
+
+
 
 library(dplyr)
-
 
 
 lf <- filter(gps, animal==c("pb_06810", "pb_06817", "pb_20176", "pb_20333", "pb_20413",
