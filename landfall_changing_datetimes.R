@@ -1,5 +1,11 @@
 all <- read.csv("ows_land_v2.csv")
-sub <- read.csv("traj_summary_v1.csv")
+sub <- Summary.traj.pb
+
+head(all$datetime)
+class(sub$date.begin)
+
+all$datetime <- as.POSIXct(all$datetime, tz="US/Alaska")  
+
 head(sub)
 sub2 <- select(sub, id, date.begin)
 class(sub2$date.begin)
