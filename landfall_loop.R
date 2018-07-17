@@ -11,6 +11,14 @@ for (i in 1:length(id)) {
 }
 dim(out)
 
+write.csv(out, file="landfall.csv")
+# Double-checking out (new df) against Sum (summary from traj with date.begin)
+head(out)
+head(Sum)
+
+#############################################################################################
+### TRIAL AND ERROR ##########
+
 ## Subsetting landfall entries from ows_land_v2.csv
 
 # setting both datetime and begin.date to POSIXct
