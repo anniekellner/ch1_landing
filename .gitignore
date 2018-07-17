@@ -8,3 +8,5 @@ ows_complete_v1.csv
 usgs_pbear_gps_ccde16_v20170131.csv
 ows_land_v2.csv
 traj_summary_v1.csv
+landfall.csv
+schema.ini
