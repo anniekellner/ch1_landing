@@ -1,5 +1,9 @@
 rm(list = ls())
 
+library(rgdal)
+library(maptools)
+library(dplyr)
+
 gps <- readOGR("./Shapefiles/ows_land_v2.shp")
 land <- readOGR("./Shapefiles/AK_CA_5kbuff.shp")
 
@@ -9,10 +13,13 @@ points(gps)
 
 gps2<-as.data.frame(gps)
 gps2$date<-paste(gps2$year, gps2$month, gps2$day, sep="-")
-gps2<-gps2[!duplicated(gps2$date),]
+#gps2<-gps2[order(gps2$date),]
 gps2$date<-strptime(gps2$date, format="%Y-%m-%d")
 
-id<-unique(gps2$animal)
+#gps3<-gps2[!duplicated(gps2$date),]
+#as.POSIXct(gps3$date, tz="US/Alaska")
+
+id<-unique(gps3$animal)
 gps2$cont<-0
 gps2$burst<-0
 b<-1
@@ -20,6 +27,7 @@ out<-data.frame()
 for (i in 1:length(id)) {
   sub<-gps2[gps2$animal==id[i],]
   sub<-sub[order(sub$date),]
+  sub<-sub[!duplicated(sub$date),]
   a<-1  
   if(nrow(sub)>2) {
     for (j in 2:nrow(sub)) {
@@ -39,4 +47,4 @@ for (i in 1:length(id)) {
 }
 head(out)
 
-head(gps)
+write.csv(out, file="21days.csv")
