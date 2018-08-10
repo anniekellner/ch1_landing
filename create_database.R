@@ -11,6 +11,7 @@ land<-dplyr::select(land, animal:date, datetime)
 
 #make sure dataframes have identical columns
 all$datetime <- ymd_hms(paste(all$year, all$month, all$day, all$hour, all$minute, all$second, sep = "-"), tz="US/Alaska")
+all <- na.omit(all) # delete datetimes that failed to parse
 land$distance<- land$distanc
 land$data_origin <- land$dat_rgn
 
@@ -24,7 +25,7 @@ all$land<-ifelse(all$tt %in% tt2, 1, 0)
 
 swim <- read.csv("Landing.csv") #swim
 swim <- na.omit(swim) #remove NAs
-swim<-dplyr::select(swim, ID:End.long) #eliminate unnecessary columns
+swim<-dplyr::select(swim, ID:End.Date) #eliminate unnecessary columns
 
 #Format datetime
 swim$Start.Date <- mdy_hms(swim$Start.Date)
