@@ -14,9 +14,9 @@ all <- na.omit(all) # delete datetimes that failed to parse
 land <- read.csv("Land.csv")
 land<-dplyr::select(land, animal:date, datetime)
 land$tt<-paste(land$animal, land$datetime) 
-all$tt<-paste(all$animal, all$datetime)
+all$id.datetime<-paste(all$animal, all$datetime)
 tt2<-land$tt
-all$land<-ifelse(all$tt %in% tt2, 1, 0)
+all$land<-ifelse(all$id.datetime %in% tt2, 1, 0)
 
 #### swim ###
 
@@ -24,15 +24,15 @@ swim <- read.csv("swim.csv")
 swim<-dplyr::select(swim, ID:end.time)
 swim <- na.omit(swim)
 
-swim$tt <- paste(swim$ID, swim$start.datetime) 
-tt3 <- swim$tt
-all$start.swim <- ifelse(all$tt %in% tt3, 1,0)
+swim$tt.start <- paste(swim$ID, swim$start.datetime) #temp start
+swim$tt.end <- paste(swim$ID, swim$end.datetime) #temp end
+tt.start <- swim$tt.start
+tt.end <- swim$tt.end
+all$start.swim <- ifelse(all$id.datetime %in% tt.start, 1,0)
+all$end.swim <- ifelse(all$id.datetime %in% tt.start, 1,0)
 
-## save df as .Rdata
-mydata <- 
-
-
-
+## save df as .Rda
+save("all", file="mydata.RData")
 
 
 ###########################
