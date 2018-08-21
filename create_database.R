@@ -1,7 +1,6 @@
 rm(list = ls())
 
 library(dplyr)
-library(adehabitatLT)
 library(lubridate)
 
 ## Prep database from TA
@@ -19,6 +18,9 @@ all$id.datetime<-paste(all$animal, all$datetime)
 tt2<-land$tt
 all$land<-ifelse(all$id.datetime %in% tt2, 1, 0)
 
+all$tt <- paste(all$gps_lat, all$gps_lon)  #changing an end.swim entry from 0 to 1 (bc is land on sea ice TIF and is probably land)
+all$land[all$tt=='70.5425 -150.7114'] <- 1
+
 #### swim ###
 
 swim <- read.csv("swim.csv")
@@ -32,9 +34,11 @@ swim$tt.end <- paste(swim$ID, swim$end.datetime) #temp end
 tt.start <- swim$tt.start
 tt.end <- swim$tt.end
 all$start.swim <- ifelse(all$id.datetime %in% tt.start, 1,0)
-all$end.swim <- ifelse(all$id.datetime %in% tt.start, 1,0)
+all$end.swim <- ifelse(all$id.datetime %in% tt.end, 1,0)
 
 ## save df as .RData
+all<-dplyr::select(all, -tt)
+all<- dplyr::select(all, -id.datetime)
 save("all", file="pbears.RData")
 
 ## Checking ####
@@ -43,8 +47,6 @@ library(lubridate)
 test<-filter(all, start.swim==1)
 test2 <- filter(all, land==1)
 test3 <- filter(all, end.swim==1)
-
-
 
 ###########################
 ### JUNK #################
