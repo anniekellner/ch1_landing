@@ -39,7 +39,7 @@ all$end.swim <- ifelse(all$id.datetime %in% tt.end, 1,0)
 ## save df as .RData
 all<-dplyr::select(all, -tt)
 all<- dplyr::select(all, -id.datetime)
-save("all", file="pbears.RData")
+save("all", file="all.RData")
 
 ## Checking ####
 
