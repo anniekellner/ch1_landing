@@ -18,9 +18,6 @@ all$id.datetime<-paste(all$animal, all$datetime)
 tt2<-land$tt
 all$land<-ifelse(all$id.datetime %in% tt2, 1, 0)
 
-all$tt <- paste(all$gps_lat, all$gps_lon)  #changing an end.swim entry from 0 to 1 (bc is land on sea ice TIF and is probably land)
-all$land[all$tt=='70.5425 -150.7114'] <- 1
-
 #### swim ###
 
 swim <- read.csv("swim.csv")

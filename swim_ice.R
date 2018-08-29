@@ -2,7 +2,7 @@ rm(list = ls())
 library(dplyr)
 
 #load data
-load("pbears.RData")
+load("all.RData")
 ice <- read.csv("sbs_daily_icestats_1979_2017_v4_dcd.csv")
 
 #create swim data frame
