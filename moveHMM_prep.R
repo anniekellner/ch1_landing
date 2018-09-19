@@ -26,8 +26,8 @@ pb19 <- subset(all, animal=='pb_21368' & month==8 & year==2014)
 pb20 <- subset(all, animal=='pb_32366' & month==8 & year==2011)
 pb21 <- subset(all, animal=='pb_32366' & month==8 & year==2014)
 
-swimHMM <- rbind(pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8, pb9, pb10, pb11, pb12, pb13, pb14, pb15, pb16, pb17, pb18, pb19, pb20, pb21)
-swimHMM$ID <- paste(swimHMM$animal, swimHMM$year, sep = '.')
+swim.az <- rbind(pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8, pb9, pb10, pb11, pb12, pb13, pb14, pb15, pb16, pb17, pb18, pb19, pb20, pb21)
+swim.az$ID <- paste(swim.az$animal, swim.az$year, sep = '.')
 
 swimHMM <- dplyr::select(swimHMM, ID, gps_lat, gps_lon, datetime)
 
