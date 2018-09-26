@@ -1,0 +1,60 @@
+---
+title: "pbear_migration"
+author: "Annie Kellner"
+date: "September 26, 2018"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+load('all.RData')
+
+all$temp <- paste(all$animal, all$year) # ID by animal and year
+
+start <- filter(all, start.swim==1)
+start <- select(start, temp, gps_lon, gps_lat)
+
+end <- filter(all, end.swim==1)
+end <- select(end, temp, gps_lon, gps_lat)
+
+colnames(start) <- c("ID", "start.lon", "start.lat")
+colnames(end) <- c("ID", "end.lon", "end.lat")
+
+cor <- full_join(start, end, by="ID")
+
+cor(cor$start.lon, cor$end.lon)
+cor(cor$start.lat, cor$end.lat)
+
+plot(cor$start.lon, cor$end.lon, main="Longitudinal correlation between starting and landing points of polar bear summer migration to land", xlab = 'Starting Longitude', ylab = 'Landing Longitude', pch=19)
+abline(fit, col='red')
+legend('topleft', expression(paste(r,'=0.815, ',italic('P'), '<0.001')))
+```
+
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

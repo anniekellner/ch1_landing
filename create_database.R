@@ -20,9 +20,8 @@ all$land<-ifelse(all$id.datetime %in% tt2, 1, 0)
 
 #### swim ###
 
-swim <- read.csv("swim.csv")
-swim<-dplyr::select(swim, ID:end.time)
-swim <- na.omit(swim)
+swim <- read.csv("swim_092618_v2.csv")
+swim <- select(swim, start.date:end.time, ID)
 swim$start.datetime <- as.character(ymd_hms(paste(swim$start.date, swim$start.time))) #create column for datetime
 swim$end.datetime <- as.character(ymd_hms(paste(swim$end.date, swim$end.time)))
 

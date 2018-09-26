@@ -28,7 +28,7 @@ pb20 <- subset(all, animal=='pb_32366' & month==8 & year==2011)
 pb21 <- subset(all, animal=='pb_32366' & month==8 & year==2014)
 pb22 <- subset(all, animal=='pb_20520' & month==7 & year==2012)
 
-swim.az <- rbind(pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8, pb9, pb10, pb11, pb12, pb13, pb14, pb15, pb16, pb17, pb18, pb19, pb20, pb21)
+swim.az <- rbind(pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8, pb9, pb10, pb11, pb12, pb13, pb14, pb15, pb16, pb17, pb18, pb19, pb20, pb21, pb22)
 swim.az$ID <- paste(swim.az$animal, swim.az$year, sep = '.')
 
 # Set first azimuth at 0
