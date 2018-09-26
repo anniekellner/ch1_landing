@@ -26,6 +26,7 @@ pb18 <- subset(all, animal=='pb_21358' & month==8 & year==2013)
 pb19 <- subset(all, animal=='pb_21368' & month==8 & year==2014)
 pb20 <- subset(all, animal=='pb_32366' & month==8 & year==2011)
 pb21 <- subset(all, animal=='pb_32366' & month==8 & year==2014)
+pb22 <- subset(all, animal=='pb_20520' & month==7 & year==2012)
 
 swim.az <- rbind(pb1, pb2, pb3, pb4, pb5, pb6, pb7, pb8, pb9, pb10, pb11, pb12, pb13, pb14, pb15, pb16, pb17, pb18, pb19, pb20, pb21)
 swim.az$ID <- paste(swim.az$animal, swim.az$year, sep = '.')
@@ -41,7 +42,24 @@ for (i in 1:length(id)){ # observation i in vector 1:length(id)
   swim.az[row,12] <- 'NA' #replaces value with NA
 }
  
-  
-  
+# classify as southward or not  
+# classification: ESE (101.25) - WSW (258.75)  
+
+swim.az$south <- ifelse(swim.az$azimuth > 101.25 & swim.az$azimuth < 258.75, 1, 0)
+
+#eliminate unnecessary columns
+library(dplyr)
+swim.az <- select(swim.az, c(animal:gps_lon, distance, azimuth, datetime, ID, land, south))
+
+# add cumdist
+
+library(data.table)
+setDT(swim.az)
+
+swim.az[, cumdist := south*cumsum(distance), .(animal, rleid(south))]
+
+swim.az$cumdist <- format(round(swim.az$cumdist, 3), nsmall = 3)
 
 
+
+save(swim.az, file='swim.az.RData') #save as .RData
