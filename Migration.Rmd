@@ -30,6 +30,12 @@ abline(fit, col='red')
 legend('topleft', expression(paste(r,'=0.815, ',italic('P'), '<0.001')))
 ```
 
+```{r}
+end <- subset(all, end.swim==1)
+
+end.long <- end$gps_lon
+hist(end.long, main="Landing Longitudes", xlab = 'Longitude')
+```
 
 
 
