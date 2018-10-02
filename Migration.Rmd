@@ -5,7 +5,7 @@ date: "September 26, 2018"
 output: html_document
 ---
 
-```{r}
+```{r, echo=FALSE}
 library(dplyr)
 load('all.RData')
 
@@ -24,17 +24,23 @@ cor <- full_join(start, end, by="ID")
 
 cor(cor$start.lon, cor$end.lon)
 cor(cor$start.lat, cor$end.lat)
+fit <- lm(cor$end.lon~cor$start.lon) # regression line (y~x)
 
-plot(cor$start.lon, cor$end.lon, main="Longitudinal correlation between starting and landing points of polar bear summer migration to land", xlab = 'Starting Longitude', ylab = 'Landing Longitude', pch=19)
+plot(cor$start.lon, cor$end.lon, main='Longitudinal correlation between starting and landing', xlab = 'Starting Longitude', ylab = 'Landing Longitude', pch=19)
 abline(fit, col='red')
 legend('topleft', expression(paste(r,'=0.815, ',italic('P'), '<0.001')))
 ```
 
-```{r}
+```{r, echo=FALSE}
 end <- subset(all, end.swim==1)
 
 end.long <- end$gps_lon
 hist(end.long, main="Landing Longitudes", xlab = 'Longitude')
+```
+
+```{r}
+ks.test(end.long, "punif", 141.00, 156.46)
+print(paste("results of Kologomorov-Smirnov test is",(ks.test(end.long, "punif", 141.00, 156.46))))
 ```
 
 
