@@ -1,11 +1,23 @@
 ---
-title: "pbear_migration"
+title: "Polar Bear Migration"
 author: "Annie Kellner"
 date: "September 26, 2018"
 output: html_document
 ---
+```{r}
+knitr::opts_chunk$set(echo=FALSE)
+```
 
-```{r, echo=FALSE}
+![Starting and landing points for summer migration (n=19)](map_migration.png)
+
+Westernmost Starting Point: (-161.338, 73.266) <br>
+Easternmost Starting Point: (-145.957, 71.274) <br>
+
+Westernmost Landing Point: (-159.668, 70.759) *note: this point is outside my 'study area', but is a SBS bear (not CS) <br>
+Easternmost Landing Point: (-143.188, 70.172) <br>
+ 
+
+```{r, include=FALSE}
 library(dplyr)
 load('all.RData')
 
@@ -31,6 +43,8 @@ abline(fit, col='red')
 legend('topleft', expression(paste(r,'=0.815, ',italic('P'), '<0.001')))
 ```
 
+Landing longitude does not appear uniform in histogram
+
 ```{r, echo=FALSE}
 end <- subset(all, end.swim==1)
 
@@ -38,35 +52,13 @@ end.long <- end$gps_lon
 hist(end.long, main="Landing Longitudes", xlab = 'Longitude')
 ```
 
+Kolmogorov-Smirnov test to see if data conforms to a uniform distribution
+
 ```{r}
 ks.test(end.long, "punif", 141.00, 156.46)
-print(paste("results of Kologomorov-Smirnov test is",(ks.test(end.long, "punif", 141.00, 156.46))))
 ```
 
+Result: Landing points are not uniform with respect to longitude.
 
 
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

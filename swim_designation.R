@@ -13,14 +13,13 @@ all$datetime <- as.POSIXct(all$datetime, tz='US/Alaska')
 swim$id <- paste(swim$ID, swim$Year, sep='.')
 all$id <- paste(all$animal, all$year, sep='.')
 
-#
+#add 1's to locations included in swims
 all$swim <- 0 
 id <- swim$id
 for (i in 1:length(id)){
   all$swim[all$datetime <= swim$end.datetime[i] & all$datetime >= swim$start.datetime[i] & all$id==id[i]] <- 1
 }
 
-test <- filter(all, id=='pb_20529.2004')
-test2 <- filter(test, swim==1)
+
 
 
