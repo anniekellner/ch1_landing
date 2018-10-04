@@ -20,6 +20,7 @@ for (i in 1:length(id)){
   all$swim[all$datetime <= swim$end.datetime[i] & all$datetime >= swim$start.datetime[i] & all$id==id[i]] <- 1
 }
 
+all <- select(all, animal:azimuth, datetime, land:swim)
 
-
+save(all, file='all.RData')
 
