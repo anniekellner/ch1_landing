@@ -32,4 +32,9 @@ for (i in ids){
   swimLengths[swimLengths[,1]==i,2]=tempSums[nrow(sub)]
 }
 
+#######
+swim.len <- as.data.frame(swimLengths) #Create df with migration length
+colnames(swim.len) <- c("ID", "Distance")
+swim.len$Distance <- as.numeric(as.character(swim.len$Distance)) #change distance to numeric class
+save(swim.len, file="Migration_dist.RData") # save as dataframe for stats in .Rmd
 

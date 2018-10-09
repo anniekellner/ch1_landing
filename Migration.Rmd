@@ -58,7 +58,16 @@ Kolmogorov-Smirnov test to see if data conforms to a uniform distribution
 ks.test(end.long, "punif", 141.00, 156.46)
 ```
 
-Result: Landing points are not uniform with respect to longitude.
+Result: Landing points are not uniform with respect to longitude (support defined by longitudes between Point Barrow and US-Canada border).
+
+```{r}
+load('Migration_dist.RData')
+```
+
+Minimum migration distance is `r min(swim.len$Distance)` km <br>
+Maximum migration distance is `r max(swim.len$Distance)` km <br>
+Mean Migration distance is `r mean(swim.len$Distance)` km, with standard deviation `r sd(swim.len$Distance)` km <br>
+
 
 
 
