@@ -68,6 +68,16 @@ Minimum migration distance is `r min(swim.len$Distance)` km <br>
 Maximum migration distance is `r max(swim.len$Distance)` km <br>
 Mean Migration distance is `r mean(swim.len$Distance)` km, with standard deviation `r sd(swim.len$Distance)` km <br>
 
+```{r}
+load('swim.az.RData')
+```
 
+Mean bearing of migration is `r mean(swim.az$azimuth)` with a standard deviation of `r sd(swim.az$azimuth)`
+
+The deviation from a straight-line path for each bear is as follows:
+
+```{r}
+
+```
 
 

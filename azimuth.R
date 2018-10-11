@@ -60,6 +60,7 @@ swim.az[, cumdist := south*cumsum(distance), .(animal, rleid(south))]
 
 swim.az$cumdist <- format(round(swim.az$cumdist, 3), nsmall = 3)
 
-
-
 save(swim.az, file='swim.az.RData') #save as .RData
+
+#####################################################
+

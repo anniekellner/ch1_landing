@@ -72,6 +72,27 @@ swim1.df$LL.t2 <- paste(swim1.df$long.t2, swim1.df$lat.t2, sep=",")
 ## find bearing
 
 library(geosphere)
-#bearing(c(swim1.df$long.t1[1], swim1.df$lat.t1[1]), c(swim1.df$long.t2[1], swim1.df$lat.t2[1])) #test - works. Verified using azimuth in TA database
+
+get.az <- function(i){
+ row <- swim1.df[i,]
+ az <- bearing(c(swim1.df$long.t1[i], swim1.df$lat.t1[i]), c(swim1.df$long.t2[i], swim1.df$lat.t2[i]))
+ return(az)
+}
+
+swim1.df$bearing <- lapply(X=seq(1, nrow(swim1.df),1), FUN = get.az)
+
+# Change negative angles to positive by adding 360 
+
+swim1.df$bearing <- as.numeric(swim1.df$bearing)
+swim1.df$bearing <- ifelse(swim1.df$bearing <0, swim1.df$bearing + 360, swim1.df$bearing +0)
+
+# Save as RData 
+
+library(dplyr)
+swim1.NAZ <- select(swim1.df, x:pkey, bearing)
+
+save(swim1.NAZ, file='swim1_NAZ.RData')
+
+#####################################
 
 
