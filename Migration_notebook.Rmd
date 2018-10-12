@@ -1,0 +1,92 @@
+---
+title: "Polar Bear Migration"
+author: "Annie Kellner"
+date: "September 26, 2018"
+output: html_document
+---
+```{r}
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+![Starting and landing points for summer migration (n=19)](map_migration.png)
+
+Westernmost Starting Point: (-161.338, 73.266) <br>
+Easternmost Starting Point: (-145.957, 71.274) <br>
+
+Westernmost Landing Point: (-159.668, 70.759) *note: this point is outside my 'study area', but is a SBS bear (not CS) <br>
+Easternmost Landing Point: (-143.188, 70.172) <br>
+ 
+
+```{r, include=FALSE}
+library(dplyr)
+load('all.RData')
+
+all$temp <- paste(all$animal, all$year) # ID by animal and year
+
+start <- filter(all, start.swim==1)
+start <- select(start, temp, gps_lon, gps_lat)
+
+end <- filter(all, end.swim==1)
+end <- select(end, temp, gps_lon, gps_lat)
+
+colnames(start) <- c("ID", "start.lon", "start.lat")
+colnames(end) <- c("ID", "end.lon", "end.lat")
+
+cor <- full_join(start, end, by="ID")
+
+cor(cor$start.lon, cor$end.lon)
+cor(cor$start.lat, cor$end.lat)
+fit <- lm(cor$end.lon~cor$start.lon) # regression line (y~x)
+
+plot(cor$start.lon, cor$end.lon, main='Longitudinal correlation between starting and landing', xlab = 'Starting Longitude', ylab = 'Landing Longitude', pch=19)
+abline(fit, col='red')
+legend('topleft', expression(paste(r,'=0.815, ',italic('P'), '<0.001')))
+```
+
+Landing longitude does not appear uniform in histogram
+
+```{r, echo=FALSE}
+end <- subset(all, end.swim==1)
+
+end.long <- end$gps_lon
+hist(end.long, main="Landing Longitudes", xlab = 'Longitude')
+```
+
+Kolmogorov-Smirnov test to see if data conforms to a uniform distribution
+
+```{r}
+ks.test(end.long, "punif", 141.00, 156.46)
+```
+
+Result: Landing points are not uniform with respect to longitude (support defined by longitudes between Point Barrow and US-Canada border).
+
+```{r}
+load('Migration_dist.RData')
+```
+
+Minimum migration distance is `r min(swim.len$Distance)` km <br>
+Maximum migration distance is `r max(swim.len$Distance)` km <br>
+Mean Migration distance is `r mean(swim.len$Distance)` km, with standard deviation `r sd(swim.len$Distance)` km <br>
+
+```{r}
+load('swim.az.RData')
+```
+
+Mean bearing of migration is `r mean(swim.az$azimuth)` with a standard deviation of `r sd(swim.az$azimuth)`
+
+The deviation from a straight-line path for each bear is as follows:
+
+```{r}
+load('Migration_dist.RData')
+library(dplyr)
+library(knitr)
+swim.len <- select(swim.len, id, bear_dist, crow_dist, ratio)
+colnames(swim.len) <- c('ID','Travel Distance', 'Straight-Line Distance', 'Ratio')
+
+knitr::kable(swim.len, digits=2, align='r', caption = 'Distance Traveled vs. Straight-Line Distance')
+```
+
+* I'm not sure what the best way to present this data is, so I'm just providing this table. One issue with this approach is missing data - i.e., fixes that are NA's. These would bias the path to be 'straighter' than it probably is in reality. I might also remove pb_20525.2013 and pb_21015.2013 from this particular analysis because these two bears had large data gaps during migration. 
+
+
+
