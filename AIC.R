@@ -24,11 +24,11 @@ icepct$doy <- as.numeric(icepct$doy)
 #change column names
 colnames(icepct) <- c('animal', 'datetime', 'year', 'shelf_15', 'shelf_30', 'shelf_50', 'doy')
 
-# linear mixed models
+# linear mixed models - sea ice concentration only 
 library(lme4)
-model15 <- lmer(doy~shelf_15 + year +(1|animal), data=icepct)
-model30 <- lmer(doy~shelf_30 + year +(1|animal), data=icepct)
-model50 <- lmer(doy~shelf_50 + year +(1|animal), data=icepct)
+model15.yr <- lmer(doy~shelf_15 + year +(1|animal), data=icepct)
+model30.yr <- lmer(doy~shelf_30 + year +(1|animal), data=icepct)
+model50.yr <- lmer(doy~shelf_50 + year +(1|animal), data=icepct)
 
 AIC(model15, model30, model50)
 
@@ -36,8 +36,15 @@ AIC(model15, model30, model50)
 icepct.no9 <- icepct[-c(1,3),]
 
 #re-do AIC without September dates
-model15 <- lmer(doy~shelf_15 + year +(1|animal), data=icepct.no9)
-model30 <- lmer(doy~shelf_30 + year +(1|animal), data=icepct.no9)
-model50 <- lmer(doy~shelf_50 + year +(1|animal), data=icepct.no9)
+model15.yr <- lmer(doy~shelf_15 + year +(1|animal), data=icepct.no9)
+model30.yr <- lmer(doy~shelf_30 + year +(1|animal), data=icepct.no9)
+model50.yr <- lmer(doy~shelf_50 + year +(1|animal), data=icepct.no9)
+model15 <- lmer(doy~shelf_15 + (1|animal), data=icepct.no9)
+model30 <- lmer(doy~shelf_30 + (1|animal), data=icepct.no9)
+model50 <- lmer(doy~shelf_50 + (1|animal), data=icepct.no9)
 
-AIC()
+
+#calculate aicc - sea ice concentration only 
+library(AICcmodavg)
+mods = c(model15.yr, model30.yr, model50.yr, model15, model30, model50)
+aictab(mods, second.ord = TRUE)
