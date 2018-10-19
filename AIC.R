@@ -22,7 +22,7 @@ icepct$doy <- strftime(icepct$datetime, format = "%j")
 icepct$doy <- as.numeric(icepct$doy)
 
 #change column names
-colnames(icepct) <- c('animal', 'datetime', 'year', 'shelf_15', 'shelf_30', 'shelf_50', 'doy')
+colnames(icepct) <- c('animal', 'datetime', 'year', 'shelf_15', 'shelf_30', 'shelf_50', 'doy.start')
 
 # linear mixed models - sea ice concentration only 
 library(lme4)

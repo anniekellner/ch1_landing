@@ -88,9 +88,9 @@ knitr::kable(swim.len, digits=2, align='r', caption = 'Distance Traveled vs. Str
 
 * I'm not sure what the best way to present this data is, so I'm just providing this table. One issue with this approach is missing data - i.e., fixes that are NA's. These would bias the path to be 'straighter' than it probably is in reality. I might also remove pb_20525.2013 and pb_21015.2013 from this particular analysis because these two bears had large data gaps during migration. 
 
-**Abbreviated AICc analysis to test whether departure date is better predicted by sea ice concentration at 15, 30, or 15%**
+**Abbreviated AICc analysis to test whether departure date is better predicted by sea ice concentration at 15 or 30%**
 
-Background: After going through Todd's arrival dates with a fine-tooth comb in an attempt to boost my sample size, I realized I disagreed with the classification of many of his dates as true "arrival" dates for bears that 'migrate' from ice to land. I thought his dates might bias the sea ice towards a lower concentration, so I wanted to run a very course AICc analysis on my own 'start' dates (date on which ice-to-land migration begins). These are the results:
+Background: After going through Todd's arrival dates with a fine-tooth comb in an attempt to boost my sample size, I realized I disagreed with the classification of many of his dates as true "arrival" dates for bears that 'migrate' from ice to land. I thought his dates might bias the sea ice towards a lower concentration, so I wanted to run a very course AICc analysis on my own 'start' dates (date on which ice-to-land migration begins). I wanted to use the 30% concentration for comparison because that number reflects the concentration in the top Canadian model (WH population). These are the results:
 
 ```{r}
 rm(list = ls())
@@ -110,42 +110,49 @@ ice$tt <- paste(ice$year, ice$month, ice$day)
 start.swim.ice <- inner_join(start.swim,ice, by="tt")
 
 #isolate icepct 15, 30, 50
-icepct <- dplyr::select(start.swim.ice, animal, datetime, year.y, sbs_shelf_icepct_15, sbs_shelf_icepct_30, sbs_shelf_icepct_50)
+icemean <- dplyr::select(start.swim.ice, animal, datetime, year.y, sbs_shelf_icemean_15, sbs_shelf_icemean_30, sbs_shelf_icemean_50)
 
 #change datetime to day-of-year
-icepct$doy <- strftime(icepct$datetime, format = "%j")
-icepct$doy <- as.numeric(icepct$doy)
+icemean$doy <- strftime(icemean$datetime, format = "%j")
+icemean$doy <- as.numeric(icemean$doy)
 
 #change column names
-colnames(icepct) <- c('animal', 'datetime', 'year', 'shelf_15', 'shelf_30', 'shelf_50', 'doy')
-
-# linear mixed models - sea ice concentration only 
-library(lme4)
-model15 <- lmer(doy~shelf_15 +(1|animal), data=icepct)
-model30 <- lmer(doy~shelf_30 +(1|animal), data=icepct)
-model50 <- lmer(doy~shelf_50 +(1|animal), data=icepct)
+colnames(icemean) <- c('animal', 'datetime', 'year', 'shelf_15', 'shelf_30', 'shelf_50', 'doy.start')
 
 # remove September arrival dates
-icepct.no9 <- icepct[-c(1,3),]
+icemean <- icemean[-c(1,3),]
 
-#re-do AIC without September dates
-model15.yr <- lmer(doy~shelf_15 + year +(1|animal), data=icepct.no9)
-model30.yr <- lmer(doy~shelf_30 + year +(1|animal), data=icepct.no9)
-model50.yr <- lmer(doy~shelf_50 + year +(1|animal), data=icepct.no9)
-model15 <- lmer(doy~shelf_15 + (1|animal), data=icepct.no9)
-model30 <- lmer(doy~shelf_30 + (1|animal), data=icepct.no9)
-model50 <- lmer(doy~shelf_50 + (1|animal), data=icepct.no9)
+# load FD
+load('FD.RData')
 
-#calculate aicc - sea ice concentration only 
+#Change dates to day-of-year
+FD$doy15 <- strftime(FD$FD15, format="%j")
+FD$doy15 <- as.numeric(FD$doy15)
+
+FD$doy30 <- strftime(FD$FD30, format="%j")
+FD$doy30 <- as.numeric(FD$doy30)
+
+#join icepct and FD df's
+pct.FD <- full_join(icemean, FD, by="year")
+
+# run AIC
+library(lme4)
+
+model15 <- lmer(doy.start~shelf_15 + (1|animal), data=pct.FD)
+model30 <- lmer(doy.start~shelf_30 + (1|animal), data=pct.FD)
+model15.FD <- lmer(doy.start~shelf_15 + doy15 + (1|animal), data=pct.FD)
+model30.FD <- lmer(doy.start~shelf_30 + doy30 + (1|animal), data=pct.FD)
+
 library(AICcmodavg)
-mods = c(model15, model30, model50)
+mods = c(model15, model30, model15.FD, model30.FD)
 aictab(mods, second.ord = TRUE)
 ```
-The percentage of the continental shelf with 30% ice cover is the best predictor of departure date (but not by much).  
+
+Results: Todd's concentration of 15% came out as the "top" model, but there is basically no difference between 15 and 30% (top two models are essentially equally explanatory). In contrast to Todd's paper, I did not find that the FD variable helped explain variation (FD = first day of the year when proportion of shelf covered by < X% sea ice decreased to <=X%) 
  
  Some thoughts: 
 
-- Obviously all these models are pretty similar in terms of explanatory power. Year is less important than ice concentration (same results as Todd). I could add additional variables based on Todd's and the Canadian analysis to flesh this out, if it was something we are interested in. Todd used a lot more variables in his models, including the top model (the other variable in his top model was "first date of the year when proportion of shelf covered by >15% sea ice concentration decreased to less than 15%"). 
+- Todd wanted me to look at wind as a variable. I have doubts concerning the accuracy of the data I will be able to get (probably too course to be relevant), but I can try. I removed September bears from this analysis because from the data it appeared their behavior was somewhat different than bears that arrived on land in July and August. The latter made a distinct 'migration' from ice to land, whereas September bears seemed to hop around on tiny little ice floes until landing right when the bonepile began. I'd be interested in seeing whether the effect of wind differed between these groups, although the September group is n=2. So possibly not enough data.     
 
 - Todd did not use 30% ice concentration in his model set. I was interested in this number because it emerged in the top model in the Canadian analysis (Hudson Bay). The Canadian analysis predates Todd's, so I'd be curious why he did not use the 30% measurement. I assume there was good reason. Could ask.  
 
