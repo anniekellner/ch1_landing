@@ -147,7 +147,7 @@ The percentage of the continental shelf with 30% ice cover is the best predictor
 
 - Obviously all these models are pretty similar in terms of explanatory power. Year is less important than ice concentration (same results as Todd). I could add additional variables based on Todd's and the Canadian analysis to flesh this out, if it was something we are interested in. Todd used a lot more variables in his models, including the top model (the other variable in his top model was "first date of the year when proportion of shelf covered by >15% sea ice concentration decreased to less than 15%"). 
 
-- Todd did not use 30% ice concentration in his model set. I was interested in this number because it emerged in the top model in the Canadian analysis (Hudson Bay). The Canadian analysis predates Todd's, so I'd be curious why he did not use the 30% measurement.
+- Todd did not use 30% ice concentration in his model set. I was interested in this number because it emerged in the top model in the Canadian analysis (Hudson Bay). The Canadian analysis predates Todd's, so I'd be curious why he did not use the 30% measurement. I assume there was good reason. Could ask.  
 
 - Todd used a much larger sample size in his paper (n=68), whereas I used n=19. However, Todd acknowledged in his paper that the GPS data was the more accurate data (relative to Argos data), and I took issue with most of his GPS dates. I should also say I have not discussed this with Todd, so I could be missing something. 
 
