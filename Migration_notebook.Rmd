@@ -148,15 +148,57 @@ mods = c(model15, model30, model15.FD, model30.FD)
 aictab(mods, second.ord = TRUE)
 ```
 
-Results: Todd's concentration of 15% came out as the "top" model, but there is basically no difference between 15 and 30% (top two models are essentially equally explanatory). In contrast to Todd's paper, I did not find that the FD variable helped explain variation (FD = first day of the year when proportion of shelf covered by < X% sea ice decreased to <=X%) 
+Results: Sea ice concentration of 15% came out as the "top" model (same as Todd's 2016 paper) but there is basically no difference between 15 and 30% (top two models are essentially equally explanatory). I checked the raw data, and not surprisingly the values were nearly identical (3 are different, and only by 1-2 percentage points). Dave Douglas at USGS told me this data is very coarse, and if I were to publish this analysis I would need to use much finer-scale ice concentration data. He has offered to supply this if it's of interest.
+
+In contrast to Todd's paper, I did not find that the FD variable helped explain variation (FD = first day of the year when proportion of shelf covered by <= X% sea ice concentration decreased to <=X%) 
  
  Some thoughts: 
 
-- Todd wanted me to look at wind as a variable. I have doubts concerning the accuracy of the data I will be able to get (probably too course to be relevant), but I can try. I removed September bears from this analysis because from the data it appeared their behavior was somewhat different than bears that arrived on land in July and August. The latter made a distinct 'migration' from ice to land, whereas September bears seemed to hop around on tiny little ice floes until landing right when the bonepile began. I'd be interested in seeing whether the effect of wind differed between these groups, although the September group is n=2. So possibly not enough data.     
+- Todd wanted me to look at wind as a variable. I have doubts concerning the accuracy of the data I will be able to get (probably too coarse to be relevant), but I can try. I removed September bears from this analysis because from the data it appeared their behavior was somewhat different than bears that arrived on land in July and August. The latter made a distinct 'migration' from ice to land, whereas September bears seemed to hop around on tiny little ice floes until landing right when the bonepile began. I'd be interested in seeing whether the effect of wind differed between these groups, although the September group is n=2. So possibly not enough data.     
 
-- Todd did not use 30% ice concentration in his model set. I was interested in this number because it emerged in the top model in the Canadian analysis (Hudson Bay). The Canadian analysis predates Todd's, so I'd be curious why he did not use the 30% measurement. I assume there was good reason. Could ask.  
+- Todd did not use 30% ice concentration in his model set. I was interested in this number because it emerged in the top model in the Canadian analysis (Hudson Bay). The Canadian analysis predates Todd's, so I assume there was a reason he chose not to use 30%. I've emailed to ask him, out of curiousity.  
 
 - Todd used a much larger sample size in his paper (n=68), whereas I used n=19. However, Todd acknowledged in his paper that the GPS data was the more accurate data (relative to Argos data), and I took issue with most of his GPS dates. I should also say I have not discussed this with Todd, so I could be missing something. 
 
-- I was informed by Dave Douglas at USGS that I should not use the ice data I used in this analysis, as there is much finer-scale data available. This would require asking Dave to run analyses for me, so I decided to use the data I already had (given to me by Todd). If we decide to investigate this further, I'd ask Dave for the better data. 
+```{r}
+####################
+## Bonepile Bears ##
+####################
+
+load('all.RData')
+load('ows_land.RData')
+
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+
+# as.Date 
+start <- subset(all, start.swim==1) %>%  droplevels() 
+start$ymd <- paste(start$year, start$month, start$day, sep = '-')
+start$ymd <- ymd(start$ymd)
+
+#convert to doy
+start$doy <- strftime(start$ymd, format="%j")
+start$doy <- as.numeric(start$doy)
+
+start$md <- format(strptime(start$doy, format="%j"), format="%b-%d") 
+
+#Subset bonepile = 0
+nb <- subset(ows.land, bonepile==0) %>% droplevels()
+
+
+# plot density curve
+ggplot(start, aes(doy))+
+  geom_density() +
+  xlab("Day-of-Year") +
+  geom_vline(xintercept = 212, color="blue") +
+  geom_vline(xintercept = 222, color="blue") +
+  geom_vline(xintercept = 258, color="blue") +
+  ggtitle("Distribution of departure dates: from ice to land") 
+  
+```
+
+Blue lines represent migration departure dates for the three non-bonepile bears for which I have departure information. 
+
+* I believe the bear that arrived on day 258 is a 'denning' bear. I have asked Todd for a list of denning bears so that I can eliminate them from my analysis. However, it's interesting to note that bears that den on land are not necessarily bears that summer on land, or bears that make use of the bonepiles (even though they may arrive prior to the bonepile).  
 
