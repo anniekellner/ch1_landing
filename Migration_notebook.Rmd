@@ -64,14 +64,15 @@ Result: Landing points are not uniform with respect to longitude (support define
 load('Migration_dist.RData')
 ```
 
-Minimum migration distance is `r min(swim.len$Distance)` km <br>
-Maximum migration distance is `r max(swim.len$Distance)` km <br>
-Mean Migration distance is `r mean(swim.len$Distance)` km, with standard deviation `r sd(swim.len$Distance)` km <br>
+Minimum migration distance is `r min(swim.len$bear_dist)` km <br>
+Maximum migration distance is `r max(swim.len$bear_dist)` km <br>
+Mean Migration distance is `r mean(swim.len$bear_dist)` km, with standard deviation `r sd(swim.len$bear_dist)` km <br>
 
 ```{r}
 load('swim.az.RData')
 ```
 
+## re-do this!! ###
 Mean bearing of migration is `r mean(swim.az$azimuth)` with a standard deviation of `r sd(swim.az$azimuth)`
 
 The deviation from a straight-line path for each bear is as follows:
