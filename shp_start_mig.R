@@ -11,6 +11,7 @@ xy <- project(M, "+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_
 X <- xy[,1]
 Y <- xy[,2]
 all <- cbind(all,X,Y)
+save(all, file='all.RData')
 
 # Create .shp for departure-from-ice locations
 
