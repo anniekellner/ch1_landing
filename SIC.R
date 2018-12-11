@@ -54,8 +54,8 @@ start.spdf2$Buf50_max[i]<-extract(st, start.spdf2[i,],buffer=50000, fun=max, na.
 start.spdf2$Buf50_min[i]<-extract(st, start.spdf2[i,],buffer=50000, fun=min, na.rm=T)}
 
 df <- start.spdf2@data #convert to df
-save(start.spdf2, file='SIC.RData') #save as spdf
-
+save(start.spdf2, file='SIC_spdf.RData') #save as spdf
+save(df, file='SIC_df.RData')
 ##########################################################################################################################
 #create buffers 50,30,10 km ### THIS STEP NOT NECESSARY ####
 buff50k <- buffer(start.spdf, width=50000, dissolve=FALSE) #verified through plot(buff50k)
