@@ -1,5 +1,6 @@
-rm(list = ls())
+rm(list = ls()) # clear environment
 
+#load packages
 library(raster)
 library(sp)
 library(rgdal)
@@ -22,11 +23,11 @@ date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
 values(stack[[i]])[values(stack[[i]])>200]<-0
 }
 
-# change values >200 to 0
+# change values >200 to 0 (values > 200 = land)
 
 #create SpatialPointsDataFrame for start locations
 load('all.Rdata')
-start <- subset(all, start.swim==1)
+start <- subset(all, start.swim==1) # subsetting from master data file ('all.Rdata')
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 coords <- cbind(start$X, start$Y)
 start.spdf <- SpatialPointsDataFrame(coords = coords, data = start, proj4string = projection) 
@@ -44,6 +45,7 @@ start.spdf2$Buf10_max<-NA
 start.spdf2$Buf30_max<-NA
 start.spdf2$Buf50_max<-NA
 
+# for loop that runs through each point and pulls data from appropriate GeoTIFF
 for (i in 1:nrow(start.spdf2)) {
 st<-stack[[which(date==start.spdf2$date2[i])]]
 start.spdf2$Buf10_me[i]<-extract(st, start.spdf2[i,],buffer=10000, fun=mean, na.rm=T)
@@ -59,8 +61,3 @@ start.spdf2$Buf50_min[i]<-extract(st, start.spdf2[i,],buffer=50000, fun=min, na.
 df <- start.spdf2@data #convert to df
 save(start.spdf2, file='SIC_spdf.RData') #save as spdf
 save(df, file='SIC_df.RData')
-##########################################################################################################################
-#create buffers 50,30,10 km ### THIS STEP NOT NECESSARY ####
-buff50k <- buffer(start.spdf, width=50000, dissolve=FALSE) #verified through plot(buff50k)
-buff30k <- buffer(start.spdf, width=30000, dissolve=FALSE)
-buff10k <- buffer(start.spdf, width=10000, dissolve=FALSE)
