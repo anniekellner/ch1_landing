@@ -19,7 +19,10 @@ for (i in 1:length(rasterlist)) {
 stack[[i]]<-raster(rasterlist[i])
 tt<-unlist(strsplit(names(stack[[i]]), "[.]"))
 date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
+values(stack[[i]])[values(stack[[i]])>200]<-0
 }
+
+# change values >200 to 0
 
 #create SpatialPointsDataFrame for start locations
 load('all.Rdata')
