@@ -46,13 +46,18 @@ save(x.df, file='NewDef.RData')
 
 test <- subset(x.df, animal=='pb_06336') #test - looks good
 
-###############
-
 ###### Split dataset into two parts - 1) July through December and 2) May through November
 
+load('NewDef.RData')
+jul.dec <- subset(x.df, month >6)
+land.ded <- subset(jul.dec, cum.land >=7)
 
+first <- land.ded %>%
+  group_by(id) %>%
+  arrange(id,datetime) %>%
+  slice(1)
 
-
+write.csv(first, file='C:/Users/akell/Desktop/Spring 2019/Research/first_land_7days.csv')
 
 ##############################################
 #### JUNK ####################################
