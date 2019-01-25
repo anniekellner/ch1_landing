@@ -48,8 +48,10 @@ save(ice.df, file='NewDef.ice.RData')
 ###### Split dataset into June through November and slice by last cum.ice >7
 
 load('NewDef.ice.RData')
+library(dplyr)
+
 jun.nov <- subset(ice.df, month >5 & month < 11) # excluded Dec because bears go back out onto ice
-ice.ded <- subset(jun.dec, cum.ice >=7 & ice==1)
+ice.ded <- subset(jun.nov, cum.ice >=7 & ice==1)
 
 last <- ice.ded %>%
   group_by(id) %>%
