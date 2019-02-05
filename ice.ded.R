@@ -1,14 +1,30 @@
+## Redefining departure date based on 7-day 'dedicated stay' criteria
+## A. Kellner Feb 2019
+
+
+nuke = FALSE #do you want rm(list=ls()))
+save_df = FALSE #do you want to save dataframe
+save_csv = FALSE #do you want to save .csv
+
+if(nuke)
 rm(list = ls())
-
-load('all.RData')
-
-all$ice <- ifelse(all$land==1,0,1) #create 'ice' column (will include some swimming)
 
 library(dplyr)
 library(lubridate)
+library(data.table)
+
+load('all.RData')
+
+#---------------------------------------------------------#
+
+##prep data
+
+# reverse 'land' and 'ice' designations as 0 or 1 in main df
+all$ice <- ifelse(all$land==1,0,1) #create 'ice' column (will include some swimming)
 
 all$ymd <- ymd(paste(all$year, all$month, all$day)) 
 
+#---------------------------------------------------------#
 # count how many ice points each day w/ reset by id and day
 w.day = all %>%
   group_by(id, ymd) %>%
@@ -37,18 +53,18 @@ ice = newdef.ice %>%
 ice.df <- as.data.frame(ice)
 
 # create column with cumulative time on land (in days), reset when flag = 0
-library(data.table)
+
 setDT(ice.df)
 ice.df[, cum.ice := flag*cumsum(time.ice), .(id, rleid(flag))]
 
 ice.df$cum.ice = ice.df$cum.ice/24
 
+if(save_df)
 save(ice.df, file='NewDef.ice.RData')
 
-###### Split dataset into June through November and slice by last cum.ice >7
+#--------------------------------------------------------------------------#
 
-load('NewDef.ice.RData')
-library(dplyr)
+## Split dataset into June through November and slice by last cum.ice >7
 
 jun.nov <- subset(ice.df, month >5 & month < 11) # excluded Dec because bears go back out onto ice
 ice.ded <- subset(jun.nov, cum.ice >=7 & ice==1)
@@ -58,6 +74,7 @@ last <- ice.ded %>%
   arrange(id,datetime) %>%
   slice(n())
 
-write.csv(first, file='C:/Users/akell/Desktop/Spring 2019/Research/last_ice_7_days.csv')
+if(write_csv)
+write.csv(first, file='last_ice_7_days.csv')
 
 

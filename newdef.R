@@ -1,10 +1,21 @@
+## Redefining arrival dates based on 7-day 'dedicated stay' criteria
+## A. Kellner February 2019
+
+nuke = FALSE #do you want your environment erased
+save_csv = FALSE #do you want to create a .csv
+
+if(nuke)
 rm(list = ls())
+
 
 load('all.RData')
 library(dplyr)
 library(lubridate)
+library(data.table)
 
-all$ymd <- ymd(paste(all$year, all$month, all$day)) 
+#------------------------------------------------#
+
+all$ymd <- ymd(paste(all$year, all$month, all$day)) #change date format
 
 # count how many land points each day w/ reset by id and day
 w.day = all %>%
@@ -36,7 +47,7 @@ x.df <- as.data.frame(x) #convert to df
 
 
 # create column with cumulative time on land (in days), reset when flag = 0
-library(data.table)
+
 setDT(x.df)
 x.df[, cum.land := flag*cumsum(time.land), .(id, rleid(flag))]
 
@@ -46,7 +57,9 @@ save(x.df, file='NewDef.RData')
 
 test <- subset(x.df, animal=='pb_06336') #test - looks good
 
-###### Split dataset into two parts - 1) July through December and 2) May through November
+#------------------------------------------------------------------------------------------#
+
+# Split dataset into two parts - 1) July through December and 2) May through November
 
 load('NewDef.RData')
 jul.dec <- subset(x.df, month >6)
@@ -57,13 +70,10 @@ first <- land.ded %>%
   arrange(id,datetime) %>%
   slice(1)
 
-write.csv(first, file='C:/Users/akell/Desktop/Spring 2019/Research/first_land_7days.csv')
+if(save_csv)
+write.csv(first, file='first_land_7days.csv')
 
-##############################################
-#### JUNK ####################################
 
-mutate(cumtime.land=time.land + ifelse(is.na(lag(time.land)), 0, lag(time.land))) %>%
-  mutate(cumtime.days = cumsum(time.land)/24)
 
 
 
