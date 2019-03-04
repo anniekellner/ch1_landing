@@ -70,7 +70,7 @@ tt.end <- last$tt
 all$start.swim <- ifelse(all$id.datetime %in% tt.start, 1,0)
 all$end.swim <- ifelse(all$id.datetime %in% tt.end, 1,0)
 
-
+save(all, file='all.RData')
 
 
 
