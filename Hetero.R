@@ -27,7 +27,6 @@ pb$ord.year <- paste("2006", pb$ordinal, sep="")
 
 # create rasterstack using TIFs
 rasterlist <- list.files('./SIC-TIFs/MASIE/2006', full.names = TRUE) # bring in all files
-rasterlist <- gsub('_', '-', rasterlist) # replace underscore with dash in filename
 
 # separate date component of TIF name to correspond to spdf metadata 
 
@@ -44,17 +43,19 @@ projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y
 polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs') # epsg projection 3411 NSIDC sea ice polar stereographic north
 coords <- cbind(pb$X, pb$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data = pb, proj4string = projection) 
-pb.spdf2 <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
+pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 
 # create null columns for percent ice coverage
-pb.spdf2$pct.ice <- NA
+pb.spdf.polar$pct.ice <- NA
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
-for (i in 1:nrow(pb.spdf2)) {
-  st<-stack[[which(date==pb.spdf2$ord.year[i])]]
-  pb.spdf2$SIC[i]<-extract(st, pb.spdf2[i,])}
+for (i in 1:nrow(pb.spdf.polar)) {
+  st<-stack[[which(date==pb.spdf.polar$ord.year[i])]] #pulls raster data from GeoTIFF that corresponds to ordinal date
+  pct.ice <- focal(st[i], w=matrix(1/9, nc=3, nr=3))
+  pb.spdf.polar$pct.ice[i]<-extract(st, pb.spdf.polar[i,])}
 
-
+## TO DO:
+## I think the 'date' field is not entering into metadata for stack entries. Check against SIC.R script when able to access data
 
 #######################
 ### From Nathan #######
