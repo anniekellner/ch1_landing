@@ -10,7 +10,7 @@ library(lubridate)
 # SIC Analysis: Departure Dates
 
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC_TIFs/pb_06817', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/pb_06817', full.names = TRUE) # bring in all files
 
 # for loop for creating rasters
 # separate date component of TIF name to correspond to spdf metadata 
