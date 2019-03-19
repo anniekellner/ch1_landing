@@ -11,7 +11,7 @@ library(dplyr)
 # SIC Analysis: Departure Dates
 
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_06817', full.names = TRUE)# bring in all files
+rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_20413', full.names = TRUE)# bring in all files
 
 # for loop for creating rasters
 # separate date component of TIF name to correspond to spdf metadata 
@@ -38,7 +38,7 @@ load('all.Rdata')
 all$ymd <- as.character(ymd(paste(all$year, all$month, all$day))) #get ymd into POSIXct so can be subsetted
 all$ymd <- as.POSIXct(all$ymd, tz='US/Alaska')
 
-pb <- subset(all, id=='pb_06817.2006' & ymd >= '2006-08-16' & ymd <= '2006-09-16') # subsetting from master data file ('all.Rdata')
+pb <- subset(all, id=='pb_20413.2006' & ymd >= '2006-08-14' & ymd <= '2006-09-14') # subsetting from master data file ('all.Rdata')
 
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs') # epsg projection 3411 NSIDC sea ice polar stereographic north
@@ -48,7 +48,7 @@ pb.spdf2 <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereog
 pb.spdf2$date2 <- format(pb.spdf2$ymd, "%Y%m%d")
 
 # create null columns for SIC
-pb.spdf2$SIC <- NA
+#pb.spdf2$SIC <- NA
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
 for (i in 1:nrow(pb.spdf2)) {
@@ -62,8 +62,10 @@ pb.spdf2$SIC[i]<-extract(st, pb.spdf2[i,])}
 
 df <- pb.spdf2@data #convert to df
 df <- select(df, -date2)
-all <- left_join(all, df)
-save(all, file='all.RData')
+all <- full_join(all, df) 
+
+
+save(all, file='all_031919.RData')
 
 
 #save(start.spdf2, file='SIC_spdf.RData') #save as spdf
