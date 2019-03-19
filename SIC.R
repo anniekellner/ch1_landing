@@ -10,7 +10,7 @@ library(lubridate)
 # SIC Analysis: Departure Dates
 
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/pb_06817', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_06817', full.names = TRUE)# bring in all files
 
 # for loop for creating rasters
 # separate date component of TIF name to correspond to spdf metadata 
@@ -19,7 +19,7 @@ stack<-list()
 date<-vector()
 for (i in 1:length(rasterlist)) {
 stack[[i]]<-raster(rasterlist[i])
-tt<-unlist(strsplit(names(stack[[i]]), "[.]"))
+tt<-unlist(strsplit(names(stack[[i]]), '[[:punct:]]+')) #https://stackoverflow.com/questions/10738729/r-strsplit-with-multiple-unordered-split-arguments
 date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
 values(stack[[i]])[values(stack[[i]])>200]<-0
 }
@@ -37,7 +37,7 @@ load('all.Rdata')
 all$ymd <- as.character(ymd(paste(all$year, all$month, all$day))) #get ymd into POSIXct so can be subsetted
 all$ymd <- as.POSIXct(all$ymd, tz='US/Alaska')
 
-pb <- subset(all, id=='pb_06817.2006' & ymd > '2006-08-21' & ymd <= '2006-09-21') # subsetting from master data file ('all.Rdata')
+pb <- subset(all, id=='pb_06817.2006' & ymd >= '2006-08-16' & ymd <= '2006-09-16') # subsetting from master data file ('all.Rdata')
 
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs') # epsg projection 3411 NSIDC sea ice polar stereographic north
