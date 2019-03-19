@@ -6,6 +6,7 @@ library(sp)
 library(rgdal)
 library(sf)
 library(lubridate)
+library(dplyr)
 
 # SIC Analysis: Departure Dates
 
@@ -56,7 +57,14 @@ pb.spdf2$SIC[i]<-extract(st, pb.spdf2[i,])}
 
 #start.spdf2$Buf10_max[i]<-extract(st, start.spdf2[i,],buffer=10000, fun=max, na.rm=T)
 
+####################################################################################
+######## Merge Sea Ice Concentrations into main database ###########################
 
 df <- pb.spdf2@data #convert to df
-save(start.spdf2, file='SIC_spdf.RData') #save as spdf
-save(df, file='SIC_df.RData')
+df <- select(df, -date2)
+all <- left_join(all, df)
+save(all, file='all.RData')
+
+
+#save(start.spdf2, file='SIC_spdf.RData') #save as spdf
+#save(df, file='SIC_df.RData')
