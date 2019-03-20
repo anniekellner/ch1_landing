@@ -13,10 +13,10 @@ library(dplyr)
 # --------------------------------------------------------------------------------#
 # LOAD DATA
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_21358', full.names = TRUE)# bring in all files
+rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_21264', full.names = TRUE)# bring in all files
 
 load('all_v2.Rdata')
-pb <- subset(all, id=='pb_21358.2013' & ymd >= '2013-07-14' & ymd <= '2013-08-14') # subsetting from master data file ('all.Rdata')
+pb <- subset(all, id=='pb_21264.2011' & ymd >= '2011-06-28' & ymd <= '2011-07-28') # subsetting from master data file ('all.Rdata')
 
 # for loop for creating rasters
 # separate date component of TIF name to correspond to spdf metadata 
