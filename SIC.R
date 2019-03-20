@@ -16,7 +16,7 @@ library(dplyr)
 #create rasterstack using TIFs
 rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_20418', full.names = TRUE)# bring in all files
 
-load('all.Rdata')
+load('all_v2.Rdata')
 pb <- subset(all, id=='pb_20418.2005' & ymd >= '2005-07-19' & ymd <= '2005-08-19') # subsetting from master data file ('all.Rdata')
 
 # for loop for creating rasters
@@ -66,7 +66,6 @@ pb.spdf2$SIC[i]<-extract(st, pb.spdf2[i,])}
 df <- pb.spdf2@data #convert to df
 df <- select(df, -date2)
 all <- full_join(all, df) 
-
 
 save(all, file='all_v2.RData')
 
