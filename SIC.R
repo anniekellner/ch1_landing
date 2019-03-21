@@ -10,13 +10,13 @@ library(dplyr)
 
 # SIC Analysis: Departure Dates
 
-# --------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------#
 # LOAD DATA
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_21368', full.names = TRUE)# bring in all files
+rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_20414', full.names = TRUE)# bring in all files
 
-load('all_v2.Rdata')
-pb <- subset(all, id=='pb_21368.2014' & ymd >= '2014-07-11' & ymd <= '2014-08-11') # subsetting from master data file ('all.Rdata')
+load('all.Rdata')
+pb <- subset(all, id=='pb_20414.2009' & ymd >= '2009-06-18' & ymd <= '2009-07-18') # subsetting from master data file ('all.Rdata')
 
 # for loop for creating rasters
 # separate date component of TIF name to correspond to spdf metadata 
