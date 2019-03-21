@@ -8,11 +8,11 @@ library(dplyr)
 
 SIC <- subset(all.v2, SIC>=0) #subset SIC records
 
-unique(SIC$id) # missing pb_20414
 
 ## Run pb_20414 through SIC.R 
 
 SIC <- rbind(SIC, df) #bind pb_20414 to SIC
+SIC <- distinct(SIC) #remove duplicate rows
 
 all.v2 <- select(all.v2, -SIC)
 
