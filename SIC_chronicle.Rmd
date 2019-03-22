@@ -1,0 +1,141 @@
+---
+title: "Ice Chronicle Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+# Data load and prep
+rm(list = ls()) 
+load('all_v2.RData')
+
+SIC <- subset(all.v2, SIC>=0)
+SIC$SIC <- SIC$SIC/2
+```
+
+```{r}
+library(ggplot2)
+
+yr2004 <- subset(SIC, id=='pb_20544.2004')
+
+ggplot(yr2004, aes(ymd, SIC, na.rm=TRUE)) +
+  stat_summary(geom="line",fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2004") +
+  theme_bw()
+
+```
+
+```{r}
+yr2005 <- subset(SIC, year==2005)
+
+ggplot(yr2005, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line",fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2005") +
+  theme_bw()
+```
+
+```{r}
+yr2006 <- subset(SIC, year==2006)
+
+ggplot(yr2006, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", position=position_jitter(width=0.1, height=0.1),fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2006") +
+  theme_bw()
+
+
+##LLOK INTO COORD
+```
+
+
+```{r}
+yr2009 <- subset(SIC, year==2009)
+
+ggplot(yr2009, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", position=position_jitter(width=0.1, height=0.1), fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2009") +
+  theme_bw()
+
+```
+
+```{r}
+yr2011 <- subset(SIC, year==2011)
+
+ggplot(yr2011, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", position=position_jitter(width=0.1, height=0.1), fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2011") +
+  theme_bw()
+```
+
+```{r}
+yr2012 <- subset(SIC, year==2012)
+
+ggplot(yr2012, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line",fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2012") +
+  theme_bw()
+```
+
+```{r}
+yr2013 <- subset(SIC, year==2013)
+
+ggplot(yr2013, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", position=position_jitter(width=0.1, height=0.1), fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2013") +
+  theme_bw()
+```
+
+```{r}
+yr2014 <- subset(SIC, year==2014)
+
+ggplot(yr2014, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", position=position_jitter(width=0.1, height=0.1), fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2014") +
+  theme_bw()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
