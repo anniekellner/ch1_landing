@@ -112,6 +112,16 @@ ggplot(yr2014, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
   theme_bw()
 ```
 
+```{r}
+yr2015 <- subset(SIC, year==2015)
+
+ggplot(yr2015, aes(ymd, SIC, color=animal, na.rm=TRUE)) +
+  stat_summary(geom="line", fun.y="mean") +
+  xlab("Date") +
+  ylab("Sea Ice Concentration") +
+  ggtitle("2015") +
+  theme_bw()
+```
 
 
 
