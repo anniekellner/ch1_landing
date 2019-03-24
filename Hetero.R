@@ -28,13 +28,10 @@ pb$ord.year <- paste("2006", pb$ordinal, sep="")
 
 # create rasterstack using TIFs
 rasterlist <- list.files('./SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all files
-st <- stack(rasterlist)
-df <- data.frame(id=3, v=1)
-st2 <- subs(st, df, subsWithNA=FALSE)
 
 # separate date component of TIF name to correspond to spdf metadata 
 
-stack<-list()
+stack <- list()
 date<-vector()
 for (i in 1:length(rasterlist)) {
   stack[[i]]<-raster(rasterlist[i])
@@ -42,14 +39,12 @@ for (i in 1:length(rasterlist)) {
   date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
 }
 
-  
+st <- stack(rasterlist)
 
+#substitute 3(ice) with 1 so data is binary
+df <- data.frame(id=3, v=1)
+st2 <- subs(st, df, subsWithNA=FALSE)
 
-
-  
-## Want to substitute to make raster binary but am lost ###
-#stack2 <- subs(stack, data.frame(id=c(1,3), v=c(0,1)), by='Color Index')
-#y <- subs(x, data.frame(id=c(2,3), v=c(40,50)))
 # create spdf
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs') # epsg projection 3411 NSIDC sea ice polar stereographic north
@@ -57,25 +52,31 @@ coords <- cbind(pb$X, pb$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data = pb, proj4string = projection) 
 pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 
-# create null columns for percent ice coverage
-pb.spdf.polar$pct.ice <- NA
+# create null columns 
+pb.spdf.polar$Buf10_me<-NA
+pb.spdf.polar$Buf30_me<-NA
+pb.spdf.polar$Buf50_me<-NA
+pb.spdf.polar$buf10_sum <- NA
+pb.spdf.polar$buf30_sum <- NA
+pb.spdf.polar$buf50_sum <- NA
+
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
 for (i in 1:nrow(pb.spdf.polar)) {
-  st<-stack[[which(date==pb.spdf.polar$ord.year[i])]] #pulls raster data from GeoTIFF that corresponds to ordinal date
-  pb.spdf.polar$pct.ice[i]<-extract(st, pb.spdf.polar[i,])}
+  st3<-st2[[which(date==pb.spdf.polar$ord.year[i])]] #pulls raster data from GeoTIFF that corresponds to ordinal date
+  pb.spdf.polar$Buf10_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=10000, fun=mean, na.rm=T)
+  pb.spdf.polar$Buf30_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=30000, fun=mean, na.rm=T)
+  pb.spdf.polar$Buf50_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=50000, fun=mean, na.rm=T)
+  pb.spdf.polar$buf10_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=10000, fun=sum, na.rm=T) 
+  pb.spdf.polar$buf30_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=30000, fun=sum, na.rm=T)
+  pb.spdf.polar$buf50_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=50000, fun=sum, na.rm=T)}
+  
+  
+df.pb <- pb.spdf.polar@data #convert to df
+
+## cell is included if its center is covered by the buffer
+
+## The MASIE products are provided in a polar stereographic projection with the WGS 1984 datum
 
 
-#######################
-### From Nathan #######
 
-# calculate percents for forest and ag at .25km2 moving window
-pct.forest <- focal(forest.r, w=matrix(1/289, nrow = 17, ncol = 17))
-hist(pct.ag)
-
-pct.ag <- focal(ag.r, w=matrix(1/289, nrow = 35, ncol = 35))
-hist(pct.ag)
-
-# use a larger focal area for ag at .5km2 moving window
-pct.ag.2 <- focal(ag.r, w=matrix(1/1225, nrow = 35, ncol = 35))
-hist(pct.ag.2)
