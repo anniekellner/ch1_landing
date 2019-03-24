@@ -39,7 +39,7 @@ for (i in 1:length(rasterlist)) {
   date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
 }
 
-st <- stack(rasterlist)
+st <- stack(stack)
 
 #substitute 3(ice) with 1 so data is binary
 df <- data.frame(id=3, v=1)
@@ -47,18 +47,17 @@ st2 <- subs(st, df, subsWithNA=FALSE)
 
 # create spdf
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
-polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs') # epsg projection 3411 NSIDC sea ice polar stereographic north
+polar.stereo <-crs('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') # matches MASIE raster
 coords <- cbind(pb$X, pb$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data = pb, proj4string = projection) 
 pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 
-# create null columns 
-pb.spdf.polar$Buf10_me<-NA
-pb.spdf.polar$Buf30_me<-NA
-pb.spdf.polar$Buf50_me<-NA
-pb.spdf.polar$buf10_sum <- NA
-pb.spdf.polar$buf30_sum <- NA
-pb.spdf.polar$buf50_sum <- NA
+# create null columns for 10,30,50,100,500 km from bear GPS point
+pb.spdf.polar$Buf10_me<- NA
+pb.spdf.polar$Buf30_me<- NA
+pb.spdf.polar$Buf50_me<- NA
+pb.spdf.polar$Buf100_me <- NA
+pb.spdf.polar$Buf500_me <- NA
 
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
@@ -67,9 +66,8 @@ for (i in 1:nrow(pb.spdf.polar)) {
   pb.spdf.polar$Buf10_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=10000, fun=mean, na.rm=T)
   pb.spdf.polar$Buf30_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=30000, fun=mean, na.rm=T)
   pb.spdf.polar$Buf50_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=50000, fun=mean, na.rm=T)
-  pb.spdf.polar$buf10_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=10000, fun=sum, na.rm=T) 
-  pb.spdf.polar$buf30_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=30000, fun=sum, na.rm=T)
-  pb.spdf.polar$buf50_sum[i] <- extract(st3, pb.spdf.polar[i,], buffer=50000, fun=sum, na.rm=T)}
+  pb.spdf.polar$Buf100_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=100000, fun=mean, na.rm=T)
+  pb.spdf.polar$Buf500_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=500000, fun=mean, na.rm=T)}
   
   
 df.pb <- pb.spdf.polar@data #convert to df
