@@ -72,6 +72,16 @@ for (i in 1:nrow(pb.spdf.polar)) {
   
 df.pb <- pb.spdf.polar@data #convert to df
 
+# Change pct ice to pct water
+df.pb$pct.h20.10 <- 1-df.pb$Buf10_me
+df.pb$pct.h20.30 <- 1-df.pb$Buf30_me
+df.pb$pct.h20.50 <- 1-df.pb$Buf50_me
+df.pb$pct.h20.100 <- 1-df.pb$Buf100_me
+df.pb$pct.h20.500 <- 1-df.pb$Buf500_me
+
+
+save(df.pb, file='Ice_Measurements.RData')
+
 ## cell is included if its center is covered by the buffer
 
 ## The MASIE products are provided in a polar stereographic projection with the WGS 1984 datum
