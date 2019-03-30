@@ -19,6 +19,7 @@ start <- subset(all.v2, start.swim==1)
 start <- start %>% # remove 'undecided'
   filter(!(id=='pb_20333.2008' | id=='pb_20413.2006' | id=='pb_20418.2005' | id=='pb_20520.2012' | id=='pb_20529.2004'))
 year <- subset(start, year==2006) #subset by year
+year <- dplyr::select(year, id:ymd)
 
 # Create spdf
 
@@ -29,6 +30,7 @@ year.spdf <- SpatialPointsDataFrame(coords = coords, data = year, proj4string = 
 year.spdf2 <-spTransform(year.spdf, polar.stereo) #reproject points to polar stereographic
 
 
+
 # Create rasterstack
 rasterlist <- list.files('./SIC-TIFs/Timeto15%/2006', full.names = TRUE)# bring in all files
 st <- stack(rasterlist)
@@ -37,7 +39,10 @@ st <- stack(rasterlist)
 
 loc <- year.spdf2[,c("X", "Y")]
 ext <- extract(st, loc, df=TRUE)
+SIC <- t(ext)
+SIC <- as.data.frame(SIC)
+
+levels(SIC$value) <- c("Date", "SIC")
 
 
- # bind the extracted values back to the previous dataframe
-
+# bind the extracted values back to the previous dataframe
