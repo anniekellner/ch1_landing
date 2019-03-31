@@ -14,6 +14,7 @@ rm(list = ls())
 load('all_v2.RData')
 library(dplyr)
 library(data.table)
+library(ggplot2)
 
 SIC <- subset(all.v2, SIC >=0, na.rm=TRUE)
 
@@ -31,9 +32,24 @@ x= flag %>%
   arrange(id,datetime) %>%
   mutate(time.15 = ifelse(flag==0 | lag(flag)==0,
          0, difftime(datetime, lag(datetime), units='days'))) %>%
-  mutate(cumtime.15 = cumsum(ifelse(is.na(time.15), 0, time.15)) + time.15*0)
+  mutate(cumtime.15 = cumsum(ifelse(is.na(time.15), 0, time.15)) + time.15*0) %>%
+  mutate(pct.days.below15 = cumtime.15/30) %>%
+  mutate(index=difftime(ymd, first(ymd), units='days')) # so day 1 is day 1 for all bears, regardless of month/year
 
 x <- as.data.frame(x)
 
-## TO DO: calculate cumtime.15 as percentage of all days and plot - include this in dplyr grouping so can do length of rows in id grouping
+#-------------- GGPLOT ---------------------------------#
+
+# Percent Time Spent in 15% SIC or less - all bears
+
+
+
+#Number of days on 15% SIC or less before departing
+ggplot = x %>%
+  group_by(id) %>%
+  arrange(id,datetime) %>%
+  slice(n()) 
+  
+
+## TO DO: Make sure each animal only has 30 days (not 'one month' of data)
 
