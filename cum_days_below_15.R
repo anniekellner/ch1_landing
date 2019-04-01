@@ -36,7 +36,7 @@ x= flag.15 %>%
          0, difftime(datetime, lag(datetime), units='days'))) %>%
   mutate(cumtime.15 = cumsum(ifelse(is.na(time.15), 0, time.15)) + time.15*0) %>%
   mutate(pct.days.below15 = cumtime.15/30) %>%
-  mutate(index=difftime(ymd, first(ymd), units='days')) # so day 1 is day 1 for all bears, regardless of month/year
+  mutate(index=difftime(last(ymd), ymd, units='days')) # so day 1 is day 1 for all bears, regardless of month/year
 
 ice.calc <- as.data.frame(x)
 save(ice.calc, file='ice_calc.RData')
@@ -44,13 +44,24 @@ save(ice.calc, file='ice_calc.RData')
 
 # Number of days Spent in 15% SIC or less - all bears
 
-ggplot(x, aes(index, cumtime.15, color=id,na.rm=TRUE)) +
+ggplot(ice.calc, aes(index, cumtime.15, color=id, na.rm=TRUE)) +
   stat_summary(geom = 'line', fun.y = 'mean') +
-  xlab("Day") +
-  ylab('Number of days spent at < 15% SIC') +
+  scale_x_reverse() +
+  xlab("Days before Departure") +
+  ylab('Cumulative # of days spent at < 15% SIC') +
   ggtitle('Days before departure spent at < 15% SIC') +
   theme_bw()
 
+#saved C:\Users\akell\Desktop\Spring 2019\Presentations\Alaska\days_15pct.pdf
 
+#------------- MEAN AND STDEV------------------------------------#
+
+last <- ice.calc %>%
+  group_by(id) %>%
+  arrange(id, datetime) %>%
+  slice(n())
+
+mean (last$cumtime.15) #20.13 days
+sd(last$cumtime.15) #8.77 days 
 ## TO DO: Make sure each animal only has 30 days (not 'one month' of data)
 
