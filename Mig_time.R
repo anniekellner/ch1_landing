@@ -1,23 +1,44 @@
 rm(list = ls())
+
 library(dplyr)
+library(sp)
+library(rgdal)
+
+#--------------------------------------------#
+#--- CALCULATE MIGRATION TIME IN DAYS -------#
 
 load('all_v2.RData')
 
-start <- subset(all, start.swim==1)
+start <- subset(all.v2, start.swim==1)
 start <- start %>% # remove 'undecided'
   filter(!(id=='pb_20333.2008' | id=='pb_20413.2006' | id=='pb_20418.2005' | id=='pb_20520.2012' | id=='pb_20529.2004'))
 start <- droplevels(start)
 
-end <- subset(all, end.swim==1)
+end <- subset(all.v2, end.swim==1)
 end <- end %>% # remove 'undecided'
   filter(!(id=='pb_20333.2008' | id=='pb_20413.2006' | id=='pb_20418.2005' | id=='pb_20520.2012' | id=='pb_20529.2004'))
 end <- droplevels(end)
 
-mig <- left_join(start,end, by='id')
-mig <- select(mig, animal.x, datetime.x, datetime.y)
+mig <- left_join(start, end, by='id')
+mig <- select(mig, animal.x, gps_lat.x, gps_lon.x, datetime.x, X.x, Y.x, gps_lat.y, gps_lon.y, X.y, Y.y, datetime.y)
 
-colnames(mig) <- c('animal', 'start', 'end')
+colnames(mig) <- c('animal', 'lat.start', 'long.start', 'dt.start', 'X.start', 'Y.start', 'lat.end', 'long.end', 'X.end', 'Y.end', 'dt.end')
 
-mig$diff <- difftime(mig$end, mig$start, tz='US/Alaska', units="days")
+mig$diff <- difftime(mig$dt.end, mig$dt.start, tz='US/Alaska', units="days")
 
+# ---- CREATE SHAPEFILES --------------------#
 
+# Mig Start
+
+start <- select(start, animal:gps_lon, datetime, X,Y)
+projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
+coords <- cbind(start$X, start$Y)
+start.spdf <- SpatialPointsDataFrame(coords=coords, data=start, proj4string = projection)
+writeOGR(start.spdf, dsn = 'C:/Users/akell/Documents/ArcGIS/Polar_Bears_GIS/Location Data', layer ="start_mig_040419", driver='ESRI Shapefile')
+
+# Mig end
+end <- select(end, animal:gps_lon, datetime, X,Y)
+projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
+coords <- cbind(end$X, end$Y)
+end.spdf <- SpatialPointsDataFrame(coords=coords, data=end, proj4string = projection)
+writeOGR(end.spdf, dsn = 'C:/Users/akell/Documents/ArcGIS/Polar_Bears_GIS/Location Data', layer ="end_mig_040419", driver='ESRI Shapefile')
