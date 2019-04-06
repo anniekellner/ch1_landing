@@ -2,7 +2,9 @@
 title: "Polar Bear Migration"
 author: "Annie Kellner"
 date: "September 26, 2018"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r}
 knitr::opts_chunk$set(echo=FALSE)
