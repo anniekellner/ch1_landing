@@ -14,17 +14,22 @@ library(sf)
 library(spData)
 library(lubridate)
 
+
+
 # create df with start dates
 load('all_v2.RData')
-#start <- subset(all, start.swim==1)
+start <- subset(all.v2, start.swim==1)
+start <- start %>% # remove 'undecided'
+  filter(!(id=='pb_20333.2008' | id=='pb_20413.2006' | id=='pb_20418.2005' | id=='pb_20520.2012' | id=='pb_20529.2004'))
+start <- droplevels(start)
 
 #subset bear
 #all$ymd <- as.character(ymd(paste(all$year, all$month, all$day))) #get ymd into POSIXct 
 #all$ymd <- as.POSIXct(all$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_06817' & datetime > '2006-08-22' & datetime < '2006-09-21')
+pb <- subset(all.v2, animal=='pb_20414' & datetime > '2009-06-17' & datetime < '2009-07-18')
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
-pb$ord.year <- paste("2006", pb$ordinal, sep="")
+pb$ord.year <- paste("2009", pb$ordinal, sep="")
 
 # create rasterstack using TIFs
 rasterlist <- list.files('./SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all files
