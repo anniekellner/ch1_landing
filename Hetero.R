@@ -36,7 +36,7 @@ pb <- pb %>% #remove 2009181 because no data in MASIE
 pb <- droplevels(pb)
 
 # create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20446', full.names = TRUE) # bring in all files
 
 # separate date component of TIF name to correspond to spdf metadata 
 
@@ -79,18 +79,18 @@ for (i in 1:nrow(pb.spdf.polar)) {
   pb.spdf.polar$Buf500_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=500000, fun=mean, na.rm=T)}
   
   
-df.new2 <- pb.spdf.polar@data #convert to df
+df.new <- pb.spdf.polar@data #convert to df
 
 # Change pct ice to pct water
-df.new2$pct.h20.10 <- 1-df.new2$Buf10_me
-df.new2$pct.h20.30 <- 1-df.new2$Buf30_me
-df.new2$pct.h20.50 <- 1-df.new2$Buf50_me
-df.new2$pct.h20.100 <- 1-df.new2$Buf100_me
-df.new2$pct.h20.500 <- 1-df.new2$Buf500_me
+df.new$pct.h20.10 <- 1-df.new$Buf10_me
+df.new$pct.h20.30 <- 1-df.new$Buf30_me
+df.new$pct.h20.50 <- 1-df.new$Buf50_me
+df.new$pct.h20.100 <- 1-df.new$Buf100_me
+df.new$pct.h20.500 <- 1-df.new$Buf500_me
 
-load('Ice_Measurements.RData')
+#load('Ice_Measurements.RData')
 
-ice.df <- rbind(df.new, df.new2)
+ice.df <- df.new
 save(ice.df, file='Ice_Measurements.RData')
 
 ## cell is included if its center is covered by the buffer
