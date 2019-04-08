@@ -16,7 +16,7 @@ library(lubridate)
 # create df with start dates
 
 load('all_v2.RData')
-#load('Ice_Measurements.RData')
+load('Ice_Measurements.RData')
 
 start <- subset(all.v2, start.swim==1)
 start <- start %>% # remove 'undecided'
@@ -27,7 +27,7 @@ start <- droplevels(start)
 all.v2$ymd <- as.character(ymd(paste(all.v2$year, all.v2$month, all.v2$day))) #get ymd into POSIXct 
 all.v2$ymd <- as.POSIXct(all.v2$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_20414' & datetime >= '2009-06-17' & datetime <= '2009-07-18') 
+pb <- subset(all.v2, animal=='pb_20735' & datetime > '2009-06-25' & datetime < '2009-07-26') 
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
 pb$ord.year <- paste("2009", pb$ordinal, sep="")
 
@@ -36,7 +36,7 @@ pb <- pb %>% #remove 2009181 because no data in MASIE
 pb <- droplevels(pb)
 
 # create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20735', full.names = TRUE) # bring in all files
 
 # separate date component of TIF name to correspond to spdf metadata 
 
@@ -87,8 +87,6 @@ df.new$pct.h20.30 <- 1-df.new$Buf30_me
 df.new$pct.h20.50 <- 1-df.new$Buf50_me
 df.new$pct.h20.100 <- 1-df.new$Buf100_me
 df.new$pct.h20.500 <- 1-df.new$Buf500_me
-
-load('Ice_Measurements.RData')
 
 ice.df <- rbind(df.new, ice.df)
 ice.df <- droplevels(ice.df)
