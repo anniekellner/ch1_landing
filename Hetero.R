@@ -27,7 +27,7 @@ start <- droplevels(start)
 #all$ymd <- as.character(ymd(paste(all$year, all$month, all$day))) #get ymd into POSIXct 
 #all$ymd <- as.POSIXct(all$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_20414' & datetime > '2009-06-17' & datetime < '2009-07-18')
+pb <- subset(all.v2, animal=='pb_20446' & datetime >= '2009-06-28' & datetime <= '2009-07-28')
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
 pb$ord.year <- paste("2009", pb$ordinal, sep="")
 
@@ -79,17 +79,19 @@ for (i in 1:nrow(pb.spdf.polar)) {
   pb.spdf.polar$Buf500_me[i] <- extract(st3, pb.spdf.polar[i,], buffer=500000, fun=mean, na.rm=T)}
   
   
-df.new <- pb.spdf.polar@data #convert to df
+df.new2 <- pb.spdf.polar@data #convert to df
 
 # Change pct ice to pct water
-df.new$pct.h20.10 <- 1-df.new$Buf10_me
-df.new$pct.h20.30 <- 1-df.new$Buf30_me
-df.new$pct.h20.50 <- 1-df.new$Buf50_me
-df.new$pct.h20.100 <- 1-df.new$Buf100_me
-df.new$pct.h20.500 <- 1-df.new$Buf500_me
+df.new2$pct.h20.10 <- 1-df.new2$Buf10_me
+df.new2$pct.h20.30 <- 1-df.new2$Buf30_me
+df.new2$pct.h20.50 <- 1-df.new2$Buf50_me
+df.new2$pct.h20.100 <- 1-df.new2$Buf100_me
+df.new2$pct.h20.500 <- 1-df.new2$Buf500_me
 
-df.new <- rbind(df.pb, df.new)
-save(df.new, file='Ice_Measurements.RData')
+load('Ice_Measurements.RData')
+
+ice.df <- rbind(df.new, df.new2)
+save(ice.df, file='Ice_Measurements.RData')
 
 ## cell is included if its center is covered by the buffer
 
