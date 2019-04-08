@@ -27,16 +27,16 @@ start <- droplevels(start)
 all.v2$ymd <- as.character(ymd(paste(all.v2$year, all.v2$month, all.v2$day))) #get ymd into POSIXct 
 all.v2$ymd <- as.POSIXct(all.v2$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_20735' & datetime > '2009-06-25' & datetime < '2009-07-26') 
+pb <- subset(all.v2, animal=='pb_20845' & datetime > '2015-07-28' & datetime < '2015-08-28') 
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
-pb$ord.year <- paste("2009", pb$ordinal, sep="")
+pb$ord.year <- paste("2015", pb$ordinal, sep="")
 
-pb <- pb %>% #remove 2009181 because no data in MASIE
-  filter(!(ord.year == '2009181'))
-pb <- droplevels(pb)
+#pb <- pb %>% #remove 2009181 because no data in MASIE
+  #filter(!(ord.year == '2009181'))
+#pb <- droplevels(pb)
 
 # create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20735', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20845', full.names = TRUE) # bring in all files
 
 # separate date component of TIF name to correspond to spdf metadata 
 
