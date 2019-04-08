@@ -27,16 +27,16 @@ start <- droplevels(start)
 all.v2$ymd <- as.character(ymd(paste(all.v2$year, all.v2$month, all.v2$day))) #get ymd into POSIXct 
 all.v2$ymd <- as.POSIXct(all.v2$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_06817' & datetime >= '2006-08-22' & datetime < '2006-09-22') #not picking up ymd='2006-09-21'
+pb <- subset(all.v2, animal=='pb_20414' & datetime >= '2009-06-17' & datetime <= '2009-07-18') 
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
-pb$ord.year <- paste("2006", pb$ordinal, sep="")
+pb$ord.year <- paste("2009", pb$ordinal, sep="")
 
 pb <- pb %>% #remove 2009181 because no data in MASIE
   filter(!(ord.year == '2009181'))
 pb <- droplevels(pb)
 
 # create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all files
+rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all files
 
 # separate date component of TIF name to correspond to spdf metadata 
 
@@ -91,6 +91,7 @@ df.new$pct.h20.500 <- 1-df.new$Buf500_me
 load('Ice_Measurements.RData')
 
 ice.df <- rbind(df.new, ice.df)
+ice.df <- droplevels(ice.df)
 save(ice.df, file='Ice_Measurements.RData')
 
 ## cell is included if its center is covered by the buffer
