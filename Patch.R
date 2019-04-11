@@ -64,7 +64,11 @@ pat3 <- ldply (pat2, data.frame)
 # Merge pat dataframe to original pb dataframe
 ice.pat <- bind_cols(pb, pat3)
 
- 
+#----------- DATA EXPLORATION --------------------#
+
+pb.plot <- subset(ice, animal=='pb_06817')
+
+plot(st_geometry(pb.plot))
 
 
  
