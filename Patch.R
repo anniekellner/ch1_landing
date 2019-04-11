@@ -7,7 +7,7 @@ rm(list = ls())
 library(sp)
 library(sf)
 library(raster)
-library(plyr)
+library(dplyr)
 library(SDMTools)
 
 #------------------- PREP DATA ----------------------------#
@@ -47,23 +47,27 @@ pb.sp <- as(pb, 'Spatial') # pb as sp object
 
 # pull raster data from GeoTIFF that corresponds to ordinal date
 
-ice.pat <- list()
+pat <- list()
 for (i in 1:nrow(pb.sp)) {
   st2<-st[[which(date==pb.sp$ord.year[i])]]
   GeoCrop <- raster::crop(st2, pb.sp[i,])
   GeoCrop_mask <- raster::mask(GeoCrop, pb.sp[i,])
-  ice.pat[[i]] <- PatchStat(GeoCrop_mask)}
-  
-ice.pat2 <- lapply(ice.pat, `[`, -1,) # remove first row in each list element
+  pat[[i]] <- PatchStat(GeoCrop_mask)}
 
-pb <- as.data.frame(pb)
-test10 <- merge(pb,df.test2) 
+# Change objects to df  
+pat2 <- lapply(pat, `[`, -1,) # remove first row in each list element
+
+library(plyr) #ldply command
+
+pat3 <- ldply (pat2, data.frame)
+
+# Merge pat dataframe to original pb dataframe
+ice.pat <- bind_cols(pb, pat3)
 
  
-df.test <- data.frame(matrix(unlist(ice.pat2), nrow=length(ice.pat2), byrow=T),stringsAsFactors=FALSE)
-  
 
-df.test2 <- ldply (ice.pat2, data.frame) 
+
+ 
 
  
 
