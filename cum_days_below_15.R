@@ -11,12 +11,14 @@
 #-------------------------------------------------#
 
 rm(list = ls())
+
 load('all_v2.RData')
 library(dplyr)
 library(data.table)
 library(ggplot2)
 
 SIC <- subset(all.v2, SIC >=0, na.rm=TRUE)
+SIC$SIC <- SIC$SIC*2
 SIC <- SIC %>%
   filter(!(id=='pb_20333.2008' | id=='pb_20413.2006' | id=='pb_20418.2005' | id=='pb_20520.2012' | id=='pb_20529.2004')) #remove undecided
 
@@ -61,7 +63,7 @@ last <- ice.calc %>%
   arrange(id, datetime) %>%
   slice(n())
 
-mean (last$cumtime.15) #20.13 days
-sd(last$cumtime.15) #8.77 days 
-## TO DO: Make sure each animal only has 30 days (not 'one month' of data)
+mean (last$cumtime.15) #18.91 days
+sd(last$cumtime.15) #8.75 days 
+
 
