@@ -13,7 +13,7 @@ df <- data.frame(id=3, v=1)
 x2 <- subs(x, df, subsWithNA=FALSE)
 
 x2[3000,3000] # 1
-x2[100,100] # NA
+x2[100,100] # 0
 
 
 
