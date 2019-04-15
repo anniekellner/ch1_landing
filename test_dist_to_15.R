@@ -13,6 +13,8 @@ library(raster)
 library(sp)
 library(rgeos)
 library(sf)
+library(dplyr)
+library(tidyr)
 
 # load data
 
@@ -32,10 +34,7 @@ pb.spdf.polar <-spTransform(pb.spdf, polar.stereo)
 #############
 # Prep raster
 
-# Reclassify raster so SIC>15 = 1 and all else = 0
-rc <- reclassify(r, c(1,15,0, 15,100,1, 100,255,0))
-
-# Clump
+rc <- reclassify(r, c(1,15,0, 15,100,1, 100,255,0)) # Reclassify raster so SIC>15 = 1 and all else = 0
 
 rcc <- clump(rc, directions=8) # all cells adjacent to main pack ice with 15% SIC or greater are considered part of ice pack
 plot(rcc)
@@ -46,9 +45,12 @@ plot(rcc)
 #### Distance ###
 
 pb.sf <- st_as_sf(pb.spdf.polar) #convert to sf object
+poly <- rasterToPolygons(rcc, function(x) {x==89}, dissolve = TRUE)
 poly <- st_as_sf(poly) 
 poly <- st_transform(poly,'+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
 
 dist <- st_distance(pb.sf, poly, by_element = TRUE)
+dist <- as.data.frame(dist)
 
+icepk <- cbind(pb, dist) 
 #st_write(poly, "./Tests/icepack_ex.shp") It works!
