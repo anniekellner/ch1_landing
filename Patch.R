@@ -26,7 +26,6 @@ buf30 <- st_buffer(ice, 30000) # 30 km buffer around points
 
 pb <- subset(buf30, id=='pb_06817.2006')
 
-
 rasterlist <- list.files('./SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 # separate date component of TIF name to correspond to spdf metadata 
@@ -48,21 +47,20 @@ pb.sp <- as(pb, 'Spatial') # pb as sp object
 # pull raster data from GeoTIFF that corresponds to ordinal date
 
 pat <- list()
+cs <- list()
 for (i in 1:nrow(pb.sp)) {
   st2<-st[[which(date==pb.sp$ord.year[i])]]
   GeoCrop <- raster::crop(st2, pb.sp[i,])
   GeoCrop_mask <- raster::mask(GeoCrop, pb.sp[i,])
-  pat[[i]] <- PatchStat(GeoCrop_mask)}
+  pat[[i]] <- PatchStat(GeoCrop_mask)
+  cs[[i]] <- ClassStat(GeoCrop_mask)}
+ 
+pp <- t(sapply(pat, function(i) i[2,]))
+cs2 <- t(sapply(cs, function(i) i[2,]))
+pbpp <- cbind(pb.sp, pp)
+sdm <- cbind(pbpp, cs2) # new data file for patch stats
 
-# Change objects to df  
-pat2 <- lapply(pat, `[`, -1,) # remove first row in each list element
-
-library(plyr) #ldply command
-
-pat3 <- ldply (pat2, data.frame)
-
-# Merge pat dataframe to original pb dataframe
-ice.pat <- bind_cols(pb, pat3)
+save(sdm, file='Patch.RData')
 
 #----------- DATA EXPLORATION --------------------#
 
