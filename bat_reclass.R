@@ -2,7 +2,7 @@
 ###         BATCH RECLASSIFY AND CLUMP RASTERS        ##########
 ###############################################################
 
-## Calculate distance from bears location to nearest pack ice ##
+## Reclassify SIC rasters so 1=ice and 0=else. Use clump fxn to determine pack ice ##
 
 # ----------------- Load Data --------------------------------------#
 
@@ -10,17 +10,25 @@ rm(list = ls())
 
 library(raster)
 
-rl <- list.files(path = "./SIC-TIFs/SIC_univ_Bremen/pb_06817", pattern='.tif', all.files=TRUE, full.names=FALSE)
+#------------------ Create directories for new folders -------------#
+
+#load('ded_ids.RData')
+
+#for(i in 1:length(ded)){
+#dir.create(paste0('./SIC-TIFs/SIC_univ_Bremen/RCC/', ded[i]))
+#}
+
+rl <- dir(path = "./SIC-TIFs/SIC_univ_Bremen", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
 
 m <- c(1,15,0, 15,100,1, 100,255,0)
 rclmat <- matrix(m, ncol=3, byrow=TRUE)
 
 batch_reclass <- function(rl){
   for (i in 1:length(rl)) {
-    r <- raster(paste0("./SIC-TIFs/SIC_univ_Bremen/pb_06817/", rl[i])) #read in raster
+    r <- raster(paste0("./SIC-TIFs/SIC_univ_Bremen/", rl[i])) #read in raster
     rc <- reclassify(r, rclmat) #reclassify such that SIC>15% = 1, else 0
     rcc <- clump(rc, directions=8) # clumping algorithm
-    writeRaster(rcc, filename = paste0("./SIC-TIFs/SIC_univ_Bremen/RCC/", "rcc_", 
+    writeRaster(rcc, filename = paste0("./SIC-TIFs/RCC/", 
                                        rl[i]), format="GTiff", overwrite=TRUE)
   }
 }
@@ -28,9 +36,9 @@ batch_reclass <- function(rl){
 #run the function
 batch_reclass(rl)
 
-### TEST
+# ------------------------- TEST ------------------------------------------------#
 
-test <- raster('./SIC-TIFs/SIC_univ_Bremen/RCC/rcc_asi-n6250-20060921-v5.4.tif')
+test <- raster('./SIC-TIFs/RCC/pb_20735.2009/asi-n6250-20090725-v5.4.tif')
 test
 plot(test)
 #writeRaster(test, './Tests/bat_clump.tif')
