@@ -18,9 +18,9 @@ library(tidyr)
 
 # load data
 
-r <- raster('./SIC-TIFs/SIC_univ_Bremen/pb_06817/asi-n6250-20060821-v5.4.tif')
+r <- raster('./SIC-TIFs/SIC_univ_Bremen/RCC/pb_06817.2006/asi-n6250-20060821-v5.4.tif')
 load('ice_calc.RData')
-pb <- subset(ice.calc, animal=='pb_06817')
+pb <- subset(ice.calc, id=='pb_06817.2006')
 
 ########### 
 # Create spatial object
@@ -54,3 +54,11 @@ dist <- as.data.frame(dist)
 
 icepk <- cbind(pb, dist) 
 #st_write(poly, "./Tests/icepack_ex.shp") It works!
+
+##########
+gv <- getValues(r) # change values to vector so can get mode
+mode <- modal(gv, na.rm=TRUE) # find mode
+poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE)
+
+
+
