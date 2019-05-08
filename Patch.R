@@ -10,19 +10,23 @@ library(raster)
 library(dplyr)
 library(SDMTools)
 
+is2009 = TRUE
+
 #------------------- PREP DATA ----------------------------#
 
+load('ded_ids.RData')
 load('Ice_Measurements.RData')
 load('Patch.Rdata')
 
-pb.df <- subset(ice.df, id=='pb_06817.2006')
+pb.df <- subset(ice.df, id=='pb_20414.2009')
 
-#pb.df <- pb.df %>% 
-  #filter(!(ord.year=='2009199'))
+if(is2009){
+pb.df <- pb.df %>% 
+  filter(!(ord.year=='2009199'))}
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -69,11 +73,18 @@ for (i in 1:nrow(buf.sp)) {
  
 cs2 <- t(sapply(cs, function(i) i[2,]))
 
+
+
+cs3 <- ifelse(cs[[i]]>1, i[2,])  
+
+{t(sapply(cs, function(i) i[-1,])))}}
+ 
+
 patch <- cbind(buf.sp, cs2)
 
 save(patch, file='Patch.RData')
 
-
+head(cs)
 
  
 

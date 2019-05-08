@@ -47,7 +47,7 @@ pb.spdf.polar <-spTransform(pb.spdf, polar.stereo)
 pb.sf <- st_as_sf(pb.spdf.polar) #convert to sf object
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
-
+system.time({
 for (i in 1:nrow(pb.sf)) {
   ras <- st[[which(date==pb.sf$date2[i])]] # select raster that corresponds
   gv <- getValues(ras) # change values to vector so can get mode
@@ -56,17 +56,21 @@ for (i in 1:nrow(pb.sf)) {
   poly <- st_as_sf(poly)
   poly <- st_transform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
   dist <- st_distance(pb.sf, poly, by_element = TRUE)
-  }
+  }})
+
+#   user  system elapsed 
+#3554.39    4.71 3611.92 
+# approximately one hour to run 61 observations
 
 dist <- as.data.frame(dist)
 
 pkice <- cbind(pb, dist) 
 
-save(pkice, 'pkice_timedist.RData')
+save(pkice, file='pkice_timedist.RData')
 
 #####################################################################################
 
-#This works but takes too long to convert raster to polygon every time. Do same thing but use polygons (.shp)
+# Values are incorrect. Does not work. 
 
 unlist(strsplit(colnames(poly),'[[:punct:]]+')) # YES!!!! THIS WILL WORK!!!!!
 
