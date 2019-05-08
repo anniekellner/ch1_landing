@@ -55,10 +55,13 @@ dist <- as.data.frame(dist)
 icepk <- cbind(pb, dist) 
 #st_write(poly, "./Tests/icepack_ex.shp") It works!
 
-##########
-gv <- getValues(r) # change values to vector so can get mode
+
+
+# ------------- TESTS --------------------------------------------#
+r2 <- raster('./SIC-TIFs/SIC_univ_Bremen/RCC/pb_06817.2006/asi-n6250-20060821-v5.4.tif')
+plot(r2) # plot from RCC folder is the same as #prep raster code
+
+# extract mode pixel value - WORKS!!!!!!!!
+gv <- getValues(rcc) # change values to vector so can get mode
 mode <- modal(gv, na.rm=TRUE) # find mode
-poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE)
-
-
-
+poly2 <- rasterToPolygons(rcc, function(x){x==mode}, dissolve = TRUE)
