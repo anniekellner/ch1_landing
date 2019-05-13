@@ -6,6 +6,8 @@
 # Reclassify all ice >=15% with a single value
 # use clump function (directions = 8) to identify clumps
 
+rm(list = ls())
+
 library(raster)
 library(sp)
 library(sf)
