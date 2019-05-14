@@ -45,7 +45,7 @@ plot(rcc)
 gv <- getValues(rcc) # change values to vector so can get mode
 mode <- modal(gv, na.rm=TRUE) # find mode
 
-pb.sf <- st_as_sf(pb.spdf.polar) #convert to sf object
+pb.sf <- st_as_sf(pb.sp.polar) #convert to sf object
 poly <- rasterToPolygons(rcc, function(x) {x==mode}, dissolve = TRUE) # convert to polygon
 poly <- st_as_sf(poly) #sf object 
 dist <- st_distance(pb.sf, poly, by_element = TRUE)
