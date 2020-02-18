@@ -13,7 +13,8 @@ library(sf)
 load('ice_calc.RData') #GPS data
 pb <- subset(ice.calc, animal=='pb_06817')
 
-rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/RCC/pb_06817.2006', full.names = TRUE) # bring in all GeoTIFFs by bear
+
+rasterlist <- list.files('C:/Users/akell/Documents/ArcGIS/Polar_Bears_GIS/R/Chapter1/Landing Analysis/ch1_landing/SIC-TIFs/SIC_univ_Bremen/RCC/pb_06817.2006', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 # Create spatial object
 
@@ -25,7 +26,7 @@ pb.spdf.polar <-spTransform(pb.spdf, polar.stereo)
 pb.spdf.polar$date2 <- format(pb.spdf.polar$ymd, "%Y%m%d") # format for matching up with dates on GeoTIFFs
 
 track <- st_as_sf(pb.spdf.polar) # as sf object 
-#plot(st_geometry(track)) # verify track looks good
+plot(st_geometry(track)) # verify track looks good
 
 # separate date component of TIF name to correspond to spdf metadata 
 
