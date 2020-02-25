@@ -16,7 +16,7 @@ library(rgeos)
 
 # load data
 
-r <- raster('./SIC-TIFs/SIC_univ_Bremen/Orig_decided/pb_06817.2006/asi-n6250-20060821-v5.4.tif')
+r <- raster('C:/Users/akell/Documents/PhD\Polar_Bears\Data\SIC-TIFs\SIC_univ_Bremen/Orig_decided/pb_06817.2006/asi-n6250-20060821-v5.4.tif')
 load('ice_calc.RData')
 pb <- subset(ice.calc, animal=='pb_06817')
 
@@ -46,7 +46,7 @@ plot(rcc)
 #### Distance ###
 
 # Using rgeos
-dist <- gDistance(pb.sp.polar, rasterToPoints(rcc, fun=function(x) {x==mode})) # Doesn't work
+#dist <- gDistance(pb.sp.polar, rasterToPoints(rcc, fun=function(x) {x==mode})) # Doesn't work
 
 
 
