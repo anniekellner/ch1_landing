@@ -52,5 +52,23 @@ bat_pack_ice_poly <- function(rl){
 #run the function
 bat_pack_ice_poly(rl)
 
+# -------------------------------------------------------------------------------------------------------- #
+# Test the script - make sure the polygon looks like the raster. 
+#Pairwise assessment to make sure R1-R2 are different; R1-P1 similar; R2-P2 similar
 
+
+setwd('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen')
+
+
+r1 <- raster('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20525.2013/asi-AMSR2-n6250-20130717-v5.4.tif')
+p1 <- st_read('./POLY/pb_20525.2013/asi-AMSR2-n6250-20130719-v5.4/polygon.shp')
+
+plot(r1)
+plot(st_geometry(p1))
+
+r2 <- raster('./RCC/pb_20529.2005/asi-n6250-20050820-v5.4.tif')
+p2 <- st_read('./POLY/pb_20529.2005/asi-n6250-20050820-v5.4/polygon.shp')
+
+plot(r2)
+plot(st_geometry(p2))
 
