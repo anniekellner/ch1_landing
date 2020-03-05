@@ -51,8 +51,10 @@ dist <- vector()
 for (i in 1:nrow(track)){
   file <- filelist[grep(track$date2[i], filelist)]
   shp <- st_read(file)
-  st_transform(shp, polar.stereo)
-  dist[i] <- st_distance(track[i], shp, by_element = FALSE)}
+  st_crs(shp) <- st_crs(track)
+  shp <- st_transform(shp, polar.stereo)
+  dist[i] <- st_distance(track[i,], shp)
+  }
 
 
 
