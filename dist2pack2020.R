@@ -9,6 +9,7 @@ library(raster)
 library(sp)
 library(sf)
 library(rgdal)
+library(dplyr)
 
 # load data
 
@@ -43,7 +44,7 @@ st_crs(shp) <- st_crs(track)
 shp <- st_transform(shp, polar.stereo)
 
 
-# ------------------------------------------------------------------------------------------------
+# ---------   DISTANCE ANALYSIS   ------------------------------------------ #
 
 # Associate GPS point with polygon file name
 
@@ -56,8 +57,11 @@ for (i in 1:nrow(track)){
   dist[i] <- st_distance(track[i,], shp)
   }
 
+pb$dist2pack <- cbind(matrix(dist)) # transposes vector into a column and binds to original subsetted df
+ice.calc <- left_join(ice.calc, pb)
+# ------------------------------------------------------------------ #
 
-
+# Loop in 
 
 
 
