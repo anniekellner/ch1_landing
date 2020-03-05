@@ -26,15 +26,26 @@ pb.spdf.polar <-spTransform(pb.spdf, polar.stereo)
 pb.spdf.polar$date2 <- format(pb.spdf.polar$ymd, "%Y%m%d") # format for matching up with dates on GeoTIFFs
 
 track <- st_as_sf(pb.spdf.polar) # as sf object 
-plot(st_geometry(track)) 
+plot(st_geometry(track))  # verify track looks good
 
-plot(st_geometry(track)) # verify track looks good
+
+# Test projection compatibility using one shapefile
+
+shp <- st_read(filelist[1])
+plot(st_geometry(shp))
+plot(st_geometry(track), add = TRUE)
+
+# Make sure distance calculation works
+
+disttest <- st_distance(track[1,], shp) # works!
+# if crs(x) doesn't equal crs(y):
+st_crs(shp) <- st_crs(track)
+shp <- st_transform(shp, polar.stereo)
+
 
 # ------------------------------------------------------------------------------------------------
 
 # Associate GPS point with polygon file name
-
-track$date2 <- format(track$ymd, "%Y%m%d")
 
 dist <- vector()
 for (i in 1:nrow(track)){
@@ -43,49 +54,13 @@ for (i in 1:nrow(track)){
   st_transform(shp, polar.stereo)
   dist[i] <- st_distance(track[i], shp, by_element = FALSE)}
 
-disttest <- st_distance(track[1,], shp) # works!
 
-# projection - see what raster data is in
-ras <- raster('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_06817.2006/asi-n6250-20060821-v5.4.tif')
 
-track <- st_transform(track, crs = polar.stereo)
-shp <- st_transform(shp, crs = 3995)
-shp <- st_read(filelist[1])
-shp <- st_transform(shp, crs = polar.stereo)
 
-plot(st_geometry(shp))
-plot(st_geometry(track), add = TRUE)
 
-plot(st_geometry(track[1]), col = 'red', add = TRUE)
-plot(st_geometry(track[1,]), col = 'red', add = TRUE)
-plot(st_geometry(shp), add = TRUE)
 
-lsfilelist <- as.list(filelist)
-file <- filelist[grep("20060821", filelist)]
 
-filelist[which=="20060821"]
-# create list of shapefiles 
 
-sptest <- readOGR(filelist[[1]]) # test: sp seems to preserve file info better than sf
-sftest <- st_read(filelist[[1]])
-rastershp <- shapefile(filelist[[1]])
 
-shp.list <- list()
-for (i in 1:length(filelist)){
-  shp.list[[i]] <- shapefile(filelist[i])
-}
 
-# separate date component of POLY name to correspond to spdf metadata 
 
-sptest
-
-# find out where name/date is in shp metadata
-shptest$geometry$
-
-shp.list <- list()
-date<-vector()
-for (i in 1:length(filelist)) {
-  shp.list[[i]]<-st_read(filelist[i])
-  tt<-unlist(strsplit(names(stack[[i]]), "[.]"))
-  date[i] <-tt[which(nchar(tt)==max(nchar(tt)))]
-}
