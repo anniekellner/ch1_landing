@@ -13,7 +13,7 @@ library(dplyr)
 # -------------------------------------------------------------------------------#
 # LOAD DATA
 #create rasterstack using TIFs
-rasterlist <- list.files('./SIC-TIFs/SIC_univ_Bremen/pb_20414', full.names = TRUE)# bring in all files
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20414.2009', full.names = TRUE)# bring in all files
 
 load('all.Rdata')
 pb <- subset(all, id=='pb_20414.2009' & ymd >= '2009-06-18' & ymd <= '2009-07-18') # subsetting from master data file ('all.Rdata')

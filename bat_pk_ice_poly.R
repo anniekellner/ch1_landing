@@ -78,22 +78,25 @@ plot(st_geometry(p2))
 
 library(stringr)
 
-rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20446.2009", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20525.2013", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+rl <- rl[-c(3:32)]
 rl2 <- str_remove(rl,".tif")
-
-#Create directories for each shapefile
-for(i in 1:length(rl2)){
-  dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/', rl2[i]))
-}
 
 rl3 <- character()
 for(i in 1:length(rl2)){
   rl3[i] <- paste0(rl2[i], "/polygon")
 }
 
+
+#Create directories for each shapefile
+for(i in 1:length(rl2)){
+  dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/', rl2[i]))
+}
+
+
 for (i in 1:length(rl)) {
   for(j in 1:length(rl3)){
-    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20446.2009/", rl[i])) #read in raster
+    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20525.2013/", rl[i])) #read in raster
     gv <- getValues(r) # change values to vector so can get mode
     mode <- modal(gv, na.rm=TRUE) # find mode
     poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
