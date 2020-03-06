@@ -72,3 +72,33 @@ p2 <- st_read('./POLY/pb_20529.2005/asi-n6250-20050820-v5.4/polygon.shp')
 plot(r2)
 plot(st_geometry(p2))
 
+# ------------------------------------------------------------------------------------------- #
+
+# BEcause I needed stopped running the third folder mid-run in 2019
+
+library(stringr)
+
+rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20446.2009", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+rl2 <- str_remove(rl,".tif")
+
+#Create directories for each shapefile
+for(i in 1:length(rl2)){
+  dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/', rl2[i]))
+}
+
+rl3 <- character()
+for(i in 1:length(rl2)){
+  rl3[i] <- paste0(rl2[i], "/polygon")
+}
+
+for (i in 1:length(rl)) {
+  for(j in 1:length(rl3)){
+    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20446.2009/", rl[i])) #read in raster
+    gv <- getValues(r) # change values to vector so can get mode
+    mode <- modal(gv, na.rm=TRUE) # find mode
+    poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
+    spTransform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
+    writeOGR(poly, dsn = 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY', layer = rl3[j], driver = 'ESRI Shapefile')
+  }
+}
+

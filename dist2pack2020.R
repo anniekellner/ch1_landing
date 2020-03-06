@@ -13,9 +13,9 @@ library(dplyr)
 
 # load data
 
-load('ice_calc.RData') #GPS data
-filelist <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/pb_06817.2006", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
-pb <- subset(ice.calc, animal=='pb_06817') # test with one bear
+load('ice.calc.RData') #GPS data
+filelist <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/pb_20414.2009", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+pb <- subset(ice.calc, id=='pb_20414.2009') # test with one bear
 
 # Create spatial object. This works - always do it this way!
 
@@ -32,16 +32,16 @@ plot(st_geometry(track))  # verify track looks good
 
 # Test projection compatibility using one shapefile
 
-shp <- st_read(filelist[1])
-plot(st_geometry(shp))
-plot(st_geometry(track), add = TRUE)
+#shp <- st_read(filelist[1])
+#plot(st_geometry(shp))
+#plot(st_geometry(track), add = TRUE)
 
 # Make sure distance calculation works
 
-disttest <- st_distance(track[1,], shp) # works!
+#disttest <- st_distance(track[1,], shp) # works!
 # if crs(x) doesn't equal crs(y):
-st_crs(shp) <- st_crs(track)
-shp <- st_transform(shp, polar.stereo)
+#st_crs(shp) <- st_crs(track)
+#shp <- st_transform(shp, polar.stereo)
 
 
 # ---------   DISTANCE ANALYSIS   ------------------------------------------ #
@@ -50,23 +50,29 @@ shp <- st_transform(shp, polar.stereo)
 
 dist <- vector()
 for (i in 1:nrow(track)){
-  file <- filelist[grep(track$date2[i], filelist)]
+  file <- filelist[grep(track$date2[1], filelist)]
   shp <- st_read(file)
   st_crs(shp) <- st_crs(track)
   shp <- st_transform(shp, polar.stereo)
   dist[i] <- st_distance(track[i,], shp)
   }
 
+
+
 pb$dist2pack <- cbind(matrix(dist)) # transposes vector into a column and binds to original subsetted df
-ice.calc <- left_join(ice.calc, pb)
+head(pb) 
+tail(pb)
+
+tt <- rbind(tt, pb) # create new df via rbind
+
+           
+            
+# ------------------------------------------------------------------------------------------- #
+
+save(tt, file='ice_calc.RData') # rewrite existing df with new data
 # ------------------------------------------------------------------ #
 
-# Loop in 
-
-
-
-
-
+# paste0 collapses the string so there is no extra whitespace
 
 
 
