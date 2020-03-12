@@ -35,14 +35,24 @@ wind2 <- wind %>%
 
 wind2$depart <- ifelse(wind2$index==0, 1,0) # flag departures
 
-wind2$days_b4_depart <- as.numeric(round(wind2$index, digits = 0)) # round index to nearest day
+wind2$index <- as.numeric(wind2$index)
 
-wind2 <- select(wind2, -index)
 
 # plot one animal to see what it looks like
-ggplot(wind2[wind2$ID =='pb_20414.2009',], aes(days_b4_depart, mph, na.rm = TRUE)) +
+ggplot(wind2[wind2$ID =='pb_20414.2009',], aes(index, mph)) +
   geom_line(aes(color = 'red')) +
   scale_x_reverse()
+
+
+# ------------------------------------------------------------------------------------------------------- #
+
+# Double-check timezone against raw data
+
+load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/all_v2.RData')
+head(ice)
+head(wind2)
+wind2 <- as.data.frame(wind2)
+
 
 # Plot wind speed vs. time
 
