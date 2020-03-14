@@ -26,7 +26,7 @@ pb.df <- pb.df %>%
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('./SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -71,20 +71,23 @@ for (i in 1:nrow(buf.sp)) {
   cs[[i]] <- ClassStat(GeoCrop_mask)}
  
  
-cs2 <- t(sapply(cs, function(i) i[2,]))
+cs2 <- t(sapply(cs, function(i) i[1,]))
 
 
 
-cs3 <- ifelse(cs[[i]]>1, i[2,])  
+#cs3 <- ifelse(cs[[i]]>1, i[2,])  
 
-{t(sapply(cs, function(i) i[-1,])))}}
+#{t(sapply(cs, function(i) i[-1,])))}}
  
 
-patch <- cbind(buf.sp, cs2)
+patch2 <- cbind(buf.sp, cs2)
+patch2 <- st_as_sf(patch2)
+
+patch <- rbind(patch, patch2)
 
 save(patch, file='Patch.RData')
 
-head(cs)
+
 
  
 
