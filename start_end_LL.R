@@ -45,7 +45,7 @@ get.dist <- function(i){
   } 
 start.end.LL$Distance <- lapply(X=seq(1,nrow(start.end.LL),1), FUN = get.dist)
 
-save(start.end.LL, file='Str_line_dist.RData')
+save(start.end.LL, file='great_circle_dist.RData')
 
 #distm(c(-154.4895, 71.5196), c(-154.4969, 71.5019)) #test to see whether distm() fxn is equivalent to TA distance.It is.
 
