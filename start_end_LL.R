@@ -1,3 +1,10 @@
+###################################################################################
+##          CALCULATE GREAT CIRCLE DISTANCE BETWEEN START AND END OF MIGRATION    #
+###################################################################################
+
+# Compared against ArcGIS: looks good!!!
+
+
 rm(list = ls())
 
 library(geosphere)
@@ -6,7 +13,7 @@ load('all.RData')
 
 ## Set first distance value for starting point as 0
 
-swim <- subset(all, all$swim==1)
+swim <- subset(all.v2, all.v2$swim==1)
 swim$index <- seq(1,nrow(swim),1) # so there is a unique identifier for each row
 id <- unique(swim$id)
 
@@ -33,7 +40,7 @@ start.end.LL <- dplyr::select(out, id, gps_lon, gps_lat, lon_end, lat_end) #sele
 
 get.dist <- function(i){
   row <- start.end.LL[i,]
-  dist <- distm(c(start.end.LL$gps_lon[i], start.end.LL$gps_lat[i]), c(start.end.LL$lon_end[i], start.end.LL$lat_end[i]))
+  dist <- distGeo(c(start.end.LL$gps_lon[i], start.end.LL$gps_lat[i]), c(start.end.LL$lon_end[i], start.end.LL$lat_end[i]))
   return(dist)
   } 
 start.end.LL$Distance <- lapply(X=seq(1,nrow(start.end.LL),1), FUN = get.dist)
