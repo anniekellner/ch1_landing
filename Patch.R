@@ -18,7 +18,7 @@ load('ded_ids.RData')
 load('Ice_Measurements.RData')
 load('Patch.Rdata')
 
-pb.df <- subset(ice.df, id=='pb_20414.2009')
+pb.df <- subset(ice.df, id=='pb_20446.2009')
 
 if(is2009){
 pb.df <- pb.df %>% 
@@ -26,7 +26,7 @@ pb.df <- pb.df %>%
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20414.2009', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -70,15 +70,28 @@ for (i in 1:nrow(buf.sp)) {
   GeoCrop_mask <- raster::mask(GeoCrop, buf.sp[i,])
   cs[[i]] <- ClassStat(GeoCrop_mask)}
  
- 
-cs2 <- t(sapply(cs, function(i) i[1,]))
 
+# add index number to list elements
 
+for (i in 1:length(cs)){
+  cs[[i]][["Index"]] <- i
+}
 
-#cs3 <- ifelse(cs[[i]]>1, i[2,])  
+# subset list items into class = 3 and class = 0
 
-#{t(sapply(cs, function(i) i[-1,])))}}
- 
+water <- cs[sapply(cs, function(x) x[[1]][[1]]==0)] # subset items for which exists(class = 0)
+ice.only <- cs[sapply(cs, function(x) x[[1]][[1]]==3)] # subset items for which class = 3 only 
+
+ice.only <- t(sapply(ice.only, function(i) i[1,])) 
+water <- t(sapply(water, function(i) i[2,])) 
+
+cs2 <- rbind(water, ice.only) # combine data for class = 3 only  
+
+# Figure out how to convert cs2 to dataframe so can arrange by Index
+
+cs3 <- cs2 %>% arrange(Index) # does not work
+  
+
 
 patch2 <- cbind(buf.sp, cs2)
 patch2 <- st_as_sf(patch2)
@@ -87,8 +100,19 @@ patch <- rbind(patch, patch2)
 
 save(patch, file='Patch.RData')
 
+# ------------------------------------------------------------------------------------------------------------------------- #
+
+head(cs)
 
 
- 
 
 
+
+test <- lapply(cs, function(i) length(i) > 38)
+
+test <- lapply(cs, '[', 2,)
+
+test <- lapply(cs, function(i) i[[1]]==3)
+
+Filter(cs, function(i) length(i) > 38, 1)
+               
