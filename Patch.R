@@ -26,7 +26,7 @@ pb.df <- pb.df %>%
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20414.2009', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20446', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -77,19 +77,34 @@ for (i in 1:length(cs)){
   cs[[i]][["Index"]] <- i
 }
 
-# subset list items into class = 3 and class = 0
+# Create dataframes out of list elements so can join together later
 
-water <- cs[sapply(cs, function(x) x[[1]][[1]]==0)] # subset items for which exists(class = 0)
-ice.only <- cs[sapply(cs, function(x) x[[1]][[1]]==3)] # subset items for which class = 3 only 
+only3 <- lapply(cs, function(x) cs[[x]]$class == 3)
+only3 <- water[water[[1]]$class == 3]
 
-ice.only <- t(sapply(ice.only, function(i) i[1,])) 
-water <- t(sapply(water, function(i) i[2,])) 
+water <- cs[sapply(cs, function(x) x[[1]][[1]]==0)] 
 
-cs2 <- rbind(water, ice.only) # combine data for class = 3 only  
+
+water.only <- water[sapply, function(x) [[1]]]
+
+p2.df <- data.frame(matrix(unlist(p2), nrow = nrow(water), byrow = F)) # this works to convert list to dataframe
+
+water <- t(sapply(water, function(i) i[2,])) # keep only class = 3
+water.df <- data.frame(matrix(unlist(water), nrow = nrow(water), byrow = F)) # this works to convert list to dataframe
+colnames(water.df)<- colnames(water)  # add back column names
+
+ice <- cs[sapply(cs, function(x) x[[1]][[1]]==3)] 
+ice <- t(sapply(ice, function(i) i[1,])) 
+ice.df <- data.frame(matrix(unlist(ice), nrow = nrow(ice), byrow = F)) # this works to convert list to dataframe
+colnames(ice.df)<- colnames(ice)
+
+
+cs2 <- rbind(water.df, ice.df) # combine data for class = 3 only  
+
 
 # Figure out how to convert cs2 to dataframe so can arrange by Index
 
-cs3 <- cs2 %>% arrange(Index) # does not work
+cs3 <- arrange(cs2, Index) # does not work
   
 
 
@@ -102,17 +117,4 @@ save(patch, file='Patch.RData')
 
 # ------------------------------------------------------------------------------------------------------------------------- #
 
-head(cs)
-
-
-
-
-
-test <- lapply(cs, function(i) length(i) > 38)
-
-test <- lapply(cs, '[', 2,)
-
-test <- lapply(cs, function(i) i[[1]]==3)
-
-Filter(cs, function(i) length(i) > 38, 1)
-               
+tail(test)              
