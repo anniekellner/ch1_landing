@@ -9,8 +9,9 @@ library(sf)
 library(raster)
 library(dplyr)
 library(SDMTools)
+library(landscapemetrics)
 
-is2009 = TRUE
+#is2009 = TRUE
 
 #------------------- PREP DATA ----------------------------#
 
@@ -20,13 +21,13 @@ load('Patch.Rdata')
 
 pb.df <- subset(ice.df, id=='pb_20446.2009')
 
-if(is2009){
-pb.df <- pb.df %>% 
-  filter(!(ord.year=='2009199'))}
+#if(is2009){
+#pb.df <- pb.df %>% 
+  #filter(!(ord.year=='2009199'))}
 
-pb.df <- droplevels(pb.df)
+#pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/SIC-TIFs/MASIE/pb_20446', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFsMASIEpb_20446', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -76,6 +77,9 @@ for (i in 1:nrow(buf.sp)) {
 for (i in 1:length(cs)){
   cs[[i]][["Index"]] <- i
 }
+
+# ----------------------------------------------------------------------------------------------------------------------------- #
+# WORKING SCRIPT - TRIAL AND ERROR #
 
 # Create dataframes out of list elements so can join together later
 
