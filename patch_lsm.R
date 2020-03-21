@@ -39,7 +39,7 @@ for (i in 1:length(rasterlist)) {
 st <- stack(stack)
 
 check_landscape(st[[1]]) # rasters look good
-list_lsm(level = "class", type = "area and edge metric")
+list_lsm(level = "class") # to see all class level metrics
 
 # Try using lsm 
 test <- scale_sample(st[[1]], pb.spdf.polar[1:2,],  size = 10000, max_size = 50000, level = "class") # this works!
