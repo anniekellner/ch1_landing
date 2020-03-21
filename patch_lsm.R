@@ -20,6 +20,7 @@ rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs
 
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') # matches MASIE raster
+coords <- cbind(pb.df$X, pb.df$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data = pb.df, proj4string = projection) 
 pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 
@@ -41,11 +42,14 @@ check_landscape(st[[1]]) # rasters look good
 list_lsm(level = "class", type = "area and edge metric")
 
 # Try using lsm 
-scale_sample(st[[1]], pb.spdf.polar[1:2,],  size = 10000, max_size = 50000, what = "lsm_p_area") # this works!
+test <- scale_sample(st[[1]], pb.spdf.polar[1:2,],  size = 10000, max_size = 50000, level = "class") # this works!
 
 cs <- list()
-for (i in 1:nrow(pb.df)) {
-  st2<-st[[which(date==pb.df$ord.year[i])]]
+for (i in 1:nrow(pb.spdf.polar)) {
+  st2<-st[[which(date==pb.spdf.polar$ord.year[i])]]
+  cs[[i]] <- scale_sample(st2, pb.spdf.polar[i], size = 10000, max_size = 50000, level = "class" )
+}
+  
   
 
    
