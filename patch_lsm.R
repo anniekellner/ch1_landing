@@ -85,7 +85,10 @@ for (i in 1:nrow(track)) {
                                  "lsm_c_te"))
 }
 
-save(cs, file = "lsm.RData")  
+
+cs.df <- data.frame(matrix(unlist(cs), byrow = T), stringsAsFactors = FALSE) # convert list to dataframe
+
+save(cs.df, file = "lsm.RData")  
 
    
 sample_lsm(st[[1]], track[1:2,], plot_id = track$id.datetime[1:2], shape = "circle", size = 10000, verbose = TRUE, what = c("lsm_c_area_mn", "lsm_c_pland"))
