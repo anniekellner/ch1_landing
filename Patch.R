@@ -2,6 +2,11 @@
 ### PATCH STATS ################
 ################################
 
+# MASIE FTP: sidads.colorado.edu Directory: /pub/DATASETS/NOAA/G02186/geotiff/4km
+# username: anonymous
+# pw: annie.kellner@colostate.edu
+
+
 rm(list = ls())
 
 library(sp)
@@ -21,11 +26,11 @@ load('Patch.Rdata')
 
 pb.df <- subset(ice.df, id=='pb_20446.2009')
 
-#if(is2009){
-#pb.df <- pb.df %>% 
-  #filter(!(ord.year=='2009199'))}
+if(is2009){
+pb.df <- pb.df %>% 
+  filter(!(ord.year=='2009181'))} # date is missing from MASIE data
 
-#pb.df <- droplevels(pb.df)
+pb.df <- droplevels(pb.df)
 
 rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFsMASIEpb_20446', full.names = TRUE) # bring in all GeoTIFFs by bear
 

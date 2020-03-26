@@ -15,11 +15,12 @@ library(raster)
 library(dplyr)
 library(landscapemetrics)
 
-is2009 = TRUE
+is2009 = FALSE
 
 load('Patch.RData') # check new package against what is already done
 load('Ice_Measurements.RData')
-pb.df <- subset(ice.df, id=='pb_20446.2009')
+load('ded_ids.RData')
+pb.df <- subset(ice.df, id=='pb_06817.2006')
 
 if(is2009){
   pb.df <- pb.df %>% 
@@ -27,7 +28,7 @@ if(is2009){
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_20446', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -85,11 +86,12 @@ for (i in 1:nrow(track)) {
                                  "lsm_c_te"))
 }
 
+cs.df <- do.call(rbind.data.frame, cs) # convert list to dataframe
 
-cs.df <- data.frame(matrix(unlist(cs), byrow = T), stringsAsFactors = FALSE) # convert list to dataframe
 
 save(cs.df, file = "lsm.RData")  
 
+#################################################################################################################################################
    
 sample_lsm(st[[1]], track[1:2,], plot_id = track$id.datetime[1:2], shape = "circle", size = 10000, verbose = TRUE, what = c("lsm_c_area_mn", "lsm_c_pland"))
   
