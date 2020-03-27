@@ -16,13 +16,14 @@ library(dplyr)
 library(landscapemetrics)
 
 is2009 = FALSE
-size = 50000
+size = 10000
 
+load('ice.calc.RData')
 load('Patch.RData') # check new package against what is already done
 load('Ice_Measurements.RData')
 load('ded_ids.RData')
 load('lsm.Rdata')
-pb.df <- subset(ice.df, id=='pb_06817.2006')
+pb.df <- subset(ice.calc, id=='pb_20529.2005')
 
 if(is2009){
   pb.df <- pb.df %>% 
@@ -30,7 +31,7 @@ if(is2009){
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_06817', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_20529', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
