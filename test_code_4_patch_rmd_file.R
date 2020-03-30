@@ -34,11 +34,30 @@ test %>% complete(index, class, fill = list(value = 0)) # HOLY SHIT THIS WORKS!!
  
 lsm10 <- dplyr::filter(lsm, radius_m == 10000) # 10 km radius
 
+
+## Mean Patch Area ##
 area_mn_10 <- lsm10 %>%
   filter(metric == "area_mn") %>%
+  complete(index, class, fill = list(value = 0)) %>%
   filter(class == 3)
 
-# plot
+
+## Clumpiness ##
+
+clumpy_30 <- lsm30 %>%
+  filter(metric == "clumpy") %>%
+  filter(class == 3)
+
+## Cohesion ##
+
+
+cohes_10 <- lsm10 %>%
+  filter(metric == "cohesion") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+# ------------------------------------------------------------------------------------------------------------------------- #
+# plots
 
 ggplot(area_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
   stat_summary(geom = 'line', fun = 'mean') +
@@ -47,9 +66,54 @@ ggplot(area_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
   ylab("Mean Area") +
   ggtitle("Mean Area of Ice Patch") +
   theme_bw()
+
+
+
+# plot - clumpiness 30  km
+
+ggplot(clumpy_30, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Clumpiness") +
+  ggtitle("Clumpiness - 30 km radius") +
+  theme_bw()
+
+# cohesion 10 km
  
+ggplot(cohes_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Cohesion Index") +
+  ggtitle("Cohesion Index - 10 km") +
+  theme_bw()
 
+# edge density
 
+ed_10 <- lsm10 %>%
+  filter(metric == "ed") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
 
+ggplot(ed_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Edge Density") +
+  ggtitle("Edge Density - 10 km") +
+  theme_bw()
 
+# fractal dimension (mean)
 
+frac_mn_10 <- lsm10 %>%
+  filter(metric == "frac_mn") %>%
+  filter(class == 3)
+
+ggplot(frac_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Fractal Dimension Index") +
+  ggtitle("Fractal Dimension Index - 10 km") +
+  theme_bw()

@@ -22,9 +22,13 @@ lsm <- lsm %>%
   group_by(id) %>%
   arrange(id, datetime) %>%
   mutate(index = difftime(last(date), date, units = "days"))
+
+metrics <- unique(lsm$metric)
 ```
 
 # Patch Metric: Mean Area
+
+# 10 km radius around bears
 
 ```{r}
 # Subset
@@ -33,6 +37,7 @@ lsm10 <- dplyr::filter(lsm, radius_m == 10000) # 10 km radius
 
 area_mn_10 <- lsm10 %>%
   filter(metric == "area_mn") %>%
+  complete(index, class, fill = list(value = 0)) %>%
   filter(class == 3)
 
 # plot
@@ -42,7 +47,112 @@ ggplot(area_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
   scale_x_reverse() +
   xlab("Time") +
   ylab("Mean Area") +
-  ggtitle("Mean Area of Ice Patch") +
+  ggtitle("Mean Area of Ice Patch - 10 km radius") +
+  theme_bw()
+```
+
+# 30 km radius
+
+```{r}
+lsm30 <- dplyr::filter(lsm, radius_m == 30000) # 10 km radius
+
+area_mn_30 <- lsm30 %>%
+  filter(metric == "area_mn") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+# plot
+
+ggplot(area_mn_30, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Mean Area") +
+  ggtitle("Mean Area of Ice Patch - 30 km radius") +
+  theme_bw()
+```
+
+# Patch Metric - Cohesion
+
+# 10 km
+
+```{r}
+cohes_10 <- lsm10 %>%
+  filter(metric == "cohesion") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+ggplot(cohes_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Cohesion Index") +
+  ggtitle("Cohesion Index - 10 km") +
+  theme_bw()
+
+```
+
+ # 30  km
+```{r}
+cohes_30 <- lsm30 %>%
+  filter(metric == "cohesion") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+ggplot(cohes_30, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Cohesion Index") +
+  ggtitle("Cohesion Index - 30 km") +
+  theme_bw()
+```
+
+# Metric: Fractal Dimension Index 
+
+# 10 km
+
+```{r}
+frac_mn_10 <- lsm10 %>%
+  filter(metric == "frac_mn") %>%
+  filter(class == 3)
+
+ggplot(frac_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Fractal Dimension Index") +
+  ggtitle("Fractal Dimension Index - 10 km") +
+  theme_bw()
+```
+
+# 30 km
+
+```{r}
+frac_mn_30 <- lsm30 %>%
+  filter(metric == "frac_mn") %>%
+  filter(class == 3)
+
+ggplot(frac_mn_30, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Fractal Dimension Index") +
+  ggtitle("Fractal Dimension Index - 30 km") +
+  theme_bw()
+```
+```{r}
+gyrate_mn_10 <- lsm10 %>%
+  filter(metric == "gyrate_mn") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+ggplot(gyrate_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Radius of Gyration") +
+  ggtitle("Radius of Gyration - 10 km") +
   theme_bw()
 ```
 
