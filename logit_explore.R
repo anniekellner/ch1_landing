@@ -124,5 +124,9 @@ ice.df$id # 12 observations
 nodata <- ice.df$id[!(ice.df$id %in% test$id)] 
 unique(nodata) # ANSWER: 20525.2013, 20414.2009, 20446.2009
 
+# 20525 - start swim date: 8/17/13 00:00:13
+
+pb20525.ice <- subset(ice.df, animal=="pb_20525")
+
 
   
