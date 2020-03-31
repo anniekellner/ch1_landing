@@ -29,5 +29,13 @@ area_mn_10$id.datetime <- paste(area_mn_10$id, area_mn_10$datetime)
 
 area_mn_10 <- area_mn_10 %>% pivot_wider(names_from = c(class), values_from = c(class, value)) # spread rows into columns by class
 
+
 full <- left_join(ice.df, area_mn_10, by = "id.datetime") # join ice.df with lsm df's
-                    
+
+# Change ice value (3) to 0 if NA
+full$value_3[is.na(full$value_3)] <- 0
+full$class_3[is.na(full$class_3)] <- 3
+
+                
+  
+   
