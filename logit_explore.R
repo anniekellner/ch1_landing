@@ -5,6 +5,7 @@
 rm(list = ls())
 
 library(dplyr)
+library(tidyr)
 
 # Load dataframe #
 
@@ -26,16 +27,7 @@ area_mn_10 <- lsm10 %>%
 head(area_mn_10)
 area_mn_10$id.datetime <- paste(area_mn_10$id, area_mn_10$datetime)
 
-test <- setdiff(ice.df$datetime, area_mn_10$datetime)
+area_mn_10 <- area_mn_10 %>% pivot_wider(names_from = c(class), values_from = c(class, value)) # spread rows into columns by class
 
-pb1_ice <- subset(ice.df, animal == "pb_06817")
-pb1_area <- subset(area_mn_10, id == "pb_06817.2006")
-
-test <- subset(ice.df, !(datetime %in% area_mn_10$datetime))
-
-
-test <- full_join(ice.df, area_mn_10)
-
-
-
-test <- pivot_wider(area_mn_10, plot_id, names_from = metric, values_from = value)
+full <- left_join(ice.df, area_mn_10, by = "id.datetime") # join ice.df with lsm df's
+                    
