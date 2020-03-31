@@ -117,3 +117,7 @@ ggplot(frac_mn_10, aes(index, value, color = id, na.rm = TRUE)) +
   ylab("Fractal Dimension Index") +
   ggtitle("Fractal Dimension Index - 10 km") +
   theme_bw()
+
+
+
+
