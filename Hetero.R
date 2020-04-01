@@ -27,17 +27,17 @@ start <- droplevels(start)
 all.v2$ymd <- as.character(ymd(paste(all.v2$year, all.v2$month, all.v2$day))) #get ymd into POSIXct 
 all.v2$ymd <- as.POSIXct(all.v2$ymd, tz='US/Alaska')
 
-pb <- subset(all.v2, animal=='pb_20525' & datetime > '2013-07-17' & datetime < '2013-08-18') 
+pb <- subset(all.v2, animal=='pb_20446' & datetime >= '2009-06-28' & datetime < '2009-07-29') 
 pb$ordinal <- yday(pb$ymd) #change ymd to ordinal date
-pb$ord.year <- paste("2013", pb$ordinal, sep="")
-pb <- head(pb, -3) # remove rows after bear has started swimming
+pb$ord.year <- paste("2009", pb$ordinal, sep="")
+pb <- head(pb, -11) # remove rows after bear has started swimming
 
 #pb <- pb %>% #remove 2009181 because no data in MASIE
   #filter(!(ord.year == '2009181'))
 #pb <- droplevels(pb)
 
 # create rasterstack using TIFs
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_20525', full.names = TRUE) # bring in all files
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_20414', full.names = TRUE) # bring in all files
 
 # separate date component of TIF name to correspond to spdf metadata 
 
@@ -80,7 +80,9 @@ df.new$pct.h20.500 <- NA
 
 # Add missing data to dataframe
 
-missing <- slice(df.new, n()) # select last row from pb dataframe (missing data 4/1/2020)
+b4 <- subset(ice.df, animal=="pb_20414") # 8 missing rows
+
+missing <- df.new %>% slice(tail(row_number(), 8)) # select last row from pb dataframe (missing data 4/1/2020)
 
 ice.df <- rbind(ice.df, missing)
 save(ice.df, file='Ice_Measurements.RData')
