@@ -16,12 +16,12 @@ library(dplyr)
 library(landscapemetrics)
 
 is2009 = FALSE
-size = 50000
+size = 10000
 
 load('Ice_Measurements.RData')
 load('ded_ids.RData')
 load('lsm.Rdata')
-pb.df <- subset(ice.df, id=='pb_32366.2014')
+pb.df <- subset(ice.df, id=='pb_20525.2013')
 
 if(is2009){
   pb.df <- pb.df %>% 
@@ -29,7 +29,7 @@ if(is2009){
 
 pb.df <- droplevels(pb.df)
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_32366_2014', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/pb_20525', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -90,10 +90,15 @@ for (i in 1:nrow(track)) {
 cs.df <- do.call(rbind.data.frame, cs) # convert list to dataframe
 cs.df$radius_m <- size # change to size parameter from loop
 
-lsm.df <- bind_rows(lsm.df, cs.df)
-tail(lsm.df)
+####  Add missing data 04/01/2020  #######
+ 
 
-save(lsm.df, file = "lsm.RData")  
+cs.df <- dplyr::select(cs.df, -id) # remove id column so can do anti-join
+missing <- anti_join(cs.df, lsm)
+
+lsm <- bind_rows(lsm, missing)
+
+save(lsm, file = "lsm.RData") 
 
 
 #################################################################################################################################################
