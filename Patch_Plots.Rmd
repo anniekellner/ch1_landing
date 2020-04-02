@@ -15,7 +15,7 @@ load('lsm.RData')
 
 # prep data - all
 
-lsm <- separate(lsm.df, col = "plot_id", into = c("id", "date", "time"), sep = " ", remove = FALSE)
+lsm <- separate(lsm, col = "plot_id", into = c("id", "date", "time"), sep = " ", remove = FALSE)
 lsm$datetime <- paste(lsm$date, lsm$time); lsm$datetime <- as.POSIXct(lsm$datetime) # add new column for datetime
 lsm$date <- ymd(lsm$date)
 lsm <- lsm %>%
@@ -24,6 +24,8 @@ lsm <- lsm %>%
   mutate(index = difftime(last(date), date, units = "days"))
 
 metrics <- unique(lsm$metric)
+
+save(lsm, file = 'lsm.RData')
 ```
 
 # Patch Metric: Mean Area
@@ -71,6 +73,30 @@ ggplot(area_mn_30, aes(index, value, color = id, na.rm = TRUE)) +
   ggtitle("Mean Area of Ice Patch - 30 km radius") +
   theme_bw()
 ```
+
+
+```{r}
+lsm50 <- dplyr::filter(lsm, radius_m == 50000) # 50 km radius
+
+area_mn_50 <- lsm50 %>%
+  filter(metric == "area_mn") %>%
+  complete(index, class, fill = list(value = 0)) %>%
+  filter(class == 3)
+
+# plot
+
+ggplot(area_mn_50, aes(index, value, color = id, na.rm = TRUE)) +
+  stat_summary(geom = 'line', fun = 'mean') +
+  scale_x_reverse() +
+  xlab("Time") +
+  ylab("Mean Area") +
+  ggtitle("Mean Area of Ice Patch - 50 km radius") +
+  theme_bw()
+```
+
+
+
+
 
 # Patch Metric - Cohesion
 
