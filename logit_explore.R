@@ -13,7 +13,7 @@ library(ggplot2)
 load('Ice_Measurements.RData')
 load('lsm.RData')
 
-ice.df <- select(ice.df, animal:datetime, start.swim, id:ord.year)
+ice.df <- dplyr::select(ice.df, animal:datetime, start.swim, id:ord.year)
 lsm$index <- as.numeric(lsm$index)
 
 # subset lsm by radius
@@ -111,6 +111,7 @@ par(mar = c(4,4,1,1))
 
 ######  TROUBLESHOOTING     #################################################################################
 
+## RESOLVED 04/01/2020
 # which ice.df animals do not have start.swim date 
 
 load('all.v2.RData')
