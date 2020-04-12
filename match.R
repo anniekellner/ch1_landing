@@ -9,6 +9,7 @@ rm(list = ls())
 library(dplyr)
 library(sf)
 library(ggplot2)
+library(sp)
 
 
 # load data
@@ -70,7 +71,7 @@ library(tmap)
 tmap_mode("plot")
 tm_shape(bears2006.sf) + tm_symbols(col = "animal", shape = "month", palette = sf.colors(3))
 
-st_write(bears2006.sf, dsn = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears_GIS/Location Data', layer = 'compare2006', driver = 'ESRI Shapefile', update = TRUE)
+st_write(bears2006.sf, "Compare2006.shp")
 
 
 
