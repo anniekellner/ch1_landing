@@ -2,7 +2,9 @@
 ##      Denning Bears   ##################
 ##########################################
 
-# See whether data exists for bears the year they emerged, or the year prior to emergence from den
+# See whether data exists for bears during year when they enter den, have a coy, have a yearling
+# Add reproductive status to all.v2 database
+# Account for loss of coy (revise status)
 
 
 rm(list = ls())
@@ -19,21 +21,49 @@ colnames(den) <- c("Den_Emerge", "Subpop", "BearID")
 str(den)
 den$BearID <- str_trim(den$BearID, side = "right") # trim whitespace
 
-den$id <- paste(den$BearID, den$Den_Emerge, sep = '.')
+# ---------------------------------------------------------------------------------------------------------------------------- #
 
-# which bears have data from year they EMERGED from den (coy)
+den$id.coy <- paste(den$BearID, den$Den_Emerge, sep = '.')
+length(which(den$id.coy %in% all.v2$id)) # which bears have data from year they EMERGED from den (coy)
 
-which(den$id %in% all.v2$id) 
-# 2  8 13 14 22 24 25 26 27 28 29 30 31 32 33 34 37
+all.v2$coy <- ifelse(all.v2$id %in% den$id.coy, 1, 0) # Add coy to main dataframe
 
 
-# which bears have data fall before (preg)
+# which bears have data fall before (DenYr)
+
 den$Den_Emerge <- as.numeric(den$Den_Emerge)
-den <- den %>% mutate(yrb4 = Den_Emerge - 1)
-den$id2 <- paste(den$BearID, den$yrb4, sep = '.') 
-which(den$id2 %in% all.v2$id) # which bears have data from year BEFORE denning 
-#8 10 16 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37
+den <- den %>% mutate(DenYr = Den_Emerge - 1)
+den$id.den <- paste(den$BearID, den$DenYr, sep = '.') 
 
+length(which(den$id.den %in% all.v2$id)) # how many bears have data from year they entered den 
+
+all.v2$DenYr <- ifelse(all.v2$id %in% den$id.den, 1, 0) # add DenYr to main df
+
+# which bears have yearlings
+
+den$Den_Emerge <- as.numeric(den$Den_Emerge)
+den <- den %>% mutate(yrAfter = Den_Emerge + 1)
+den$id.yearling <- paste(den$BearID, den$yrAfter, sep = '.')
+
+which(den$id.yearling %in% all.v2$id) # which bears have data from year AFTER denning 
+
+all.v2$yearling <- ifelse(all.v2$id %in% den$id.yearling, 1, 0) # add yearling to main df
+
+# Look at data
+
+DenYr <- subset(all.v2, DenYr ==1)
+coy <- subset(all.v2, coy==1)
+yearling <- subset(all.v2, yearling==1)
+
+# bears that den in consecutive years (account for loss of coy)
+
+all.v2$coy[all.v2$coy == 1 & all.v2$DenYr ==1] <- 0 # change coy to 0 if both coy & denYr
+
+all.v2$yearling[all.v2$animal == 'pb_20446'] <- 0 # change yearling to 0 for pb_20446 (better would have been DenYr ==1 & Yearling == 1)
+
+save(all.v2, file = 'all_v2.RData')
+
+# -------------------------------------------------------------------------------------------- #
 
 allden <- subset(all.v2, all.v2$id %in% den$id)
 allden <- droplevels(allden)
