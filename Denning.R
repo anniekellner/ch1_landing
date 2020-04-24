@@ -34,7 +34,7 @@ den$id2 <- paste(den$BearID, den$yrb4, sep = '.')
 which(den$id2 %in% all.v2$id) # which bears have data from year BEFORE denning 
 #8 10 16 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37
 
-<<<<<<< HEAD
+
 allden <- subset(all.v2, all.v2$id %in% den$id)
 allden <- droplevels(allden)
 coy <- subset(allden, month > 5 & month < 11)
@@ -45,7 +45,9 @@ unique(coy$id)
 preg <- subset(all.v2, all.v2$id %in% den$id2)
 preg <- subset(preg, month > 5 & month < 11)
 preg <- droplevels(preg)
-=======
+
+# ---------------------------------------------------------------------------------- #
+
 # which bears are land bears when pregnant?
 
 # Load land bears
@@ -61,7 +63,7 @@ which(den$id %in% ows.land$id) # which are land bears with COYs
 which(den$id2 %in% ows.land$id) # which are land bears while pregnant (den the following winter on land)
 
 
->>>>>>> 3476d6d73eca93dda387ca9048e6c1fb99ffb7ca
+
 
 
 
