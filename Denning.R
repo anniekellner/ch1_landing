@@ -65,16 +65,7 @@ save(all.v2, file = 'all_v2.RData')
 
 # -------------------------------------------------------------------------------------------- #
 
-allden <- subset(all.v2, all.v2$id %in% den$id)
-allden <- droplevels(allden)
-coy <- subset(allden, month > 5 & month < 11)
-coy <- droplevels(ows)
-
-unique(coy$id)
-
-preg <- subset(all.v2, all.v2$id %in% den$id2)
-preg <- subset(preg, month > 5 & month < 11)
-preg <- droplevels(preg)
+all.v2$ows <- ifelse(all.v2$month > 5 & all.v2$month < 11,1,0) # create column for ows
 
 # ---------------------------------------------------------------------------------- #
 
