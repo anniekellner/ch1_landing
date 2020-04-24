@@ -61,27 +61,11 @@ all.v2$coy[all.v2$coy == 1 & all.v2$DenYr ==1] <- 0 # change coy to 0 if both co
 
 all.v2$yearling[all.v2$animal == 'pb_20446'] <- 0 # change yearling to 0 for pb_20446 (better would have been DenYr ==1 & Yearling == 1)
 
-save(all.v2, file = 'all_v2.RData')
-
-# -------------------------------------------------------------------------------------------- #
-
 all.v2$ows <- ifelse(all.v2$month > 5 & all.v2$month < 11,1,0) # create column for ows
 
-# ---------------------------------------------------------------------------------- #
-
-# which bears are land bears when pregnant?
-
-# Load land bears
-load('ows_land.RData')
-save(ows.land, file = 'ows_land.RData') # save land bears to repo
-
-ows.land$id <- paste(ows.land$animal, ows.land$year, sep = '.')
-
-which(den$id %in% ows.land$id) # which are land bears with COYs
-#  2 13 14 34
+#save(all.v2, file = 'all_v2.RData')
 
 
-which(den$id2 %in% ows.land$id) # which are land bears while pregnant (den the following winter on land)
 
 
 
