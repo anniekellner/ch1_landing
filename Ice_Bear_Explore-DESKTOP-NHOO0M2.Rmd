@@ -1,7 +1,13 @@
-######################################################
-#########   EXPLORE ICE BEARS   ######################
-######################################################
+---
+title: "Explore Ice Bears"
+output: html_notebook
+---
 
+# Exploring Ice Bears
+
+### Reproductive Status
+
+```{r}
 library(sf)
 library(dplyr)
 library(sp)
@@ -19,31 +25,7 @@ setwd('C:/Users/akell/Documents/ArcGIS') # GIS data
 
 # projection
 
-polar.stereo <- CRS('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs')
-
-# Create land bear & ice bear distinction in database
-
-#ows.land$id.datetime <- paste(ows.land$id, ows.land$datetime, sep = " ")
-#all.v2$land_bear_ows <- ifelse(all.v2$id.datetime %in% ows.land$id.datetime, 1, 0) # column for land bear during ows
-#save(all.v2, file = 'all_v2.RData')
-
-# Spatial Data
-
-land <- st_read('./Land Shapefiles/AK_CA_5kbuff.shp') # AK and Canada w/ 5K buffer
-land <- st_transform(land, albers.proj)
-land_crop <- st_crop(land, st_bbox(ows))
-
-bone <- st_read('./Bonepiles/bonepiles.shp')
-bone <- st_transform(bone, albers.proj)
-
-#plot(st_geometry(land_crop))
-
-
-# plot to make sure projections match and points look good
-
-#ggplot() +
-  #geom_sf(data = ows) +
-  #geom_sf(data = land_crop, fill = "grey") 
+albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
 
 # Function to turn df into sf (cannot droplevels in sf object so always need to start w df)
 
@@ -53,7 +35,11 @@ DFtoSF <- function(df) {
   sf.alb <- st_transform(sf.wgs, albers.proj)
   return(sf.alb)
 }
+```
 
+# Denning Bears (OWS while they are pregnant)
+
+```{r}
 #Denning Bears
 den <- subset(all.v2, DenYr == 1 & ows == 1)
 bears <- DFtoSF(den)
@@ -63,12 +49,15 @@ bears <- DFtoSF(den)
 tmap_mode("view") # in view mode, land fills in
 
 tm_shape(bears) +
-  tm_symbols(col = "month") +
+  tm_symbols(col = "month", popup.vars = "year", "month", "day") +
   tm_facets(by = "animal") +
   tmap_options(limits = c(facets.view = 20))
   
+```
 
 # Coys
+
+```{r}
 
 coy <- subset(all.v2, coy ==1 & ows == 1)
 coy <- (DFtoSF(coy))
@@ -76,10 +65,13 @@ coy <- (DFtoSF(coy))
 tm_shape(coy) +
   tm_symbols(col = "month", popup.vars = c("year", "month")) +
   tm_facets(by = "animal") +
+  tm_shape(bone) + tm_symbols(col = "green") +
   tmap_options(limits = c(facets.view = 8))
+```
 
 # Yearling
 
+```{r}
 yearling <- subset(all.v2, yearling == 1 & ows ==1)
 yearling <- DFtoSF(yearling)
 
@@ -87,8 +79,12 @@ tm_shape(yearling) +
   tm_symbols(col = "month", popup.vars = c("year", "month", "day")) +
   tm_shape(bone) +
   tm_dots(col = "green", size = 0.08, legend.show = TRUE)
+```
 
-# All ice bears
+
+# Ice Bears
+
+```{r}
 
 ice <- subset(all.v2, yearling == 0 & coy == 0 & DenYr == 0 & ows == 1 & land_bear_ows == 0)
 
@@ -108,10 +104,24 @@ viewPB <- function(bear){
   
 }
 
-viewPB('pb_20479.2006') 
+#viewPB('pb_20479.2006') # view individual bear
+```
+
+# View all ice bears
+
+```{r}
+# View all ice bears
+
+ice <- DFtoSF(ice)
+
+tm_shape(ice) +
+  tm_symbols(col = "month", popup.vars = c("year", "month", "day")) +
+  tmap_options(limits = c(facets.view = 105)) +
+  tm_facets("id", free.coords = TRUE)
+
+```
 
 
-length(unique(ice$id))  # 105 ice bears with > 100 GPS points
 
 
 
