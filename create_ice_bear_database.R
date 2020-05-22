@@ -26,7 +26,7 @@ DFtoSF <- function(df) {
 
 # remove ice bears with insufficient data
 
-ice <- subset(all.v2, month > 5 & month < 11 & land_bear_ows == 0)
+ice <- subset(all.v2, month > 4 & month < 12 & land_bear_ows == 0)
 
 noData <- ice %>% # remove bears with < 100 data points
   add_count(id) %>%
@@ -36,8 +36,8 @@ ice <- anti_join(ice, noData) # 133 bears
 
 rem <- c("pb_20926.2015", "pb_20474.2009", "pb_20492.2008", "pb_20694.2004", "pb_21402.2016", "pb_21403.2016", "pb_22299.2015", "pb_22305.2015","pb_22318.2016", "pb_32362.2015", "pb_32608.2008", "pb_32921.2016")
 
-ice <- ice %>% # these were from visual inspecteion of trajectories
+ice <- ice %>% # these were from visual inspection of trajectories
   filter(!(id %in% rem))
 
-
+save(ice, file = 'ice_bears_may2nov.RData')
 

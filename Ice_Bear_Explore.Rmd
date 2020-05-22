@@ -25,15 +25,15 @@ setwd('C:/Users/akell/Documents/ArcGIS') # GIS data
 
 # projection
 
-albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
+polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
 
 # Function to turn df into sf (cannot droplevels in sf object so always need to start w df)
 
 DFtoSF <- function(df) {
   df <- droplevels(df)
   sf.wgs <- st_as_sf(df, coords = c('gps_lon', 'gps_lat'), crs = 4326, dim = 'XY')
-  sf.alb <- st_transform(sf.wgs, albers.proj)
-  return(sf.alb)
+  sf.ps <- st_transform(sf.wgs, polar.stereo)
+  return(sf.ps)
 }
 ```
 
@@ -86,7 +86,7 @@ tm_shape(yearling) +
 
 ```{r}
 
-ice <- subset(all.v2, yearling == 0 & coy == 0 & DenYr == 0 & ows == 1 & land_bear_ows == 0)
+ice <- subset(all.v2, month > 5 & month < 11 & land_bear_ows == 0)
 
 noData <- ice %>% # remove bears with < 100 data points
   add_count(id) %>%
@@ -111,12 +111,13 @@ viewPB <- function(bear){
 
 ```{r}
 # View all ice bears
+tmap_mode("view")
 
 ice <- DFtoSF(ice)
 
 tm_shape(ice) +
   tm_symbols(col = "month", popup.vars = c("year", "month", "day")) +
-  tmap_options(limits = c(facets.view = 105)) +
+  tmap_options(limits = c(facets.view = 133)) +
   tm_facets("id", free.coords = TRUE)
 
 ```
