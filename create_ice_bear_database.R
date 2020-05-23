@@ -41,3 +41,16 @@ ice <- ice %>% # these were from visual inspection of trajectories
 
 save(ice, file = 'ice_bears_may2nov.RData')
 
+### ----- Data Exploration  ------------------------------------------------------------------------------------------- ###
+
+# how many fixes per day?
+
+fix <- ice %>%
+  group_by(id, ymd) %>%
+  arrange(id, ymd) %>%
+  summarise(n())
+
+mean(fix$`n()`) # mean daily fix = 9.34
+
+
+
