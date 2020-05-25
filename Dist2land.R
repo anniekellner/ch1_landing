@@ -10,6 +10,9 @@ library(sf)
 library(sp)
 library(dplyr)
 library(ggplot2)
+library(tmap)
+library(lwgeom)
+library(proj4)
 
 # LOAD DATA --------------------------------------------------------------------------------- #
 
@@ -18,49 +21,63 @@ load('land_bears_ows.RData')
 polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
 
 land <- st_read('C:/Users/akell/Documents/ArcGIS/Land Shapefiles/AK_CA_5kbuff.shp')
-land <- st_transform(land, polar.stereo)
+
+# Verify
+
+land.map <- tm_shape(land) + 
+  tm_polygons()
+
+projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")   # albers eq. area 55-65 lat
+
 
 # Function to create sf object
-DFtoSF <- function(df) {
+DFtoSF <- function(df, projection) {
   sf.wgs <- st_as_sf(df, coords = c('gps_lon', 'gps_lat'), crs = 4326, dim = 'XY')
-  sf.ps <- st_transform(sf.wgs, polar.stereo)
-  return(sf.ps)
+  sf.project <- st_transform(sf.wgs, projection)
+  return(sf.project)
 }
+pb <- DFtoSF(pb, projection)
 
-pb <- DFtoSF(land.bears.all.ows)
+# Verify
+
+land.map +
+  tm_shape(pb) + 
+  tm_dots()
+
+# crop land shapefile
+
+land.crop <- st_crop(land, xmin = -596311, ymin = 2083889, xmax = 850962, ymax = 3576142)
+
 
 # plot to make sure projections match and points look good
 
 ggplot() +
-  geom_sf(data = land, fill = "grey") +
+  geom_sf(data = land.crop, fill = "grey") +
   geom_sf(data = pb) 
+
+land.ps <- st_transform(land.crop, polar.stereo)
+pb.ps <- st_transform(pb, polar.stereo)
 
 # ---------   DISTANCE ANALYSIS   ------------------------------------------ #
 
 dist <- vector()
-dist <- st_distance(pb, land, by_element = TRUE)
+dist <- st_distance(pb.ps, land.ps, by_element = TRUE)
 
-pb$dist2land <- cbind(matrix(dist))
+pb.ps$dist2land <- cbind(matrix(dist))
 
 save(pb, file = 'land_bears_ows.RData')
 
 # -------------------------------------------------------------------------- #
 
-# Verify
-
-# land polygon is invalid
-library(lwgeom)
-land <- st_make_valid(land)
-
 # check first ten points
 
-test <- pb[1:10,]
+test <- pb.ps[356:35655,]
 test <- st_as_sf(test)
 
 library(tmap)
 tmap_mode("view")
 
-land.map <- tm_shape(land) +
+land.map <- tm_shape(land.ps) +
   tm_polygons() 
 
 land.map +
