@@ -62,9 +62,9 @@ tm_shape(pb) + # plot points first so frame is large enough to accompany points 
 dist <- vector()
 dist <- st_distance(pb, land.ps, by_element = TRUE)
 
-pb.ps$dist2land <- cbind(matrix(dist))
+pb$dist2land <- cbind(matrix(dist))
 
-save(pb, file = 'land_bears_ows.RData')
+save(pb, file = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/land_bears_ows.RData')
 
 # -------------------------------------------------------------------------- #
 
