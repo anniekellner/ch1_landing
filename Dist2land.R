@@ -1,5 +1,5 @@
 ###############################################
-#####   Distance to land    ###################
+#####   Distance to land  - land bears  ###################
 ###############################################
 
 # Calculate distance from land bears to land
