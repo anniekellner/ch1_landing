@@ -8,9 +8,32 @@ library(dplyr)
 library(tidyr)
 library(magrittr)
 library(lubridate)
+library(tmap)
+library(sf)
 
 
 load('land_bears_ows.RData')
+
+# remove undecided bears
+
+pb <- filter(pb, id != "pb_20413.2006")
+pb <- filter(pb, id != "pb_20418.2005")
+pb <- filter(pb, id != "pb_20520.2012")
+pb <- filter(pb, id != "pb_20529.2004")
+pb <- filter(pb, id != "pb_20333.2008")
+pb <- filter(pb, id != "pb_21307.2012")
+pb <- filter(pb, id != "pb_21307.2014")
+pb <- filter(pb, id != "pb_20446.2009")
+
+# visual inspection
+
+tmap_mode("view")
+
+tm_shape(pb) +
+  tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
+  tm_facets(by = "id") +
+  tmap_options(limits = c(facets.view = 26))
+
 
 end.swim <- subset(pb, end.swim == 1) # latest arrival on shore is 9/22
 
