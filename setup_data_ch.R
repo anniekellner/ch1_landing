@@ -1,5 +1,5 @@
 ##############################################################
-#####       Land Bear Database for Survival Model   ##########
+#####       Land Bear Database for Known-Fate Survival Model   ##########
 ##############################################################
 
 rm(list = ls())
@@ -35,16 +35,32 @@ tm_shape(pb) +
   tmap_options(limits = c(facets.view = 26))
 
 
+pb$on.ice <- ifelse(pb$swim == 1 | pb$land == 1, 0, 1)
+
+
+
+testdata <- subset(pb, id == "pb_21237.2011")
+
 end.swim <- subset(pb, end.swim == 1) # latest arrival on shore is 9/22
 
 yday("2009-09-22")
 
-mydata <- dplyr::select(pb, id, ymd, land)
+mydata <- dplyr::select(pb, id, ymd, land, swim, )
+
+# denote first time bear is on land 
+# For KF, need to lag 'land' by one interval (see Chapter 16, Cooch & White 2020)
+
+
 
 mydata$ordinal <- yday(mydata$ymd) # create column for ordinal dates to standardize across years
-mydata$on.ice <- ifelse(mydata$land == 0,1,0) # reverse 1 and 0 for model format
 
-mydata <- select(mydata, -land)
+mydata$on.ice <- ifelse(mydata$land == 0,1,0) # reverse 1 and 0 for model format
+mydata$on.ice <- ifelse(mydata$start.swim ===========)
+
+
+
+
+#mydata <- select(mydata, -land)
 mydata <- select(mydata, -ymd)
 
 # Create capture histories
