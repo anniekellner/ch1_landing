@@ -13,7 +13,7 @@ library(tmap)
 library(sf)
 
 load('land_bears_ows.RData')
-lb <- land.bears.all.ows
+
 
 data("Blackduck") # example from RMark
 head(Blackduck)
@@ -49,11 +49,13 @@ prep_data <- function(df) {
     df <- as_tibble(df)
     df$on.ice <- ifelse(df$swim == 1 | df$land == 1, 0, 1)
     df$ordinal <- yday(df$ymd)
-    df <- select(df, id, ymd, ordinal, on.ice, land)
+    df <- select(df, id, ymd, ordinal, on.ice, land, start.swim)
   return(df)
 }
 
 ch <- prep_data(lb)
+
+ss <- subset(lb, start.swim == 1) # 12 bears with start swim date
 
 # ---   Format capture history (ch) for known-fate models ----------------------- #
 
@@ -70,31 +72,41 @@ ch <- ch %>% # if there were both on and off land observations in a single day, 
   slice(1) %>%
   distinct() # remove duplicates
 
+# No start.swim entries were eliminated when first daily observation taken
+
+
+# Remove bears with < 7 days on land
+
 ch <- ch %>%
   group_by(id) %>%
   arrange(id, ordinal) %>%
   mutate(days.on.land = cumsum(land))
 
+seven.days <- subset(ch, land == 1 & days.on.land > 6) # >= 7 days on land
+
+seven.days.ids <- unique(seven.days$id) # list of bears that spend >=7 days on land
+ch <- subset(ch, id %in% seven.days.ids) 
+
+# fill in missing ordinal days with number; eh1 with 0 because animal not observed
+
 ch <- ch %>%
   group_by(id) %>%
-  complete(ordinal = 152:295, fill = list(eh1 = 0)) # fill in missing ordinal days with number; eh1 with 0 because animal not observed
+  complete(ordinal = 152:295, fill = list(eh1 = 0)) 
 
 
+# Encounter history = 1 on occasion BEFORE animal is known to be swimming
 
-
-ch %>%
+ch <- ch %>% 
   group_by(id) %>%
-  mutate(flag = )
-  
-
-land.bears <- ows %>% # create column for number of days spent on land by individual bear
-  group_by(id) %>%
-  arrange(id, datetime) %>%
-  mutate(days.on.land = cumsum(land))
+  arrange(id, ordinal) %>%
+  mutate(eh2 = if_else(lead(start.swim == 1), 1, 0))
 
 
   
-  mutate(eh1 = if_else(ordinal == 152 |  )
+  
+ 
+         
+
  
 
 ch <- ch %>%
@@ -109,18 +121,10 @@ test <- ch %>%
   )
   
   
-  mutate(eh1 = if_else(ordinal == 152) | lead(on.ice == 1)) %>%
+
 
   
   
-  x= flag.15 %>%
-  group_by(id) %>%
-  arrange(id,datetime) %>%
-  mutate(time.15 = ifelse(flag.15==0 | lag(flag.15)==0,
-                          0, difftime(datetime, lag(datetime), units='days'))) %>%
-  mutate(cumtime.15 = cumsum(ifelse(is.na(time.15), 0, time.15)) + time.15*0) %>%
-  mutate(pct.days.below15 = cumtime.15/30) %>%
-  mutate(index=difftime(last(ymd), ymd, units='days')) 
-  
+
 
   
