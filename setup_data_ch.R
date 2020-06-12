@@ -87,9 +87,12 @@ ch <- subset(ch, id %in% seven.days.ids)
 
 # fill in missing ordinal days with number; eh1 with 0 because animal not observed
 
+ch <- subset(ch, ch$ordinal < 296)
+
+
 ch <- ch %>%
   group_by(id) %>%
-  complete(ordinal = 152:295, fill = list(eh1 = 0)) 
+  complete(ordinal = 152:295, fill = list(eh1 = 0)) # 295 = last date of arrival on land
 
 ch[,9][is.na(ch[,9])] <- 0 # change NA's to 0 for ch$eh1
 
@@ -110,27 +113,22 @@ ch <- ch %>%
   arrange(id, ordinal) %>%
   mutate(eh1 = replace(eh1, row_number() > which(eh2==1)[1] & eh1 == 1, 0)) 
   
+ch$eh <- paste0(ch$eh1, ch$eh2) # create column for encounter history with 10,11,00 pairs
+
 
 # -------------------------------------------------------------------------------------------------------- #
  
 # Create capture histories
 # https://jamesepaterson.github.io/jamespatersonblog/07_creatingcapturehistories
      
+ch <- dplyr::select(ch, id, ordinal, eh)
 
- 
-
-ch <- ch %>%
-  group_by(id) %>%
-  distinct() %>%
-  pivot_wider()
-
-test <- ch %>%
-  pivot_wider(
+ch <- pivot_wider(ch,
     names_from = ordinal,
-    values_from = on.ice
-  )
-  
-  
+    values_from = eh)
+
+ch <- ch %>% unite("eh", 2:tail(names(.),1), sep = "")
+
 
 
   
