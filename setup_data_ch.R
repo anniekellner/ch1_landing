@@ -72,7 +72,9 @@ ch <- ch %>% # if there were both on and off land observations in a single day, 
   slice(1) %>%
   distinct() # remove duplicates
 
-# No start.swim entries were eliminated when first daily observation taken
+ss <- subset(ch, start.swim == 1)
+
+# start.swim entries were eliminated when first daily observation taken
 
 
 # Remove bears with < 7 days on land
@@ -101,11 +103,21 @@ ch <- ch %>%
   arrange(id, ordinal) %>%
   mutate(eh2 = if_else(lead(start.swim == 1), 1, 0))
 
+ch[,9][is.na(ch[,9])] <- 0 # change NA's to 0
 
+# Change 1's in eh1 to 0's following start.swim
+
+ch <- ch %>%
+  group_by(id) %>%
+  arrange(id, ordinal) %>%
+  mutate(eh1 = replace(eh1, row_number() > which(eh2==1)[1] & eh1 == 1, 0)) 
   
-  
+
+test <- subset(ch, eh2 == 1)
+ss <- subset(ch, start.swim == 1)
  
-         
+
+     
 
  
 
