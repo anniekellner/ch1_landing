@@ -9,14 +9,14 @@ library(dplyr)
 library(tidyr)
 library(magrittr)
 library(lubridate)
-library(tmap)
-library(sf)
+#library(tmap)
+#library(sf)
 
 load('land_bears_ows.RData')
 
 
-data("Blackduck") # example from RMark
-head(Blackduck)
+#data("Blackduck") # example from RMark
+#head(Blackduck)
 
 # remove undecided bears
 
@@ -31,16 +31,12 @@ lb <- filter(lb, id != "pb_20446.2009")
 
 # visual inspection
 
-tmap_mode("view")
+#tmap_mode("view")
 
-tm_shape(lb) +
-  tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
-  tm_facets(by = "id") +
-  tmap_options(limits = c(facets.view = 16))
-
-
-data("Blackduck") # example from RMark
-head(Blackduck)
+#tm_shape(lb) +
+  #tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
+  #tm_facets(by = "id") +
+ # tmap_options(limits = c(facets.view = 16))
 
 
 # --  FUNCTIONS  ---------------------------------------------------------------------------- #
@@ -55,26 +51,26 @@ prep_data <- function(df) {
 
 ch <- prep_data(lb)
 
-ss <- subset(lb, start.swim == 1) # 12 bears with start swim date
+ss <- subset(ch, start.swim == 1) # 12 bears with start swim date
 
 # ---   Format capture history (ch) for known-fate models ----------------------- #
+# add columns eh1 and eh2
+# eh1: 1 = bear was monitored; 0 = bear was censored
+# eh2: 1 = bear left ice during following interval; 0 = bear did not die during following interval 
 
-
-# Create capture histories
-# https://jamesepaterson.github.io/jamespatersonblog/07_creatingcapturehistories
 # Chapter 16, Cooch & White 2020
 
  
 ch$eh1 <- 1 # all recorded observations = 1 (first number in paired ch)
 
-ch <- ch %>% # if there were both on and off land observations in a single day, took first
+ch <- ch %>% # if there were both on and off land observations in a single day, take last
   group_by(id, ordinal) %>%
-  slice(1) %>%
-  distinct() # remove duplicates
-
-ss <- subset(ch, start.swim == 1)
-
-# start.swim entries were eliminated when first daily observation taken
+  mutate(swim.day = cumsum(start.swim)) %>% # so that swimday = 1
+  slice(n()) %>% # select last row
+  distinct()
+  
+ 
+ss <- subset(ch, swim.day == 1) # all swim days are retained (n = 12)
 
 
 # Remove bears with < 7 days on land
@@ -95,15 +91,17 @@ ch <- ch %>%
   group_by(id) %>%
   complete(ordinal = 152:295, fill = list(eh1 = 0)) 
 
+ch[,9][is.na(ch[,9])] <- 0 # change NA's to 0 for ch$eh1
+
 
 # Encounter history = 1 on occasion BEFORE animal is known to be swimming
 
 ch <- ch %>% 
   group_by(id) %>%
   arrange(id, ordinal) %>%
-  mutate(eh2 = if_else(lead(start.swim == 1), 1, 0))
+  mutate(eh2 = if_else(lead(swim.day == 1), 1, 0))
 
-ch[,9][is.na(ch[,9])] <- 0 # change NA's to 0
+ch[,10][is.na(ch[,10])] <- 0 # change NA's to 0 for ch$eh2
 
 # Change 1's in eh1 to 0's following start.swim
 
@@ -113,10 +111,10 @@ ch <- ch %>%
   mutate(eh1 = replace(eh1, row_number() > which(eh2==1)[1] & eh1 == 1, 0)) 
   
 
-test <- subset(ch, eh2 == 1)
-ss <- subset(ch, start.swim == 1)
+# -------------------------------------------------------------------------------------------------------- #
  
-
+# Create capture histories
+# https://jamesepaterson.github.io/jamespatersonblog/07_creatingcapturehistories
      
 
  
