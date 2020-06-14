@@ -26,9 +26,12 @@ all.v2 <- all.v2 %>%
   mutate(repro = replace(repro, coy == 1, 2)) %>%
   mutate(repro = replace(repro, yearling == 1, 3))
 
+#test <- subset(all.v2, coy ==1)
+
 repro <- all.v2 %>%
   select(id, repro) %>%
-  distinct()
+  distinct() 
+
   
 # remove id's that are not in ch dataset
 ch.ids <- unique(ch.all$id)
@@ -36,6 +39,20 @@ repro <- subset(repro, id %in% ch.ids)
 
 ind <- left_join(ch.all, repro)
 
+# ---------------------------------------------------------------------------------------------------- #
+
+# Formatting for trial run via A. Dillon
+
+ind$group <- 1 
+
+ind$id2 <- paste0("/*", ind$id, "*/")
+ind <- ungroup(ind)
+
+ind <- dplyr::select(ind, -id)
+
+ind <- select(ind, id2, ch, group, repro)
+
+write.csv(ind, file = "test_run.csv") 
 
 
 
