@@ -149,18 +149,18 @@ load('ice_bears_may2nov.RData')
 # visual inspection
 # lots of bears with limited data, but going to include preliminarily
 
-library(raster)
+#library(raster)
 
-albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
+#albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
 
-ice <- DFtoSF(ice)
+#ice <- DFtoSF(ice)
 
-tmap_mode("view")
+#tmap_mode("view")
 
-tm_shape(ice) +
-tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
-tm_facets(by = "id") +
-tmap_options(limits = c(facets.view = 153))
+#tm_shape(ice) +
+#tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
+#tm_facets(by = "id") +
+#tmap_options(limits = c(facets.view = 153))
 
 # ----------------------------------------------------------------------------------------------- #
 
@@ -218,3 +218,7 @@ ch.ice <- pivot_wider(ch.ice,
                   values_from = eh)
 
 ch.ice <- ch.ice %>% unite("eh", 2:tail(names(.),1), sep = "")
+
+# combine ch and ch.ice into one dataset
+
+ch.all <- rbind(ch, ch.ice)
