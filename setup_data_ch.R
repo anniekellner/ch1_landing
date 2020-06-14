@@ -1,6 +1,6 @@
-################################################
+##########################################################
 #######   FORMAT DATA FOR RMARK   ########################
-################################################
+##########################################################
 
 rm(list = ls())
 
@@ -9,8 +9,10 @@ library(dplyr)
 library(tidyr)
 library(magrittr)
 library(lubridate)
-#library(tmap)
-#library(sf)
+library(tmap)
+library(sf)
+
+# -----   LAND BEARS    --------------------------------------------------------------------------- #
 
 load('land_bears_ows.RData')
 
@@ -49,9 +51,14 @@ prep_data <- function(df) {
   return(df)
 }
 
-ch <- prep_data(lb)
+DFtoSF <- function(df) {
+  df <- droplevels(df)
+  sf.wgs <- st_as_sf(df, coords = c('gps_lon', 'gps_lat'), crs = 4326, dim = 'XY')
+  sf.alb <- st_transform(sf.wgs, albers.proj)
+  return(sf.alb)
+}
 
-ss <- subset(ch, start.swim == 1) # 12 bears with start swim date
+# ------------------------------------------------------------------------------------------- #
 
 # ---   Format capture history (ch) for known-fate models ----------------------- #
 # add columns eh1 and eh2
@@ -60,6 +67,9 @@ ss <- subset(ch, start.swim == 1) # 12 bears with start swim date
 
 # Chapter 16, Cooch & White 2020
 
+ch <- prep_data(lb)
+
+ss <- subset(ch, start.swim == 1) # 12 bears with start swim date
  
 ch$eh1 <- 1 # all recorded observations = 1 (first number in paired ch)
 
@@ -130,9 +140,81 @@ ch <- pivot_wider(ch,
 ch <- ch %>% unite("eh", 2:tail(names(.),1), sep = "")
 
 
+###################################################################################################
 
-  
-  
+# ----    ICE BEARS  --------------------------------------------------------------------------------- #
+
+load('ice_bears_may2nov.RData')
+
+# visual inspection
+# lots of bears with limited data, but going to include preliminarily
+
+library(raster)
+
+albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
+
+ice <- DFtoSF(ice)
+
+tmap_mode("view")
+
+tm_shape(ice) +
+tm_dots(col = "month", size = 1, popup.vars = c("month", "day")) +
+tm_facets(by = "id") +
+tmap_options(limits = c(facets.view = 153))
+
+# ----------------------------------------------------------------------------------------------- #
+
+# Remove duplicates from land bears and undecided bears
+
+# Remove land bears
 
 
-  
+lb.ids <- unique(lb$id) 
+t <- subset(ice, id %in% lb.ids) 
+
+ice <- anti_join(ice, t)
+ice <- droplevels(ice)
+
+# remove undecided
+
+ice <- filter(ice, id != "pb_20413.2006")
+ice <- filter(ice, id != "pb_20418.2005")
+ice <- filter(ice, id != "pb_20520.2012")
+ice <- filter(ice, id != "pb_20529.2004")
+ice <- filter(ice, id != "pb_20333.2008")
+ice <- filter(ice, id != "pb_21307.2012")
+ice <- filter(ice, id != "pb_21307.2014")
+ice <- filter(ice, id != "pb_20446.2009")
+
+# Format for ch 
+
+ice$ordinal <- yday(ice$ymd)
+ice <- select(ice, id, ymd, ordinal)  
+
+ch.ice <- ice %>% # take the last observation from each day
+  group_by(id, ordinal) %>%
+  slice(n()) %>%
+  distinct()
+
+ch.ice <- subset(ch.ice, ch.ice$ordinal > 151 & ch.ice$ordinal < 296) 
+
+ch.ice$eh1 <- 1
+
+ch.ice <- ch.ice %>%
+  group_by(id) %>%
+  complete(ordinal = 152:295, fill = list(eh1 = 0))
+
+ch.ice[,4][is.na(ch.ice[,4])] <- 0 # change NA to 0
+ch.ice$eh2 <- 0 # all eh2 is 0
+
+ch.ice$eh <- paste0(ch.ice$eh1, ch.ice$eh2)
+
+# Format ch
+
+ch.ice <- dplyr::select(ch.ice, id, ordinal, eh)
+
+ch.ice <- pivot_wider(ch.ice,
+                  names_from = ordinal,
+                  values_from = eh)
+
+ch.ice <- ch.ice %>% unite("eh", 2:tail(names(.),1), sep = "")
