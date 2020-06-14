@@ -222,3 +222,7 @@ ch.ice <- ch.ice %>% unite("eh", 2:tail(names(.),1), sep = "")
 # combine ch and ch.ice into one dataset
 
 ch.all <- rbind(ch, ch.ice)
+
+colnames(ch.all) <- c("id", "ch")
+
+save(ch.all, file = "KFM.RData") # known fate model
