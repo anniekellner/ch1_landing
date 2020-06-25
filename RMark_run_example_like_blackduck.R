@@ -41,7 +41,7 @@ bears <- left_join(ch.all, repro)
 bears <- ungroup(bears)
 bears <- dplyr::select(bears, -id) 
 bears <- as.data.frame(bears) # not sure if RMark will accept tibble format
-
+bears <- as_tibble(bears)
 
 # Change BirdAge to numeric; starting with version 1.6.3 factor variables are
 # no longer allowed. They can work as in this example but they can be misleading
