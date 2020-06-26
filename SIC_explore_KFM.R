@@ -16,13 +16,14 @@ library(raster)
 
 load('all_v2.RData')
 load('KFM.RData')
+load('SIC_KFM.RData')
 
 ids <- unique(bears$id)
 pb <- subset(all.v2, id %in% ids)
-pb <- subset(pb, year == 2004 & month > 5 & month < 10)
+pb <- subset(pb, year == 2011 & month > 5 & month < 10)
 
 #create rasterstack using TIFs
-rasterlist <- list.files(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2004", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+rasterlist <- list.files(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2011", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 # --------------------------------------------------------------------------------------------------- #
 
@@ -55,18 +56,26 @@ pb.spdf <- SpatialPointsDataFrame(coords = coords, data = pb, proj4string = proj
 pb.spdf2 <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 pb.spdf2$date2 <- format(pb.spdf2$ymd, "%Y%m%d")
 
+
 # for loop that runs through each point and pulls data from appropriate GeoTIFF
+
 for (i in 1:nrow(pb.spdf2)) {
   st<-stack[[which(date==pb.spdf2$date2[i])]]
-  pb.spdf2$SIC[i]<-extract(st, pb.spdf2[i,])}
+  pb.spdf2$SIC_30m_me[i]<-extract(st, pb.spdf2[i,], buffer = 30000, fun = mean, na.rm = TRUE)
+  pb.spdf2$SIC_30m_max[i]<-extract(st, pb.spdf2[i,], buffer = 30000, fun = max, na.rm = TRUE)
+  pb.spdf2$SIC_30m_min[i]<-extract(st, pb.spdf2[i,], buffer = 30000, fun = min, na.rm = TRUE)
+  }
 
-## NEED TO MAKE 30 KM BUFFER!!!!!!!!
 
-#df <- pb.spdf2@data #convert to df
+
+current <- pb.spdf2@data #convert to df
 #df <- dplyr::select(df, -date2)
 
+combine <- rbind(combine, current)
 
+head(combine)
+tail(combine)
 
-save(all, file='all_v2.RData')
+save(combine, file='SIC_KFM.RData')
 
 
