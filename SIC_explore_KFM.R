@@ -6,6 +6,8 @@
 # SIC + SIC^2 
 # see also Durner et al. 2004, 2006, 2009
 
+# 2012 - NO DATA FOR JUNE - JULY 1. WILL HAVE TO DO STAGGERED ENTRY FOR 2012 BEARS
+
 
 rm(list = ls())
 
@@ -20,10 +22,10 @@ load('SIC_KFM.RData')
 
 ids <- unique(bears$id)
 pb <- subset(all.v2, id %in% ids)
-pb <- subset(pb, year == 2011 & month > 5 & month < 10)
+pb <- subset(pb, year == 2016 & month > 5 & month < 10) # no idea why the datetime needs to be set like this to eliminate entries from 2012-07-01
 
 #create rasterstack using TIFs
-rasterlist <- list.files(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2011", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+rasterlist <- list.files(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2016", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 # --------------------------------------------------------------------------------------------------- #
 
@@ -77,5 +79,7 @@ head(combine)
 tail(combine)
 
 save(combine, file='SIC_KFM.RData')
+
+setdiff(ids, unique(combine$id)) # pb_21238.2012 is missing from SIC df. Probably only had points in June 2012. Ignore.
 
 
