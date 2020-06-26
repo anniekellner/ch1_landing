@@ -16,3 +16,14 @@ DFtoSF <- function(df, projection) {
   return(sf.project)
 }
 
+#' Create AICc table
+#' create table with values AICc, deltaAIC, weight, weight.pct
+#' 
+#' @param aicc A dataframe comparing models with AICc results calculated using package MuMin
+
+create_AICc_table <- function(aicc){
+  aicc$deltaAIC <- aicc$AIC - min(aicc$AIC) 
+  aicc$weight <- exp(-1/2*(aicc$deltaAIC))/sum(exp(-1/2*(aicc$deltaAIC)))
+  aicc$weight.pct <- aicc$weight*100
+  return(aicc)
+}
