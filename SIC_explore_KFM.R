@@ -26,7 +26,7 @@ SIC <- combine
 rm(combine)
 
 # add variable for "on.ice"
-SIC$on.ice <- ifelse(SIC$swim == 1 | SIC$land == 1, 0, 1)
+SIC$leave.ice <- ifelse(SIC$swim == 1 | SIC$land == 1, 1, 0)
 
 # Create quadratic SIC term
 
@@ -35,24 +35,40 @@ SIC$SICsq <- SIC$SIC_30m_me + (SIC$SIC_30m_me)^2
 
 # logistic regression - mean SIC 30km radius vs. land or ice
 
-fit_mean <- glm(on.ice ~ SIC_30m_me, data = SIC, family = binomial())
+fit_mean <- glm(leave.ice ~ SIC_30m_me, data = SIC, family = binomial())
 summary(fit_mean)
 
-fit_max <- glm(on.ice ~ SIC_30m_max, data = SIC, family = binomial())
+fit_max <- glm(leave.ice ~ SIC_30m_max, data = SIC, family = binomial())
 summary(fit_max)
 
-fit_min <- glm(on.ice ~ SIC_30m_min, data = SIC, family = binomial())
+fit_min <- glm(leave.ice ~ SIC_30m_min, data = SIC, family = binomial())
 summary(fit_min)
 
-fit_sq <- glm(on.ice ~ SICsq, data = SIC, family = binomial())
+fit_sq <- glm(leave.ice ~ SICsq, data = SIC, family = binomial())
 
 aicc <- AICc(fit_mean, fit_max, fit_min, fit_sq)
+
+# Add reproduction
+
+SIC$repro <- 0
+
+SIC <- SIC %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+fit_repro <- glm(leave.ice ~ repro, data = SIC, family = binomial())
+summary(fit_repro)
+
+fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = SIC, family = binomial())
+
+aicc <- AICc(fit_max, fit_repro, fit_repro_max)
 
 # Create AIC table to compare models
 
 create_AICc_table <- function(aicc){
   aicc$deltaAIC <- aicc$AIC - min(aicc$AIC) 
-  aicc$weight <- exp(-1/2*(aicc$deltaAIC))/sum(exp(-1/2*(aicc$deltaAIC)))
+  aicc$weight <- exp(-0.5*(aicc$deltaAIC))/(sum(exp(-0.5*(aicc$deltaAIC))))
   aicc$weight.pct <- aicc$weight*100
   return(aicc)
 }
