@@ -13,6 +13,7 @@ library(tmap)
 library(lwgeom)
 library(proj4)
 library(raster)
+library(MuMIn)
 
 # ----  BEAR SPATIAL DATA ---------------------------------------------------------------------------------------------------- #
 
@@ -81,6 +82,16 @@ save(logreg, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/c
 
 # ------  LOGISTIC REGRESSION  ------------------------------------------------------------------------ #
 
+# Use only one location per day (last GPS location)
+
+loc1 <- logreg %>% # if there were both on and off land observations in a single day, take last
+  group_by(id, ymd) %>%
+  arrange(id.datetime) %>%
+  slice(n()) # select last row
+  
+
+
+
 fit_d2l <- glm(leave.ice ~ dist2land, data = logreg, family = binomial())
 summary(fit_d2l)
 
@@ -99,12 +110,17 @@ fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = log
 aicc <- AICc(fit_max, fit_repro, fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
 
 # Create AIC table to compare models
+#AICc should be used instead AIC when sample size is small 
+#in comparison to the number of estimated parameters 
+#(Burnham & Anderson 2002 recommend its use when n/K < 40)
 
 create_AICc_table <- function(aicc){
   aicc$deltaAIC <- aicc$AIC - min(aicc$AIC) 
-  aicc$weight <- exp(-0.5*(aicc$deltaAIC))/(sum(exp(-0.5*(aicc$deltaAIC))))
+  aicc$L <- exp(-0.5*(aicc$deltaAIC))
+  aicc$weight <- aicc$L/(sum(aicc$L))
   aicc$weight.pct <- aicc$weight*100
+  aicc <- arrange(aicc, aicc$deltaAIC)
   return(aicc)
 }
 
-create_AICc_table(aicc)
+

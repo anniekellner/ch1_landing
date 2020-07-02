@@ -23,7 +23,10 @@ DFtoSF <- function(df, projection) {
 
 create_AICc_table <- function(aicc){
   aicc$deltaAIC <- aicc$AIC - min(aicc$AIC) 
-  aicc$weight <- exp(-1/2*(aicc$deltaAIC))/sum(exp(-1/2*(aicc$deltaAIC)))
+  aicc$L <- exp(-0.5*(aicc$deltaAIC))
+  aicc$weight <- aicc$L/(sum(aicc$L))
   aicc$weight.pct <- aicc$weight*100
+  aicc <- arrange(aicc, aicc$deltaAIC)
   return(aicc)
 }
+

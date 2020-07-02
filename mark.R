@@ -2,6 +2,12 @@
 #####     ADD INDIVIDUAL AND ENVIRONMENTAL VARIABLES TO MARK-FORMATTED DATA   ########
 ######################################################################################
 
+# Change repro variable to code 0 - 3
+# 0 = no data
+# 1 = Denning
+# 2 = COY
+# 3 = yearling
+
 rm(list = ls())
 
 library(dplyr)
@@ -20,6 +26,7 @@ load('KFM.RData')
 data("Blackduck")
 
 # change reproductive status to categorical variable in all.v2
+### THIS DOES NOT NEED TO BE RUN ANYMORE #################
 
 all.v2$repro <- 0
 

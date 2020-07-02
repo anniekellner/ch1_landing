@@ -1,0 +1,63 @@
+---
+title: "Migration_Log_Reg"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load("logreg.RData")
+```
+
+## Logistic Regression using all data points
+### Variables: Maximum SIC w/in 30 km radius, Reproductive Status, Distance to Land, 
+### Don't bother with this - should distill data to one point per day
+
+```{r, echo = FALSE}
+fit_d2l <- glm(leave.ice ~ dist2land, data = logreg, family = binomial())
+summary(fit_d2l)
+
+fit_max <- glm(leave.ice ~ SIC_30m_max, data = logreg, family = binomial())
+summary(fit_max)
+
+fit_repro <- glm(leave.ice ~ repro, data = logreg, family = binomial())
+summary(fit_repro)
+
+fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = logreg, family = binomial())
+
+fit_d2l_max <- glm(leave.ice ~ dist2land + SIC_30m_max, data = logreg, family = binomial())
+
+fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = logreg, family = binomial())
+
+aicc <- AICc(fit_max, fit_d2l, fit_repro, fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
+
+# Learn how to call functions from another script
+
+create_AICc_table(aicc) # From MyFunctions.R
+```
+
+# Results are cleaner when d2l is not included as a single model. Maybe d2l is absorbing too much variation. 
+
+```{r, echo=FALSE}
+fit_d2l <- glm(leave.ice ~ dist2land, data = loc1, family = binomial())
+summary(fit_d2l)
+
+fit_max <- glm(leave.ice ~ SIC_30m_max, data = loc1, family = binomial())
+summary(fit_max)
+
+fit_repro <- glm(leave.ice ~ repro, data = loc1, family = binomial())
+summary(fit_repro)
+
+fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = loc1, family = binomial())
+
+fit_d2l_max <- glm(leave.ice ~ dist2land + SIC_30m_max, data = loc1, family = binomial())
+
+fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = loc1, family = binomial())
+
+aicc <- AICc(fit_max, fit_d2l, fit_repro,fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
+
+# Learn how to call functions from another script
+
+create_AICc_table(aicc) # From MyFunctions.R
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
