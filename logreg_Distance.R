@@ -77,3 +77,34 @@ dist <- st_distance(logreg, land.ps, by_element = TRUE)
 logreg$dist2land <- cbind(matrix(dist))
 
 save(logreg, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/logreg.RData")
+
+
+# ------  LOGISTIC REGRESSION  ------------------------------------------------------------------------ #
+
+fit_d2l <- glm(leave.ice ~ dist2land, data = logreg, family = binomial())
+summary(fit_d2l)
+
+fit_max <- glm(leave.ice ~ SIC_30m_max, data = logreg, family = binomial())
+summary(fit_max)
+
+fit_repro <- glm(leave.ice ~ repro, data = logreg, family = binomial())
+summary(fit_repro)
+
+fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = logreg, family = binomial())
+
+fit_d2l_max <- glm(leave.ice ~ dist2land + SIC_30m_max, data = logreg, family = binomial())
+
+fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = logreg, family = binomial())
+
+aicc <- AICc(fit_max, fit_repro, fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
+
+# Create AIC table to compare models
+
+create_AICc_table <- function(aicc){
+  aicc$deltaAIC <- aicc$AIC - min(aicc$AIC) 
+  aicc$weight <- exp(-0.5*(aicc$deltaAIC))/(sum(exp(-0.5*(aicc$deltaAIC))))
+  aicc$weight.pct <- aicc$weight*100
+  return(aicc)
+}
+
+create_AICc_table(aicc)
