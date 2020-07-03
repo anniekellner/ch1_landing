@@ -6,6 +6,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 load("logreg.RData")
+
+library(dplyr)
+library(MuMIn)
 ```
 
 ## Logistic Regression using all data points
@@ -39,11 +42,72 @@ create_AICc_table(aicc) # From MyFunctions.R
 
 # Exploring ways to categorize reproduction
 
-```{r}
+# Add reproductive status 
+# 0 = none/unknown
+# 1 = denning
+# 2 = coy
+# 3 = yearling 
+# NOTE: combine coy and yearling and see if effect is different
 
+```{r}
+logreg$repro <- 0
+
+all.v2 <- all.v2 %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
 ```
 
+# Repro2
+0 = no young or no data
+1 = coy or yearling
 
+# Repro 3
+0 = anything but coy
+1 = coy
+
+# Repro4
+0 = no data
+1 = denning
+2 = yearling
+3 = coy
+
+
+```{r}
+# Repro 2
+logreg$repro2 <- ifelse(logreg$repro == 2 | logreg$repro == 3, 1, 0) # 1 = coy OR yearling
+
+# Repro 3
+logreg$repro3 <- ifelse(logreg$repro == 2, 1, 0) # 1 = coy only
+
+# Repro 4
+
+logreg$repro4 <- 0
+
+logreg <- logreg %>%
+  mutate(repro4 = replace(repro4, repro == 1, 1)) %>%
+  mutate(repro4 = replace(repro4, repro == 2, 3)) %>%
+  mutate(repro4 = replace(repro4, repro == 3, 2))
+
+
+repro  <- glm(leave.ice ~ repro, data = logreg, family = binomial(link = 'logit'))
+repro2 <- glm(leave.ice ~ repro2, data = logreg, family = binomial(link = 'logit'))
+repro3 <- glm(leave.ice ~ repro3, data = logreg, family = binomial(link = 'logit'))
+repro4 <- glm(leave.ice ~ repro4, data = logreg, family = binomial(link = 'logit'))
+
+
+aicc <- AICc(repro, repro2, repro3, repro4)
+
+create_AICc_table(aicc)
+aicc
+
+summary(repro)
+summary(repro2)
+summary(repro3)
+summary(repro4)
+
+```
+### Best way to handle reproduction is to make sure Repro is categorical (factor) in R. 
 
 ```{r, echo=FALSE}
 fit_d2l <- glm(leave.ice ~ dist2land, data = loc1, family = binomial())
