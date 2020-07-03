@@ -40,7 +40,9 @@ batch_reclass(rl)
 
 # ------------------------- TEST ------------------------------------------------#
 
-test <- raster('./SIC-TIFs/RCC/pb_20735.2009/asi-n6250-20090725-v5.4.tif')
-test
-plot(test)
+r <- raster('./All/asi-n3125-20110930-v5.4.tif')
+plot(r)
+rc <- reclassify(r, rclmat) 
+plot(rc)
+
 #writeRaster(test, './Tests/bat_clump.tif')
