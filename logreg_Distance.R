@@ -19,7 +19,7 @@ library(MuMIn)
 
 # Load bear data
 
-load("logreg.RData")
+load("logreg.RData") # loads in polar stereo projection
 logreg <- SIC; rm(SIC)
 
 polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
