@@ -19,11 +19,9 @@ library(MuMIn)
 
 # Load data
 
-load('KFM.RData')
-load('SIC_KFM.RData')
+load('logreg.RData')
 
-SIC <- combine
-rm(combine)
+logreg <- SIC; rm(SIC)
 
 # add variable for "on.ice"
 SIC$leave.ice <- ifelse(SIC$swim == 1 | SIC$land == 1, 1, 0)
@@ -76,6 +74,3 @@ create_AICc_table <- function(aicc){
 create_AICc_table(aicc)
 
 
-ggplot(logreg, aes(mean_val, swim)) + geom_point() +
-  scale_x_reverse() +
-  stat_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE)
