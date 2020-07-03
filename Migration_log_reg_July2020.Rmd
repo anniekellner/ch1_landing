@@ -37,6 +37,14 @@ create_AICc_table(aicc) # From MyFunctions.R
 
 # Results are cleaner when d2l is not included as a single model. Maybe d2l is absorbing too much variation. 
 
+# Exploring ways to categorize reproduction
+
+```{r}
+
+```
+
+
+
 ```{r, echo=FALSE}
 fit_d2l <- glm(leave.ice ~ dist2land, data = loc1, family = binomial())
 summary(fit_d2l)
