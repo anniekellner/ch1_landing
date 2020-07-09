@@ -132,4 +132,56 @@ aicc <- AICc(fit_max, fit_d2l, fit_repro,fit_repro_max, fit_d2l_max, fit_d2l_max
 create_AICc_table(aicc) # From MyFunctions.R
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Wind - data formatting
+
+```{r}
+library(lubridate)
+library(plyr)
+
+wind <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank_07032020.csv")
+
+colnames(wind) <- c("datetime", "long", "lat", "ht_above_ellips", "id", "Charnock_Parameter", "Wind_U_ECMWF_10m", "Temp_K_ECMWF_2m", "Pressure_2m", "Wind_U_NARR_10m", "Wind_V_NARR_10m", "Temp_K_NARR_2m", "Pressure_Sea_Level_ECMWF", "Wind_V_ECMWF_10m")
+
+wind$datetime <- ymd_hms(wind$datetime)
+wind$datetime <- with_tz(wind$datetime, "US/Alaska")
+
+# Calculate wind speed
+wind <- wind %>% # units = m/s
+  mutate(WindSpeed_ECMWF=sqrt((wind$Wind_U_ECMWF_10m * wind$Wind_U_ECMWF_10m) + (wind$Wind_V_ECMWF_10m * wind$Wind_V_ECMWF_10m))) %>%
+  mutate(WindSpeed_NARR = sqrt((wind$Wind_U_NARR_10m * wind$Wind_U_NARR_10m) + (wind$Wind_V_NARR_10m * wind$Wind_V_NARR_10m)))
+
+# Calculate wind direction
+
+
+
+```
+
+# Movebank Logistic Regression
+
+```{r}
+# add leave.ice column to movebank df to run logistic regression
+leave.ice <- logreg$leave.ice
+wind <- cbind(wind, leave.ice)
+wind$leave.ice <- as.factor(wind$leave.ice)
+
+Charnock <- glm(leave.ice ~ Charnock_Parameter, data = wind, family = binomial())
+temp <- glm(leave.ice ~ Temp_K_ECMWF_2m, data = wind, family = binomial())
+pressure <- glm(leave.ice ~ Pressure_2m, data = wind, family = binomial())
+windspeed_ECMWF <- glm(leave.ice ~ WindSpeed_ECMWF, data = wind, family = binomial())
+windspeed_NARR <- glm(leave.ice ~ WindSpeed_NARR, data = wind, family = binomial())
+test <- glm(leave.ice~test, data = wind, family = binomial()) # random numbers were not significant
+
+# Create row of random numbers
+
+wind$test <- sample(100, size = nrow(wind), replace = TRUE)
+
+
+
+aicc <- AICc(Charnock, temp, pressure, windspeed_ECMWF, windspeed_NARR, test)
+
+create_AICc_table(aicc)
+
+summary(Charnock)
+summary(temp)
+```
+
