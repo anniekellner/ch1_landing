@@ -63,4 +63,11 @@ ggplot(wind2, aes(index, mph, color=ID, na.rm=TRUE)) +
   ggtitle('Wind Speed 30 Days Before Departure') +
   #facet_wrap(~year) +
   theme_bw()
-  
+
+# ----  Test WindDir Function ------------------------------------------ #
+ 
+dd <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Analyses/uvWind_2_speedDirection_v01.csv")
+
+test <- WindDir(dd$u, dd$v)
+
+dd <- cbind(dd, test) 
