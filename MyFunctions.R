@@ -39,10 +39,9 @@ create_AICc_table <- function(aicc){
 
 WindDir <- function(u, v){
   r2d = 180/pi
-  winddir <- atan2(v,u) * r2d
-  if(u != 0 | v != 0) {
-    Dir = winddir
-  } else if (u > 0 & v > 0) {
+  winddir = atan2(v,u) * r2d
+  
+  if (u > 0 & v > 0) {
       Dir = 90 - winddir
   } else if (u > 0 & v < 0) {
       Dir = 90 + (winddir*-1)
@@ -55,19 +54,14 @@ WindDir <- function(u, v){
   } else if(u == 0 & v > 0) {
       Dir = 0
   } else if(v == 0 & u < 0) {
-      270
+      Dir == 270
   } else if (v == 0 & u > 0) {
-      90
-  }
+      Dir == 90
+  } else if (u != 0 | v != 0) {
+    Dir = winddir}
   return(Dir)
 }
 
 
-if (2==1) {
-  print("1")
-} else if (2==2) {
-  print("2")
-} else {
-  print("3")
-}
+
 
