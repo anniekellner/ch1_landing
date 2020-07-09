@@ -13,9 +13,9 @@ library(dplyr)
 
 # load data
 
-load('ice.calc.RData') #GPS data
-filelist <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/pb_20414.2009", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
-pb <- subset(ice.calc, id=='pb_20414.2009') # test with one bear
+load('logreg.RData') #GPS data
+filelist <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+pb <- subset(logreg, id=='pb_06336.2004') # test with one bear
 
 # Create spatial object. This works - always do it this way!
 
@@ -32,8 +32,8 @@ plot(st_geometry(track))  # verify track looks good
 
 # Test projection compatibility using one shapefile
 
-#shp <- st_read(filelist[1])
-#plot(st_geometry(shp))
+shp <- st_read(filelist[1500])
+plot(st_geometry(shp))
 #plot(st_geometry(track), add = TRUE)
 
 # Make sure distance calculation works

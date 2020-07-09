@@ -39,7 +39,7 @@ dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_un
 bat_pack_ice_poly <- function(rl, rl2){
   for (i in 1:length(rl)) {
     for(j in 1:length(rl2)){
-    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/", rl[1])) #read in raster
+    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/", rl[i])) #read in raster
     gv <- getValues(r) # change values to vector so can get mode
     mode <- modal(gv, na.rm=TRUE) # find mode
     poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
