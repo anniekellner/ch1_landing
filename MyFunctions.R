@@ -37,9 +37,37 @@ create_AICc_table <- function(aicc){
 #' @param u U vector
 #' @param v V Vector
 
-windDir <- function(u, v) {
-  if(v > 0)         ((180 / pi) * atan(u/v) + 180)
-  if(u < 0 & v < 0) ((180 / pi) * atan(u/v) + 0)
-  if(u > 0 & v < 0) ((180 / pi) * atan(u/v) + 360)
+WindDir <- function(u, v){
+  r2d = 180/pi
+  winddir <- atan2(v,u) * r2d
+  if(u != 0 | v != 0) {
+    Dir = winddir
+  } else if (u > 0 & v > 0) {
+      Dir = 90 - winddir
+  } else if (u > 0 & v < 0) {
+      Dir = 90 + (winddir*-1)
+  } else if (u < 0 & v > 0) {
+      Dir = 360-winddir
+  } else if (u < 0 & v < 0) {
+      Dir = 90 + (winddir*-1)
+  } else if(u == 0 & v <0) {
+      Dir = 180
+  } else if(u == 0 & v > 0) {
+      Dir = 0
+  } else if(v == 0 & u < 0) {
+      270
+  } else if (v == 0 & u > 0) {
+      90
+  }
+  return(Dir)
+}
+
+
+if (2==1) {
+  print("1")
+} else if (2==2) {
+  print("2")
+} else {
+  print("3")
 }
 
