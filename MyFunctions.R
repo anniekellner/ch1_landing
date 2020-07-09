@@ -54,9 +54,9 @@ WindDir <- function(u, v){
   } else if(u == 0 & v > 0) {
       Dir = 0
   } else if(v == 0 & u < 0) {
-      Dir == 270
+      Dir = 270
   } else if (v == 0 & u > 0) {
-      Dir == 90
+      Dir = 90
   } else if (u != 0 | v != 0) {
     Dir = winddir}
   return(Dir)
