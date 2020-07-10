@@ -68,6 +68,6 @@ ggplot(wind2, aes(index, mph, color=ID, na.rm=TRUE)) +
  
 dd <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Analyses/uvWind_2_speedDirection_v01.csv")
 
-test <- WindDir(dd$u, dd$v)
+test <- WindDir(dd)
 
 dd <- cbind(dd, test) 
