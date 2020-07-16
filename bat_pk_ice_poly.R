@@ -104,3 +104,15 @@ for (i in 1:length(rl)) {
   }
 }
 
+# ------- TEST ---------------------------- #
+
+# See whether shapefiles look correct
+
+one <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-AMSR2-n3125-20120721-v5.4.shp")
+plot(st_geometry(one))
+
+two <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-AMSR2-n3125-20120704-v5.4.shp")
+plot(st_geometry(two))
+
+
+
