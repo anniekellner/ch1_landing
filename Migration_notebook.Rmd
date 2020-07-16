@@ -6,7 +6,10 @@ output:
   html_document:
     df_print: paged
 ---
-```{r}
+```{r setup, include = FALSE, echo=FALSE}
+library(knitr)
+
+opts_knit$set(root.dir = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears_GIS/R/Chapter1/Landing Analysis/ch1_landing")
 knitr::opts_chunk$set(echo=FALSE)
 ```
 
@@ -21,7 +24,7 @@ I defined migration as follows:
 
 ### Where do the bears begin and end their ice-to-land migration?
 
-![Starting and landing points for summer migration (n=19)](map_migration.png)
+![Starting and landing points for summer migration (n=19)](C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears_GIS/R/Chapter1/Landing Analysis/ch1_landing/map_migration.png)
 
 Westernmost Starting Point: (-161.338, 73.266) <br>
 Easternmost Starting Point: (-145.957, 71.274) <br>
@@ -31,7 +34,7 @@ Easternmost Landing Point: (-143.188, 70.172) <br>
 
 ### Are landing points random? 
 
-```{r, include=FALSE}
+```{r}
 library(dplyr)
 load('all.RData')
 
