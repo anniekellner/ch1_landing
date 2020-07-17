@@ -5,6 +5,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())
 load("logreg.RData")
 
 logreg <- droplevels(logreg)
@@ -13,25 +15,31 @@ library(dplyr)
 library(MuMIn)
 ```
 
+
+
+
+
+
+
 ## Logistic Regression using all data points
 ### Variables: Maximum SIC w/in 30 km radius, Reproductive Status, Distance to Land, 
 ### Don't bother with this - should distill data to one point per day
 
 ```{r, echo = FALSE}
-fit_d2l <- glm(leave.ice ~ dist2land, data = logreg, family = binomial())
+fit_d2l <- glm(start.swim ~ dist2land, data = logreg, family = binomial())
 summary(fit_d2l)
 
-fit_max <- glm(leave.ice ~ SIC_30m_max, data = logreg, family = binomial())
+fit_max <- glm(start.swim ~ SIC_30m_max, data = logreg, family = binomial())
 summary(fit_max)
 
-fit_repro <- glm(leave.ice ~ repro, data = logreg, family = binomial())
+fit_repro <- glm(start.swim ~ repro, data = logreg, family = binomial())
 summary(fit_repro)
 
-fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = logreg, family = binomial())
+fit_repro_max <- glm(start.swim ~ repro + SIC_30m_max, data = logreg, family = binomial())
 
-fit_d2l_max <- glm(leave.ice ~ dist2land + SIC_30m_max, data = logreg, family = binomial())
+fit_d2l_max <- glm(start.swim ~ dist2land + SIC_30m_max, data = logreg, family = binomial())
 
-fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = logreg, family = binomial())
+fit_d2l_max_repro <- glm(start.swim ~ repro + SIC_30m_max + dist2land, data = logreg, family = binomial())
 
 aicc <- AICc(fit_max, fit_d2l, fit_repro, fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
 
@@ -92,10 +100,10 @@ logreg <- logreg %>%
   mutate(repro4 = replace(repro4, repro == 3, 2))
 
 
-repro  <- glm(leave.ice ~ repro, data = logreg, family = binomial(link = 'logit'))
-repro2 <- glm(leave.ice ~ repro2, data = logreg, family = binomial(link = 'logit'))
-repro3 <- glm(leave.ice ~ repro3, data = logreg, family = binomial(link = 'logit'))
-repro4 <- glm(leave.ice ~ repro4, data = logreg, family = binomial(link = 'logit'))
+repro  <- glm(start.swim ~ repro, data = logreg, family = binomial(link = 'logit'))
+repro2 <- glm(start.swim ~ repro2, data = logreg, family = binomial(link = 'logit'))
+repro3 <- glm(start.swim ~ repro3, data = logreg, family = binomial(link = 'logit'))
+repro4 <- glm(start.swim ~ repro4, data = logreg, family = binomial(link = 'logit'))
 
 
 aicc <- AICc(repro, repro2, repro3, repro4)
@@ -112,20 +120,20 @@ summary(repro4)
 ### Best way to handle reproduction is to make sure Repro is categorical (factor) in R. 
 
 ```{r, echo=FALSE}
-fit_d2l <- glm(leave.ice ~ dist2land, data = loc1, family = binomial())
+fit_d2l <- glm(start.swim ~ dist2land, data = loc1, family = binomial())
 summary(fit_d2l)
 
-fit_max <- glm(leave.ice ~ SIC_30m_max, data = loc1, family = binomial())
+fit_max <- glm(start.swim ~ SIC_30m_max, data = loc1, family = binomial())
 summary(fit_max)
 
-fit_repro <- glm(leave.ice ~ repro, data = loc1, family = binomial())
+fit_repro <- glm(start.swim ~ repro, data = loc1, family = binomial())
 summary(fit_repro)
 
-fit_repro_max <- glm(leave.ice ~ repro + SIC_30m_max, data = loc1, family = binomial())
+fit_repro_max <- glm(start.swim ~ repro + SIC_30m_max, data = loc1, family = binomial())
 
-fit_d2l_max <- glm(leave.ice ~ dist2land + SIC_30m_max, data = loc1, family = binomial())
+fit_d2l_max <- glm(start.swim ~ dist2land + SIC_30m_max, data = loc1, family = binomial())
 
-fit_d2l_max_repro <- glm(leave.ice ~ repro + SIC_30m_max + dist2land, data = loc1, family = binomial())
+fit_d2l_max_repro <- glm(start.swim ~ repro + SIC_30m_max + dist2land, data = loc1, family = binomial())
 
 aicc <- AICc(fit_max, fit_d2l, fit_repro,fit_repro_max, fit_d2l_max, fit_d2l_max_repro)
 
@@ -134,11 +142,12 @@ aicc <- AICc(fit_max, fit_d2l, fit_repro,fit_repro_max, fit_d2l_max, fit_d2l_max
 create_AICc_table(aicc) # From MyFunctions.R
 ```
 
-# Wind - data formatting
+# Wind 
 
 ```{r}
 library(lubridate)
 library(plyr)
+library(rWind)
 
 
 wind <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank_07032020.csv")
@@ -149,51 +158,190 @@ wind$datetime <- ymd_hms(wind$datetime)
 wind$datetime <- with_tz(wind$datetime, "US/Alaska")
 
 # Calculate wind speed
-wind <- wind %>% # units = m/s
-  mutate(WindSpeed_ECMWF=sqrt((wind$Wind_U_ECMWF_10m * wind$Wind_U_ECMWF_10m) + (wind$Wind_V_ECMWF_10m * wind$Wind_V_ECMWF_10m))) %>%
-  mutate(WindSpeed_NARR = sqrt((wind$Wind_U_NARR_10m * wind$Wind_U_NARR_10m) + (wind$Wind_V_NARR_10m * wind$Wind_V_NARR_10m)))
+#wind <- wind %>% # units = m/s
+  #mutate(WindSpeed_ECMWF=sqrt((wind$Wind_U_ECMWF_10m * wind$Wind_U_ECMWF_10m) + (wind$Wind_V_ECMWF_10m * wind$Wind_V_ECMWF_10m))) %>%
+  #mutate(WindSpeed_NARR = sqrt((wind$Wind_U_NARR_10m * wind$Wind_U_NARR_10m) + (wind$Wind_V_NARR_10m * wind$Wind_V_NARR_10m)))
 
 # Calculate wind direction (degrees)
 
-wind$WindDir <- windDir(wind$Wind_U_NARR_10m, wind$Wind_V_ECMWF_10m)
+# bind start.swim to wind so can run regressions
 
-for (i in 1:nrow(wind)){
-  WindDir[i] <- windDir(wind$Wind_U_NARR_10m[i], wind$Wind_V_NARR_10m[i])
-  return(WindDir)
-}
+start.swim <- depart$start.swim
+wind <- cbind(wind, start.swim)
+wind$start.swim <- as.factor(wind$start.swim)
 
-WindDir(wind$Wind_U_NARR_10m[1], wind$Wind_V_NARR_10m[1])
+# Remove NA's 
 
+wind <- wind[!is.na(wind$Wind_U_NARR_10m),]
+wind <- wind[!is.na(wind$Wind_V_NARR_10m),]
+
+
+rwind <- uv2ds(wind$Wind_U_NARR_10m, wind$Wind_V_NARR_10m)
+
+wind <- cbind(wind, rwind)
 ```
 
 # Movebank Logistic Regression
 
 ```{r}
-# add leave.ice column to movebank df to run logistic regression
-leave.ice <- logreg$leave.ice
-wind <- cbind(wind, leave.ice)
-wind$leave.ice <- as.factor(wind$leave.ice)
+# add start.swim column to movebank df to run logistic regression
 
-Charnock <- glm(leave.ice ~ Charnock_Parameter, data = wind, family = binomial())
-temp <- glm(leave.ice ~ Temp_K_ECMWF_2m, data = wind, family = binomial())
-pressure <- glm(leave.ice ~ Pressure_2m, data = wind, family = binomial())
-windspeed_ECMWF <- glm(leave.ice ~ WindSpeed_ECMWF, data = wind, family = binomial())
-windspeed_NARR <- glm(leave.ice ~ WindSpeed_NARR, data = wind, family = binomial())
-test <- glm(leave.ice~test, data = wind, family = binomial()) # random numbers were not significant
+
+Charnock <- glm(start.swim ~ Charnock_Parameter, data = wind, family = binomial())
+temp <- glm(start.swim ~ Temp_K_ECMWF_2m, data = wind, family = binomial())
+pressure <- glm(start.swim ~ Pressure_2m, data = wind, family = binomial())
+windspeed_NARR <- glm(start.swim ~ WindSpeed_NARR, data = wind, family = binomial())
+dir <- glm(start.swim ~ dir, data = wind, family = binomial())
+#test <- glm(start.swim~test, data = wind, family = binomial()) # random numbers were not significant
 
 # Create row of random numbers
 
-wind$test <- sample(100, size = nrow(wind), replace = TRUE)
+#wind$test <- sample(100, size = nrow(wind), replace = TRUE)
 
 
 
-aicc <- AICc(Charnock, temp, pressure, windspeed_ECMWF, windspeed_NARR, test)
+aicc <- AICc(Charnock, temp, pressure, windspeed_ECMWF, windspeed_NARR, dir)
 
 create_AICc_table(aicc)
 
-summary(Charnock)
-summary(temp)
-summary(windspeed_ECMWF)
+summary(dir)
 ```
 
 Every parameter was significant (except 'test' which was a series of random numbers)
+
+### Logistic Regression using Departure Date Only
+
+Remove all data points after start.swim == 1
+
+```{r}
+library(lme4)
+
+depart_only <- logreg %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n())))
+```
+
+Which Sea Ice Concentration metric is best?
+
+No Random Variables:
+
+```{r}
+
+fit_max <- glm(start.swim ~ SIC_30m_max, data = depart_only, family = binomial())
+summary(fit_max)
+
+fit_SIC_mean <- glm(start.swim ~ SIC_30m_me, data = depart_only, family = binomial())
+summary(fit_SIC_mean)
+
+fit_SIC_sq <- glm(start.swim ~ SICsq, data = depart_only, family = binomial())
+summary(fit_SIC_sq)
+
+aicc <- AICc(fit_max, fit_SIC_mean, fit_SIC_sq, glm)
+
+create_AICc_table(aicc)
+
+glm <- glmer(start.swim ~ SIC_30m_me + (1|animal), data = depart, family = binomial()) 
+
+```
+
+
+Reproductive Status
+
+```{r}
+
+depart <- depart_only
+
+depart$repro <- 0
+
+depart <-depart %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+depart$repro <- as.factor(depart$repro)
+
+fit_d2l <- glm(start.swim ~ dist2land, data = depart, family = binomial())
+summary(fit_d2l)
+
+
+fit_repro <- glm(start.swim ~ repro, data = depart, family = binomial())
+summary(fit_repro)
+
+fit_repro_max <- glm(start.swim ~ repro + SIC_30m_max, data = depart, family = binomial())
+
+fit_d2l_max <- glm(start.swim ~ dist2land + SIC_30m_max, data = depart, family = binomial())
+
+fit_d2l_max_repro <- glm(start.swim ~ repro + SIC_30m_max + dist2land, data = depart, family = binomial())
+```
+
+# Exploring ways to categorize reproduction
+
+# Add reproductive status 
+# 0 = none/unknown
+# 1 = denning
+# 2 = coy
+# 3 = yearling 
+# NOTE: combine coy and yearling and see if effect is different
+
+```{r}
+logreg$repro <- 0
+
+all.v2 <- all.v2 %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+```
+
+# Repro2
+0 = no young or no data
+1 = coy or yearling
+
+# Repro 3
+0 = anything but coy
+1 = coy
+
+# Repro4
+0 = no data
+1 = denning
+2 = yearling
+3 = coy
+
+
+```{r}
+# Repro 2
+
+depart$repro2 <- ifelse(depart$repro == 2 | depart$repro == 3, 1, 0) # 1 = coy OR yearling
+
+# Repro 3
+depart$repro3 <- ifelse(depart$repro == 2, 1, 0) # 1 = coy only
+
+# Repro 4
+
+depart$repro4 <- 0
+
+depart <- depart %>%
+  mutate(repro4 = replace(repro4, repro == 1, 1)) %>%
+  mutate(repro4 = replace(repro4, repro == 2, 3)) %>%
+  mutate(repro4 = replace(repro4, repro == 3, 2))
+
+class(depart$repro)
+
+repro  <- glm(start.swim ~ repro, data = depart, family = binomial(link = 'logit'))
+repro2 <- glm(start.swim ~ repro2, data = depart, family = binomial(link = 'logit'))
+repro3 <- glm(start.swim ~ repro3, data = depart, family = binomial(link = 'logit'))
+repro4 <- glm(start.swim ~ repro4, data = depart, family = binomial(link = 'logit'))
+
+
+aicc <- AICc(repro, repro2, repro3, repro4)
+
+create_AICc_table(aicc)
+aicc
+
+summary(repro)
+summary(repro2)
+summary(repro3)
+summary(repro4)
+```
+
+
+
+
+
