@@ -31,42 +31,4 @@ create_AICc_table <- function(aicc){
   return(aicc)
 }
 
-#' Calculate wind Direction (degrees)
-#' https://stackoverflow.com/questions/8673137/calculating-wind-Dir[i]ection-from-u-and-v-components-of-the-wind-using-lapply-or-i
-#' 
-#' @param df dataframe with wind vectors u and v
 
-
-WindDir <- function(df){
-  Dir <- vector()
-  r2d = 180/pi
- 
-  for(i in 1:nrow(df)){
-  windDir = atan2(df$v[i], df$u[i]) * r2d
-  Dir[i] <- if (df$u[i] > 0 & df$v[i] > 0) {
-      Dir = 90 - windDir
-  } else if (df$u[i] > 0 & df$v[i] < 0) {
-      Dir = 90 + (windDir*-1)
-  } else if (df$u[i] < 0 & df$v[i] > 0) {
-      Dir = 360 - windDir
-  } else if (df$u[i] < 0 & df$v[i] < 0) {
-      Dir = 90 + (windDir*-1)
-  } else if(df$u[i] == 0 & df$v[i] < 0) {
-      Dir = 180
-  } else if(df$u[i] == 0 & df$v[i] > 0) {
-      Dir = 0
-  } else if(df$u[i] < 0 & df$v[i] == 0) {
-      Dir = 270
-  } else if (df$u[i] > 0 & df$v[i] == 0) {
-      Dir = 90
-  } else if (df$u[i] != 0 | df$v[i] != 0) {
-    Dir = windDir}
-  return(Dir)
-  }
-}
-
-
-u <- 1
-v <- -1
-
-rm(list = ls())

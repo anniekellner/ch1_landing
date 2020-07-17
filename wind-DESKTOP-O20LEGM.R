@@ -15,13 +15,12 @@ setwd('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data')
 wind <- read.csv('movebank_v5_annotate.csv')
 wind <- select(wind, 1:5,8,15)
 colnames(wind) <- c('ID', 'Date', 'Time','long', 'lat', 'U', 'V') 
-head(wind)
 
 # Reformat date 
 
 wind$datetime <- paste(wind$Date, wind$Time) 
 wind$datetime <- mdy_hms(wind$datetime)
-head(wind)
+
 
 #wind$Date <- as.POSIXct(wind$Date)
 #wind$year <- year(wind$Date)
@@ -69,8 +68,6 @@ ggplot(wind2, aes(index, mph, color=ID, na.rm=TRUE)) +
  
 dd <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Analyses/uvWind_2_speedDirection_v01.csv")
 
-test <- WindDir(dd)
+test <- WindDir(dd$u, dd$v)
 
-
-dd <- cbind(dd, test)
-# 
+dd <- cbind(dd, test) 
