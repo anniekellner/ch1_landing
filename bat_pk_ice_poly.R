@@ -18,7 +18,7 @@ library(stringr)
 rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
 
 # remove elements as necessary
-#rl <- rl[-c(1:127)]
+rl <- rl[-c(1:767)]
 
 rl2 <- str_remove(rl,".tif")
 
