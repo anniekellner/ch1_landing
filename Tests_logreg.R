@@ -30,10 +30,10 @@ logreg <- logreg %>%
   mutate(repro4 = replace(repro4, repro == 3, 2))
 
 
-repro  <- glm(start.swim ~ repro, data = logreg, family = binomial(link = 'logit'))
-repro2 <- glm(start.swim ~ repro2, data = logreg, family = binomial(link = 'logit'))
-repro3 <- glm(start.swim ~ repro3, data = logreg, family = binomial(link = 'logit'))
-repro4 <- glm(start.swim ~ repro4, data = logreg, family = binomial(link = 'logit'))
+repro  <- glmer(start.swim ~ repro + (1|animal), data = logreg, family = binomial(link = 'logit'))
+repro2 <- glmer(start.swim ~ repro2 + (1|animal), data = logreg, family = binomial(link = 'logit'))
+repro3 <- glmer(start.swim ~ repro3 + (1|animal), data = logreg, family = binomial(link = 'logit'))
+repro4 <- glmer(start.swim ~ repro4 + (1|animal), data = logreg, family = binomial(link = 'logit'))
 
 
 aicc <- AICc(repro, repro2, repro3, repro4)

@@ -69,8 +69,15 @@ ggplot(wind2, aes(index, mph, color=ID, na.rm=TRUE)) +
  
 dd <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Analyses/uvWind_2_speedDirection_v01.csv")
 
-test <- WindDir(dd)
+dd$rwind <- uv2ds(dd$u, dd$v)
 
+winddir <- function(df) {
+  r2d = 180/pi
+  direction <- atan2(df$v, df$u) * r2d 
+  winddir <- if_else(direction > 0, direction, 360+direction)
+  return(winddir)
+}
 
-dd <- cbind(dd, test)
+dd$winddir_fxn <- winddir(dd)
+dd 
 # 

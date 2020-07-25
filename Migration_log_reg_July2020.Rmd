@@ -63,12 +63,16 @@ load("logreg.RData")
 start.swim <- logreg$start.swim 
 animal <- logreg$animal 
 
-logreg <- logreg  %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n()))) 
+logreg <- logreg  %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n()))) # remove points after start.swim = 1
 
-oneLocation <- logreg %>% 
+oneLocation <- logreg %>% # last location
   group_by(id, ymd) %>%
   arrange(id.datetime) %>%
   slice(n()) 
+
+avg <- logreg %>% # WHY DEFAULTS TO FIRST DATETIME - WANT TO DEFAULT TO LAST
+  group_by(id, ymd) %>%
+  dplyr::summarise(mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]))
 
 ```
  
