@@ -40,19 +40,33 @@ The data used in the following analyses come from 158 bears between the years 20
 
 * Environmental data from Movebank.org
   + Wind data (U and V vectors)
-  + Charnock parameter (sea roughness)
+  + Charnock parameter (sea surface roughness)
   + Temperature (K) at 2m
   + Pressure at 2m
 
 * Distance metrics
   + Distance to shore
-  + Distance to pack ice (not included in this analysis)*
+  + Distance to pack ice - NOT INCLUDED IN THIS ANALYSIS*
+
+* Patch Metrics (Sahatien et al. 2012; Biddlecomb et al. 2020) - NOT INCLUDED IN THIS ANALYSIS
+  + Mean patch area
+  + Total Edge
+  + PLAND (ice as percentage of landscap)
 
 * Reproductive Status
   + 0 = no data
   + 1 = denning
   + 2 = coy
   + 3 = yearling
+  
+* Wind Direction 
+  + Onshore winds (direction > 135 and < 225)
+  + Offshore winds (direction > 335 or < 45)
+  + Crosswinds (everything else)
+  
+* Bonepile
+  + 0 = no bonepile
+  + 1 = bonepile
   
 
 ```{r}
@@ -70,9 +84,11 @@ oneLocation <- logreg %>% # last location
   arrange(id.datetime) %>%
   slice(n()) 
 
-avg <- logreg %>% # WHY DEFAULTS TO FIRST DATETIME - WANT TO DEFAULT TO LAST
+avg <- logreg %>% 
   group_by(id, ymd) %>%
-  dplyr::summarise(mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]))
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim)
+    )
 
 ```
  
@@ -131,7 +147,12 @@ wind <- cbind(wind, rwind)
 
 wind <- wind  %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n()))) # remove data for land bears after start.swim = 1
 
-head(wind)
+
+# Categorize wind direction
+
+wind <- wind %>%
+  mutate(Wind_Type = ifelse(dir > 135 & dir < 225, "Onshore",
+         ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
 ```
 
 
