@@ -1,5 +1,5 @@
 ---
-title: "Migration Logistic Reg"
+title: "Migration Logistic Regression"
 output: html_document
 ---
 
@@ -11,6 +11,7 @@ library(rWind)
 library(dplyr)
 library(MuMIn)
 library(lme4)
+library(DescTools)
 
 rm(list = ls())
 
@@ -27,6 +28,8 @@ create_AICc_table <- function(aicc){ # AICc table function
   return(aicc)
 }
 ```
+
+
 
 ### Data
 
@@ -74,7 +77,7 @@ The data used in the following analyses come from 158 bears between the years 20
 load("logreg.RData")
 
 # Stand alone vectors to bind to dataframes for later analyses
-start.swim <- logreg$start.swim 
+start.swim.vector <- logreg$start.swim 
 animal <- logreg$animal 
 
 logreg <- logreg  %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n()))) # remove points after start.swim = 1
@@ -87,36 +90,32 @@ oneLocation <- logreg %>% # last location
 avg <- logreg %>% 
   group_by(id, ymd) %>%
   dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim)
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), max(Bonepile)
     )
+
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
 
 ```
  
 
 The following models are either Generalized Linear Models or Generalized Linear Mixed Models (logistic regression) in which 
 
-0 = On ice (n = 99,510)
+0 = On ice (n = 10,007)
 1 = Departure from ice (n = 12)
 
-Thus, the data is very zero-inflated. I am planning to address this issue by using a Known Fate (survival) model in Rmark for my final analyses. These analyses are preliminary, though I expect the final results to be similar.
+Clearly, the data is very zero-inflated. I am planning to address this issue by using a Known Fate (survival) model in Rmark for my final analyses. These analyses are preliminary, though I expect the final results to be similar.
 
 All points after the predetermined 'departure date' have been removed for land bears. As a reminder, the departure date has been defined as the last GPS point on ice during the open water season. To determine this point, I used NSIDC's MASIE ice data(0 = not ice and 1 = ice). Bears that vacillate extensively between ice and land have been removed from this analysis (per emails with D. Douglas and T. Atwood).
 
 
-
-
-
-
-
-
-Add environmental data from Movebank.org and format
+**Add environmental data from Movebank.org and format**
 
 * wind data (U and V vectors)  
 * Charnock Parameter   
 * Temp (K) at 2m   
 * Pressure at 2m   
 
-```{r}
+```{r results='hide'}
 
 wind <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank_07032020.csv")
 
@@ -131,7 +130,7 @@ which(logreg$start.swim == 1) # no start swim has NA for wind vectors - can dele
 
 # bind start.swim to wind so can run regressions
 
-wind <- cbind(wind, start.swim)
+wind <- cbind(wind, start.swim.vector)
 wind <- cbind(wind, animal)
 #wind$start.swim <- as.factor(wind$start.swim)
 
@@ -145,144 +144,105 @@ rwind <- uv2ds(wind$Wind_U_NARR_10m, wind$Wind_V_NARR_10m)
 
 wind <- cbind(wind, rwind)
 
-wind <- wind  %>% group_by(id) %>% slice(seq_len(min(which(start.swim == 1), n()))) # remove data for land bears after start.swim = 1
+wind <- wind  %>% group_by(id) %>% slice(seq_len(min(which(start.swim.vector == 1), n()))) # remove data for land bears after start.swim = 1
 
+wind$yday <- yday(wind$datetime)
 
 # Categorize wind direction
 
 wind <- wind %>%
   mutate(Wind_Type = ifelse(dir > 135 & dir < 225, "Onshore",
          ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
+
+# Find average
+# Note: for average "Wind Type", used 'first' direction of the day
+
+wind.avg <- wind %>%
+  group_by(id, yday) %>%
+  dplyr::summarize(
+    first(animal), mean(Charnock_Parameter), mean(Pressure_2m), mean(Temp_K_NARR_2m), mean(speed), max(start.swim.vector), first(Wind_Type) 
+  ) 
+  
+
+colnames(wind.avg) <- c("id", "yday","animal", "charnock", "pressure", "temp", "speed", "start.swim", "Wind.Type")  
 ```
 
 
-# Logistic Regression - SEA ICE CONCENTRATION 
+## SEA ICE CONCENTRATION 
 
-First I will determine which measurement of Sea Ice Concentration is best using a Generalized Linear Model (logistic regression)
+First I determined which measurement of Sea Ice Concentration is best using a glm
 
-* SIC_30m_max = maximum sea ice concentation within 30 km radius
-* SIC_30m_me  = mean sea ice concentration within 30 km radius
-* SIC_sq      = mean sea ice concentration quadratic: SIC + SIC^2
+* SIC_max   = maximum sea ice concentation within 30 km radius
+* SIC_mean  = mean sea ice concentration within 30 km radius
+* SIC_min   = minimum sea ice concentration within 30 km radius
+* SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
 
-```{r}
+```{r warning=FALSE}
 
-fit_max <- glm(start.swim ~ SIC_30m_max, data = logreg, family = binomial())
+fit_max <- glm(start.swim ~ SIC_max, data = avg, family = binomial())
 #summary(fit_max)
 
-fit_SIC_mean <- glm(start.swim ~ SIC_30m_me, data = logreg, family = binomial())
+fit_SIC_mean <- glm(start.swim ~ SIC_mean, data = avg, family = binomial())
 #summary(fit_SIC_mean)
 
-fit_SIC_sq <- glm(start.swim ~ SICsq, data = logreg, family = binomial())
+fit_SIC_sq <- glm(start.swim ~ SICsq, data = avg, family = binomial())
 #summary(fit_SIC_sq)
 
-aicc <- AICc(fit_max, fit_SIC_mean, fit_SIC_sq)
+fit_SIC_min <- glm(start.swim ~ SIC_min, data = avg, family = binomial())
+
+aicc <- AICc(fit_max, fit_SIC_mean, fit_SIC_min, fit_SIC_sq)
 
 create_AICc_table(aicc)
 
 ```
 
-SIC as a quadratic term fits best, though is only narrowly better than SIC_mean. 
+Mean SIC fits best, but is narrowly better than SIC as a quadratic term.  
+_Note: I am not reporting the results of the mixed model because of errors (singularity). However, the results were the same._ 
 
 
-### Sea Ice Concentration: Does it change results to use a mixed model? 
-
-Determine which measurement of Sea Ice Concentration is best using a Generalized Linear Mixed Model (logistic regression)
-
-```{r}
-
-fit_max <- glmer(start.swim ~ SIC_30m_max + (1|animal), data = logreg, family = binomial())
-#summary(fit_max)
-
-fit_SIC_mean <- glmer(start.swim ~ SIC_30m_me + (1|animal), data = logreg, family = binomial())
-#summary(fit_SIC_mean)
-
-fit_SIC_sq <- glmer(start.swim ~ SICsq + (1|animal), data = logreg, family = binomial())
-#summary(fit_SIC_sq)
-
-aicc <- AICc(fit_max, fit_SIC_mean, fit_SIC_sq)
-
-create_AICc_table(aicc)
-
-```
-
-Results do not change when using a mixed model. However, SIC-squared is now substantially better than SIC mean. 
-
-
-### Do results change when using one location per day?
-
-```{r}
-fit_max <- glmer(start.swim ~ SIC_30m_max + (1|animal), data = oneLocation, family = binomial())
-#summary(fit_max)
-
-fit_SIC_mean <- glmer(start.swim ~ SIC_30m_me + (1|animal), data = oneLocation, family = binomial())
-#summary(fit_SIC_mean)
-
-fit_SIC_sq <- glmer(start.swim ~ SICsq + (1|animal), data = oneLocation, family = binomial())
-#summary(fit_SIC_sq)
-
-aicc <- AICc(fit_max, fit_SIC_mean, fit_SIC_sq)
-
-create_AICc_table(aicc)
-
-```
-
-Results do not qualitatively change but fit seems slightly better and the quadratic term is now even more improved over the mean or max terms.
-
-
-# Wind 
-
-
-# Movebank Logistic Regression
-I used a regular GLM for this (no random effect) because I was getting errors about a singular fit (i.e., the model is overfitted). 
+## WIND   
+_again I am using a glm because of errors in singularity_
 
 ```{r}
 # add start.swim column to movebank df to run logistic regression
 
 
-Charnock <- glm(start.swim ~ Charnock_Parameter, data = wind, family = binomial())
-temp <- glm(start.swim ~ Temp_K_ECMWF_2m, data = wind, family = binomial())
-pressure <- glm(start.swim ~ Pressure_2m, data = wind, family = binomial())
-windspeed <- glm(start.swim ~ speed, data = wind, family = binomial())
-dir <- glm(start.swim ~ dir, data = wind, family = binomial())
-#test <- glm(start.swim~test, data = wind, family = binomial()) # random numbers were not significant
+Charnock <- glm(start.swim ~ charnock, data = wind.avg, family = binomial())
+temp <- glm(start.swim ~ temp, data = wind.avg, family = binomial())
+pressure <- glm(start.swim ~ pressure, data = wind.avg, family = binomial())
+windspeed <- glm(start.swim ~ speed, data = wind.avg, family = binomial())
+type <- glm(start.swim ~ Wind.Type, data = wind.avg, family = binomial())
 
-# Create row of random numbers
-
-#wind$test <- sample(100, size = nrow(wind), replace = TRUE)
-
-
-
-aicc <- AICc(Charnock, temp, pressure, windspeed, dir)
+aicc <- AICc(Charnock, temp, pressure, windspeed, type)
 
 create_AICc_table(aicc)
 
-
 ```
 
---> Windspeed is clearly the most important of these variables. Windspeed, temperature, and Charnock parameter were all significant. None were correlated > 0.4.
+Windspeed is clearly the most important of these variables. Windspeed and Charnock parameter were both significant and both positively associated with migration initiation. No variables were correlated > 0.4.
 
-# Comparing Sea Ice Concentration, Wind Speed, and SIC*Wind Speed (interaction) in a GLMM
+## Comparing Sea Ice Concentration, Wind Speed, and SIC*Wind Speed (interaction) in a GLMM
+
 Interaction between SIC and speed was best model of SIC quadratic, Speed, and SIC * Speed
 
 
-```{r}
+```{r warning= FALSE}
 
-windspeed <- wind$speed
+windspeed <- wind.avg$speed
+avg$windspeed <- windspeed
 
-logreg <- inner_join(logreg, wind)
-
-speed <- glmer(start.swim ~ speed + (1|animal), data = logreg, family = binomial())
-SIC <- glmer(start.swim ~ SICsq + (1|animal), data = logreg, family = binomial())
-speed_SIC <- glmer(start.swim ~ speed*SICsq + (1|animal), data = logreg, family = binomial())
+speed <- glmer(start.swim ~ windspeed + (1|animal), data = avg, family = binomial())
+SIC <- glmer(start.swim ~ SIC_mean + (1|animal), data = avg, family = binomial())
+speed_SIC <- glmer(start.swim ~ windspeed*SIC_mean + (1|animal), data = avg, family = binomial())
 
 aicc <- AICc(speed, SIC, speed_SIC)
 create_AICc_table(aicc)
 ```
 
-An interaction between SIC and Windspeed is clearly the best model of these three
+An interaction between SIC and Windspeed is clearly the best model of these three, with the caveat that I did get a "singular fit" error for the SIC_mean model. 
 
 
-# Reproductive Status
+## Reproductive Status
 
 I ran competing models to see how I should define reproductive status. My options were as follows:
 
@@ -301,7 +261,9 @@ I ran competing models to see how I should define reproductive status. My option
   + 1 = denning
   + 2 = coy or yearling
   
-The best choice was the first - dividing into all four categories. Reproductive status is a significant variable. 
+The best choice was the first - dividing into all four categories. 
+
+The logistic regression results are as follows:
 
 ``` {r}
 logreg$repro <- 0
@@ -313,22 +275,73 @@ logreg <- logreg %>%
 
 logreg$repro <- factor(logreg$repro, labels = c("Unknown", "Denning", "COY", "Yearling"))
 
-fit_repro <- glmer(start.swim ~ repro + (1|animal), data = logreg, family = binomial())
+avg <- logreg %>% 
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), first(repro), max(Bonepile)
+    )
 
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "repro", "Bonepile")
+
+fit_repro <- glm(start.swim ~ repro, data = avg, family = binomial())
 summary(fit_repro)
 
 ```
+Reproductive status is a significant variable. Again, I ran as a glm to avoid errors of singularity, but either way the result was the same. Bears that are denning or have yearlings are more likely to go to land. 
 
 
-# Distance to land
+## Distance to land, bonepile, wind direction
 
-I was unable to use a mixed effects model for this variable due to the same error: singular fit. Here is a summary of the results as a GLM. Results are below.
+Distance to land was also significant, with a negative association. Neither the existence of the bonepile nor the direction of the wind were significant.
+
+Caveat: I do not believe I defined either bonepile or wind direction sufficiently. I defined 'bonepile' as follows:
+
+0 = no whale landed
+1 = whale landed
+
+* Assumptions:  
+  + whales were butchered on same day as landed (check this - how long does it take to butcher a whale? i.e., for how many days after landing would a whale be detectable onshore      by a polar bear?)  
+  + bonepiles were lumped together: doesn't matter if was Barrow, Cross Island, or Kaktovik  
+  
+Data from: http://www.north-slope.org/departments/wildlife-management/studies-and-research-projects/bowhead-whales/bowhead-whale-subsistence-harvest-research#pubs
+_scroll to end of reports - table says what dates whales were landed_
+
+I am not sure how to get the 'average' wind direction for a day, given that I categorically defined wind direction as 1) Onshore, 2) Offshore, or 3) Crosswind. Perhaps I should take the most frequent category for any given day? Here, I simply took the first direction from the first GPS point of the day. 
 
 ```{r, echo = FALSE}
 
-fit_d2l <- glm(start.swim ~ dist2land[,1], data = logreg, family = binomial())
-summary(fit_d2l)
+avg$Wind.Type <- wind.avg$Wind.Type
+
+fit_d2l <- glm(start.swim ~ Dist2land, data = avg, family = binomial())
+
+fit_bp <- glm(start.swim ~ Bonepile, data = avg, family = binomial())
+
+fit_bp_wind <- glm(start.swim ~ Bonepile*Wind.Type, data = avg, family = binomial())
+
+aicc <- AICc(fit_d2l, fit_bp, fit_bp_wind)
+
+create_AICc_table(aicc)
 
 ```
 
+
+
+Here I combine some of the variables and find...that everything matters...
+
+* SIC_mean*windspeed
+* SIC_mean*windspeed + repro
+* SIC_mean*windspeed + distance to land
+* SIC_mean*windspeed + repro + distance to land (full)
+
+```{r}
+SIC_speed <- glm(start.swim ~ SIC_mean*windspeed, data = avg, family = binomial())
+SIC_speed_repro <- glm(start.swim ~ SIC_mean*windspeed + repro, data = avg, family = binomial())
+SIC_speed_dist <- glm(start.swim ~ SIC_mean*windspeed + Dist2land, data = avg, family = binomial())
+full <- glm(start.swim ~ SIC_mean*windspeed + Dist2land + repro, data = avg, family = binomial())
+
+aicc <- AICc(SIC_speed, SIC_speed_repro, SIC_speed_dist, full)
+
+create_AICc_table(aicc)
+
+```
 
