@@ -1,0 +1,257 @@
+---
+title: "CoxPH"
+author: "Annie Kellner"
+date: "8/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(lubridate)
+library(rWind)
+library(dplyr)
+library(MuMIn)
+#library(DescTools)
+library(survival)
+
+rm(list = ls())
+
+```
+
+```{r}
+# Functions
+
+create_AICc_table <- function(aicc){ # AICc table function
+  aicc$Model <- rownames(aicc)
+  aicc$deltaAICc <- aicc$AICc - min(aicc$AICc) 
+  aicc$L <- exp(-0.5*(aicc$deltaAICc))
+  aicc$weight <- aicc$L/(sum(aicc$L))
+  aicc$weight.pct <- aicc$weight*100
+  aicc <- arrange(aicc, aicc$deltaAICc)
+  return(aicc)
+}
+
+```
+
+
+Land bears with AK-confirmed departures only (n=14).   
+
+I included data from May 1 - Sept 30. In order to align the temporal resolution of the spatial data (e.g., one sea ice map per day) with the GPS data, I use daily averages for all environmental variables. 
+
+```{r}
+load("logreg.RData")
+
+# Stand-alone vectors for wind analysis (see below)
+
+start.swim.vector <- logreg$start.swim 
+animal <- logreg$animal 
+
+logreg <- select(logreg, -geometry)
+
+avg <- logreg %>% 
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), max(Bonepile)
+    )
+
+
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
+
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(tstart = row_number()) %>%
+  mutate(tstop = lead(tstart))
+
+load("ded_ids.RData")
+
+sub <- subset(avg, id %in% ded) # subset land bears
+
+sub <- sub %>% # Change tstart and tstop to NA after start.swim = 1
+  group_by(id) %>%
+  mutate(across(starts_with('t'),
+                ~replace(., row_number() > match(1, start.swim), NA)))
+
+```
+
+
+## SEA ICE CONCENTRATION 
+
+First I determined which measurement of Sea Ice Concentration is best 
+
+* SIC_max   = maximum sea ice concentation within 30 km radius
+* SIC_mean  = mean sea ice concentration within 30 km radius
+* SIC_min   = minimum sea ice concentration within 30 km radius
+* SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
+
+```{r}
+
+
+SIC_max <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_max, data = sub)
+
+SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = sub)
+
+SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = sub)
+
+SIC_min <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_min, data = sub)
+
+
+aicc <- AICc(SIC_max, SIC_mean, SIC_min, SIC_sq)
+
+create_AICc_table(aicc)
+
+```
+
+```{r results='hide'}
+
+wind <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank_07032020.csv")
+
+colnames(wind) <- c("datetime", "long", "lat", "ht_above_ellips", "id", "Charnock_Parameter", "Wind_U_ECMWF_10m", "Temp_K_ECMWF_2m", "Pressure_2m", "Wind_U_NARR_10m", "Wind_V_NARR_10m", "Temp_K_NARR_2m", "Pressure_Sea_Level_ECMWF", "Wind_V_ECMWF_10m")
+
+wind$datetime <- ymd_hms(wind$datetime)
+wind$datetime <- with_tz(wind$datetime, "US/Alaska")
+
+which(is.na(wind$Wind_U_NARR_10m))
+which(is.na(wind$Wind_V_NARR_10m))
+which(logreg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
+
+# bind start.swim to wind so can run regressions
+
+wind <- cbind(wind, start.swim.vector)
+wind <- cbind(wind, animal)
+#wind$start.swim <- as.factor(wind$start.swim)
+
+# Remove NA's 
+
+wind <- wind[!is.na(wind$Wind_U_NARR_10m),]
+wind <- wind[!is.na(wind$Wind_V_NARR_10m),]
+
+
+rwind <- uv2ds(wind$Wind_U_NARR_10m, wind$Wind_V_NARR_10m)
+
+wind <- cbind(wind, rwind)
+
+
+wind$yday <- yday(wind$datetime)
+
+# Categorize wind direction
+
+wind <- wind %>%
+  mutate(Wind_Type = ifelse(dir > 135 & dir < 225, "Onshore",
+         ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
+
+# Find average
+# Note: for average "Wind Type", used 'first' direction of the day
+
+wind.avg <- wind %>%
+  group_by(id, yday) %>%
+  dplyr::summarize(
+    first(animal), mean(Charnock_Parameter), mean(Pressure_2m), mean(Temp_K_NARR_2m), mean(speed), max(start.swim.vector), first(Wind_Type) 
+  ) 
+  
+
+colnames(wind.avg) <- c("id", "yday_start","animal", "charnock", "pressure", "temp", "speed", "start.swim", "Wind.Type") 
+
+wind.avg <- wind.avg %>%
+  group_by(id) %>%
+  mutate(yday_stop = lead(yday_start))
+
+load("ded_ids.RData")
+
+windSub <- subset(wind.avg, id %in% ded)
+
+windSub <- windSub %>%
+  group_by(id) %>%
+  mutate(across(starts_with('yday'),
+                ~replace(., row_number() > match(1, start.swim), NA)))
+
+```
+
+```{r}
+SIC_max <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_max, data = sub)
+
+
+Charnock <- coxph(Surv(yday_start, yday_stop, start.swim) ~ charnock, data = windSub)
+temp <- coxph(Surv(yday_start, yday_stop, start.swim) ~ temp, data = windSub)
+pressure <- coxph(Surv(yday_start, yday_stop, start.swim) ~ pressure, data = windSub)
+windspeed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ speed, data = windSub)
+type <- coxph(Surv(yday_start, yday_stop, start.swim) ~ Wind.Type, data = windSub)
+
+aicc <- AICc(Charnock, temp, pressure, windspeed, type)
+
+create_AICc_table(aicc)
+```
+```{r}
+windspeed <- windSub$speed
+sub$windspeed <- windspeed
+
+speed <- coxph(Surv(tstart, tstop, start.swim) ~ windspeed, data = sub)
+SIC <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = sub)
+Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
+
+
+aicc <- AICc(speed, SIC, Speed_SIC)
+create_AICc_table(aicc)
+```
+``` {r}
+logreg <- select(logreg, -geometry)
+
+logreg$repro <- 0
+
+logreg <- logreg %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+logreg$repro <- factor(logreg$repro, labels = c("Unknown", "Denning", "COY", "Yearling"))
+
+avg <- logreg %>% 
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), first(repro), max(Bonepile)
+    )
+
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "repro", "Bonepile")
+
+avg$yday_start <- yday(avg$datetime) 
+
+avg <- avg %>%
+  mutate(yday_stop = lead(yday_start))
+
+load("ded_ids.RData")
+
+sub <- subset(avg, id %in% ded)
+
+sub <- sub %>%
+  group_by(id) %>%
+  mutate(across(starts_with('yday'),
+                ~replace(., row_number() > match(1, start.swim), NA)))
+
+repro <- coxph(Surv(yday_start, yday_stop, start.swim) ~ repro, data = sub)
+
+summary(repro)
+```
+
+
+No bears with COYS came ashore. Denning is significantly associated with cming to shore. Having a yearling is positively related to going to shore but the result is not significant. 
+
+```{r}
+
+windspeed <- windSub$speed
+sub$windspeed <- windspeed
+
+speed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed, data = sub)
+SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean, data = sub)
+Speed_SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
+SIC_speed_dist <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land, data = sub)
+full <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land + repro, data = sub)
+
+aicc <- AICc(speed, SIC, Speed_SIC, SIC_speed_dist, full)
+
+create_AICc_table(aicc)
+
+
+
+```
+

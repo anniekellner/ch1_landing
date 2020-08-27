@@ -180,7 +180,7 @@ First I determined which measurement of Sea Ice Concentration is best using a gl
 ```{r warning=FALSE}
 
 fit_max <- glm(start.swim ~ SIC_max, data = avg, family = binomial())
-#summary(fit_max)
+summary(fit_max)
 
 fit_SIC_mean <- glm(start.swim ~ SIC_mean, data = avg, family = binomial())
 #summary(fit_SIC_mean)
