@@ -65,7 +65,8 @@ coy <- (DFtoSF(coy))
 tm_shape(coy) +
   tm_symbols(col = "month", popup.vars = c("year", "month")) +
   tm_facets(by = "animal") +
-  tm_shape(bone) + tm_symbols(col = "green") +
+  #tm_shape(bone) + 
+  tm_symbols(col = "green") +
   tmap_options(limits = c(facets.view = 8))
 ```
 
@@ -77,7 +78,7 @@ yearling <- DFtoSF(yearling)
 
 tm_shape(yearling) +
   tm_symbols(col = "month", popup.vars = c("year", "month", "day")) +
-  tm_shape(bone) +
+  #tm_shape(bone) +
   tm_dots(col = "green", size = 0.08, legend.show = TRUE)
 ```
 

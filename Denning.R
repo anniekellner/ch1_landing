@@ -24,10 +24,13 @@ den$BearID <- str_trim(den$BearID, side = "right") # trim whitespace
 # ---------------------------------------------------------------------------------------------------------------------------- #
 
 den$id.coy <- paste(den$BearID, den$Den_Emerge, sep = '.')
-length(which(den$id.coy %in% all.v2$id)) # which bears have data from year they EMERGED from den (coy)
+
+length(which(den$id.coy %in% all.v2$id)) # which bears have data from year they EMERGED from den (coy) # n = 17
 
 all.v2$coy <- ifelse(all.v2$id %in% den$id.coy, 1, 0) # Add coy to main dataframe
 
+test.coy <- subset(all.v2, coy == 1)
+unique(test.coy$id) # n = 17
 
 # which bears have data fall before (DenYr)
 
@@ -45,25 +48,26 @@ den$Den_Emerge <- as.numeric(den$Den_Emerge)
 den <- den %>% mutate(yrAfter = Den_Emerge + 1)
 den$id.yearling <- paste(den$BearID, den$yrAfter, sep = '.')
 
-which(den$id.yearling %in% all.v2$id) # which bears have data from year AFTER denning 
+length(which(den$id.yearling %in% all.v2$id)) # which bears have data from year AFTER denning 
 
 all.v2$yearling <- ifelse(all.v2$id %in% den$id.yearling, 1, 0) # add yearling to main df
 
 # Look at data
 
 DenYr <- subset(all.v2, DenYr ==1)
+unique(DenYr$id)
 coy <- subset(all.v2, coy==1)
+unique(coy$id)
 yearling <- subset(all.v2, yearling==1)
+unique(yearling$id)
 
 # bears that den in consecutive years (account for loss of coy)
 
-all.v2$coy[all.v2$coy == 1 & all.v2$DenYr ==1] <- 0 # change coy to 0 if both coy & denYr
+all.v2$coy <- ifelse(all.v2$coy == 1 & all.v2$DenYr == 1, 0, all.v2$coy) # checks out
 
-all.v2$yearling[all.v2$animal == 'pb_20446'] <- 0 # change yearling to 0 for pb_20446 (better would have been DenYr ==1 & Yearling == 1)
+all.v2$yearling <- ifelse(all.v2$DenYr == 1 & all.v2$yearling == 1,0, all.v2$yearling) # checks out
 
-all.v2$ows <- ifelse(all.v2$month > 5 & all.v2$month < 11,1,0) # create column for ows
-
-#save(all.v2, file = 'all_v2.RData')
+save(all.v2, file = 'all_v2.RData')
 
 
 
