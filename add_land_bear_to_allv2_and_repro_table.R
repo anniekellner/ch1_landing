@@ -3,13 +3,12 @@
 ##      CREATES TABLE FOR REPRODUCTIVE STATUS         ############################
 ##################################################################################
 
-
-load('all_v2.RData')
-load('land_bears_ows.RData')
-
 rm(list = ls())
 
 library(dplyr)
+
+load('all_v2.RData')
+load('land_bears_ows.RData')
 
 
 all.v2$repro <- 0 # 242 bears in all.v2
@@ -41,4 +40,5 @@ repro1 <- repro1 %>%
 
 table(repro1$bearType, repro1$repro)
 
+save(all.v2, file = "all_v2.RData")
 
