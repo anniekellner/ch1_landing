@@ -5,10 +5,11 @@
 rm(list = ls())
 
 library(dplyr)
+library(tidyr)
 library(tmap)
 
-load('all_v2.RData')
-load('logreg.RData')
+load('all_v2.RData') # Has correct repro info
+load('logreg.RData') # Not sure whether has correct repro info 
 
 # ----  Data Prep  ------------------ #
 
@@ -41,7 +42,7 @@ tm_shape(ice.sf) +
 
 # Bears with insufficient data via visual inspection
 
-ice.sf <- ice.sf %>%
+ice.sf <- ice.sf %>% 
   filter(id != "pb_20794.2005") %>%
   filter(id != "pb_20925.2009") %>%
   filter(id != "pb_21221.2010") %>%
@@ -51,5 +52,20 @@ ice.sf <- ice.sf %>%
   filter(id != "pb_21309.2012") %>%
   filter(id != "pb_32799.2006")
 
+unique(ice.sf$id) # 91 ice bears
 
+# Explore: graph change in latitude 
+
+ice.sf$id <- as.factor(ice.sf$id)
+
+ex <- ice.sf %>% 
+  filter(id %in% sample(levels(id), 3)) 
+
+  
+
+# Classify movement as northward (WNW (315 - ))
+
+# classification: ESE (101.25) - WSW (258.75)  
+
+swim.az$south <- ifelse(swim.az$azimuth > 101.25 & swim.az$azimuth < 258.75, 1, 0)
 
