@@ -61,7 +61,7 @@ ice.sf$id <- as.factor(ice.sf$id)
 ex <- ice.sf %>% 
   filter(id %in% sample(levels(id), 3)) 
 
-  
+# Should fill in missing points - interpolate using CRAWL?
 
 # Classify movement as northward (WNW (315 - ))
 
