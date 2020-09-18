@@ -7,59 +7,71 @@ rm(list = ls())
 library(dplyr)
 library(tidyr)
 library(tmap)
+library(ggplot2)
+library(lubridate)
+library(sf)
 
 load('all_v2.RData') # Has correct repro info
-load('logreg.RData') # Not sure whether has correct repro info 
+load('logreg.RData') # Not sure whether has correct repro info. Is sf object 
 
 # ----  Data Prep  ------------------ #
 
 # Remove bears for which there is little data
 
 ice <- all.v2 %>%
-  filter(month == 6 | month == 7) %>%
-  filter(land_bear == 0) %>%
-  select(animal:datetime, id)
+  inner_join(logreg) %>%
+  filter(month == 5 |month == 6 | month == 7 | month == 8) %>%
+  filter(land_bear == 0) 
 
+unique(ice$id) # 107 ice bears - includes ice bears that were prevoiusly excluded during formation of logreg df
 
-noData <- ice %>% # remove bears with < 100 data points
+insufPoints <- ice %>% # remove bears with < 100 data points
   group_by(id) %>%
   add_count(id) %>%
-  filter(n < 50)
+  filter(n < 100)
 
-ice <- anti_join(ice, noData)
+ice <- anti_join(ice, insufPoints)
 
-ice.sf <- inner_join(logreg, ice) # include land_bear designation
+unique(ice$id) # 96 bears
 
+# Visualize using tmap
 
-# Visualize
+#tmap_mode("view")
 
-tmap_mode("view")
+#tm_shape(ice.sf) + 
+  #tm_symbols(col = "month", popup.vars = "datetime")  + 
+  #tm_facets(by = "id") +
+  #tmap_options(limits = c(facets.view = 100))
 
-tm_shape(ice.sf) + 
-  tm_symbols(col = "month", popup.vars = "datetime")  + 
-  tm_facets(by = "id") +
-  tmap_options(limits = c(facets.view = 100))
+# Remove bears with insufficient data via visual inspection from tmap
 
-# Bears with insufficient data via visual inspection
+insufData <- c('pb_20794.2005', "pb_20925.2009", "pb_21221.2010", "pb_21283.2012", "pb_21291.2012", "pb_21296.2012", "pb_21309.2012", "pb_32799.2006",
+  "pb_20296.2015", "pb_20449.2014", "pb_20713.2004", "pb_20741.2008", "pb_20753.2015", "pb_20794.2006", "pb_20965.2008", "pb_20974.2008", "pb_20982.2008")
 
-ice.sf <- ice.sf %>% 
-  filter(id != "pb_20794.2005") %>%
-  filter(id != "pb_20925.2009") %>%
-  filter(id != "pb_21221.2010") %>%
-  filter(id != "pb_21283.2012") %>% 
-  filter(id != "pb_21291.2012") %>%
-  filter(id != "pb_21296.2012") %>%
-  filter(id != "pb_21309.2012") %>%
-  filter(id != "pb_32799.2006")
+insuf <- subset(ice, ice$id %in% insufData)
 
-unique(ice.sf$id) # 91 ice bears
+lat <- ice %>% 
+  anti_join(insuf) %>%
+  select(id, ymd, gps_lat) 
+  
+
+unique(lat$id) # 85 bears
+
+# ----  PLOTTING  ----------------------------------------------------------------------------------------------------------------------- #
 
 # Explore: graph change in latitude 
+# x axis = time; y axis = latitude
 
-ice.sf$id <- as.factor(ice.sf$id)
+ex <- ice.df %>% 
+  mutate(ordinal = yday(ymd)) %>%
+  group_by(id, ordinal) %>%
+  summarise(avgLat = mean(gps_lat))
 
-ex <- ice.sf %>% 
-  filter(id %in% sample(levels(id), 3)) 
+ex$id <- as.character(ex$id)
+
+ggplot(ex, aes(x = ordinal, y = avgLat, col = id)) + 
+  geom_line() + 
+  facet_wrap(~ id)
 
 # Should fill in missing points - interpolate using CRAWL?
 
