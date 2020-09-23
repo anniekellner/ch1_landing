@@ -15,6 +15,7 @@ library(dplyr)
 library(MuMIn)
 #library(DescTools)
 library(survival)
+library(tmap)
 
 rm(list = ls())
 
@@ -35,13 +36,48 @@ create_AICc_table <- function(aicc){ # AICc table function
 
 ```
 
+```{r}
 
-Land bears with AK-confirmed departures only (n=14).   
+# Projections
 
-I included data from May 1 - Sept 30. In order to align the temporal resolution of the spatial data (e.g., one sea ice map per day) with the GPS data, I use daily averages for all environmental variables. 
+polar.stereo <- CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
+```
+
+
+N = 23 migrations; 17 individuals
+
+I included data from June 1 - Sept 30. In order to align the temporal resolution of the spatial data (e.g., one sea ice map per day) with the GPS data, I use daily averages for all environmental variables. 
 
 ```{r}
-load("logreg.RData")
+
+# Prep Data
+
+load("all_v2.RData")
+
+lb <- subset(all.v2, land_bear == 1)
+
+lb <- st_as_sf(lb, coords = c("X", "Y"), crs = polar.stereo)
+
+tmap_mode(mode = "view")
+
+tm_shape(lb) +
+  tm_symbols(col = "month") +
+  tm_facets(by = "id")
+
+ss <- subset(lb, start.swim == 1) # 16 swims
+```
+
+```{r, eval= FALSE}
+# Add pb_20333.2008 per Pagano et al. 2012
+
+all.v2$ymd <- as.character(all.v2$ymd)
+all.v2$id.ymd <- paste(all.v2$id, all.v2$ymd)
+
+which(all.v2$id.ymd == "pb_20333.2008 2008-08-15") # scrolled through this date to find entry that matches Pagano et al. 2012
+all.v2[11495,]$start.swim <- 1
+
+save(all.v2, file = "all_v2.RData")
+```
 
 # Stand-alone vectors for wind analysis (see below)
 
@@ -54,7 +90,8 @@ avg <- logreg %>%
   group_by(id, ymd) %>%
   dplyr::summarise(
     first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), max(Bonepile)
-    )
+    ) %>%
+  ungroup()
 
 
 colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
