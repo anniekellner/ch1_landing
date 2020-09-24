@@ -23,9 +23,12 @@ create_AICc_table <- function(aicc){ # AICc table function
 
 
 
-load("logreg.RData")
+#load("logreg.RData")
+load("all_v2.RData")
 
-logreg <- select(logreg, -geometry)
+lb <- subset(all.v2, land_bear == 1) # 23 migrations; 17 individuals
+
+#logreg <- select(logreg, -geometry)
 
 avg <- logreg %>% 
   group_by(id, ymd) %>%
