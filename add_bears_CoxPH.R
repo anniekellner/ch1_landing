@@ -34,9 +34,8 @@ load("logreg.RData")
 
 # Projections
 
-polar.stereo <- CRS('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs') # EPSG 3413 
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/2008', full.names = TRUE) # bring in all GeoTIFFs by bear
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/MASIE/2014', full.names = TRUE) # bring in all GeoTIFFs by bear
 
 
 lb <- subset(all.v2, land_bear == 1)
@@ -49,9 +48,10 @@ bears <- filter(bears, month > 5 & month < 10)
 bears$ordinal <- yday(bears$ymd)
 bears$ord.year <- paste(bears$year, bears$ordinal, sep = "")
 
-new <- subset(bears, id == "pb_20333.2008" 
-              #| id == "pb_20525.2014"
-)
+new <- subset(bears, id == "pb_20525.2014")
+
+new <- new %>% 
+  filter(!(ord.year=='2014184'))
 
 #---------------- CREATE SPATIAL DATA ---------------------#
 
@@ -63,7 +63,7 @@ coords <- cbind(new$X, new$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data = new, proj4string = projection) 
 pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
 
-tmap_mode("plot")
+tmap_mode("view")
 
 tm_shape(pb.spdf.polar) +  # looks good!
   tm_symbols()
@@ -88,15 +88,26 @@ check_landscape(st[[1]]) # rasters look good
 
 # Try using lsm 
 
-sample_lsm(st[[1]], pb.spdf.polar[1:2,], plot_id = new$id.datetime[1:2], shape = "circle", size = 30000, verbose = TRUE, what = c("lsm_c_area_mn", "lsm_c_pland")) # works better!
+sample_lsm(st[[1]], pb.spdf.polar[1402,], plot_id = new$id.datetime[1402], shape = "circle", size = 30000, verbose = TRUE, what = c("lsm_c_area_mn", "lsm_c_pland")) # works better!
 
 cs <- list()
 for (i in 1:nrow(pb.spdf.polar)) {
   st2<-st[[which(date==pb.spdf.polar$ord.year[i])]]
   cs[[i]] <- sample_lsm(st2, pb.spdf.polar[i,], plot_id = pb.spdf.polar$id.datetime[i], shape = "circle", size = 30000, verbose = TRUE, 
-                        what = c("lsm_c_area_mn", 
-                                 "lsm_c_pland",
+                        what = c("lsm_c_area_mn", "lsm_c_pland",
                                  "lsm_c_te"))
 }
 
-cs.df <- do.call(rbind.data.frame, cs)
+cs.df2 <- do.call(rbind.data.frame, cs)
+
+save(cs.df, file = "added_bears_CoxPH.RData")
+
+# Add 
+
+load("added_bears_CoxPH.RData")
+
+tail(cs.df) # see whether all dates were calculated - looks good
+
+newBears <- rbind(cs.df, cs.df2)
+
+save(newBears, file = "added_bears_CoxPH.RData")
