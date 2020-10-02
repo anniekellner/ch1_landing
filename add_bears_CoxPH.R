@@ -91,21 +91,12 @@ check_landscape(st[[1]]) # rasters look good
 sample_lsm(st[[1]], pb.spdf.polar[1:2,], plot_id = new$id.datetime[1:2], shape = "circle", size = 30000, verbose = TRUE, what = c("lsm_c_area_mn", "lsm_c_pland")) # works better!
 
 cs <- list()
-for (i in 1:nrow(track)) {
-  st2<-st[[which(date==track$ord.year[i])]]
-  cs[[i]] <- sample_lsm(st2, track[i,], plot_id = track$id.datetime[i], shape = "circle", size = size, verbose = TRUE, 
+for (i in 1:nrow(pb.spdf.polar)) {
+  st2<-st[[which(date==pb.spdf.polar$ord.year[i])]]
+  cs[[i]] <- sample_lsm(st2, pb.spdf.polar[i,], plot_id = pb.spdf.polar$id.datetime[i], shape = "circle", size = 30000, verbose = TRUE, 
                         what = c("lsm_c_area_mn", 
-                                 "lsm_c_ca", 
-                                 "lsm_c_cai_mn", 
-                                 "lsm_c_clumpy",
-                                 "lsm_c_cohesion",
-                                 "lsm_c_core_mn",
-                                 "lsm_c_ed",
-                                 "lsm_c_frac_mn",
-                                 "lsm_c_gyrate_mn",
-                                 "lsm_c_lpi",
-                                 "lsm_c_np",
-                                 "lsm_c_para_mn",
                                  "lsm_c_pland",
                                  "lsm_c_te"))
 }
+
+cs.df <- do.call(rbind.data.frame, cs)
