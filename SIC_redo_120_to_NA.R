@@ -17,12 +17,16 @@ ss <- unique(ss$id)
 bears <- subset(lb, lb$id %in% ss)
 bears <- filter(bears, month > 5 & month < 10)
 
-sub <- subset(bears, year == 2008)
+sub <- subset(bears, year == 2011)
+
+#sub <- sub %>% 
+  #filter(!(ord.year=='2014184'))
+
 
 
 #---------------- SPATIAL DATA ---------------------#
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2008', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2011', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 
 # create spdf using sp
