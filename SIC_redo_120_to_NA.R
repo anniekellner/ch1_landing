@@ -1,3 +1,12 @@
+################################################################################################
+####    GET SIC VALUES FOR V5.4 ################################################################
+################################################################################################
+
+# Change cell value of land from 120 to NA
+
+# 2012: No data June 1 - July 1
+
+
 rm(list = ls())
 
 library(sf)
@@ -17,16 +26,17 @@ ss <- unique(ss$id)
 bears <- subset(lb, lb$id %in% ss)
 bears <- filter(bears, month > 5 & month < 10)
 
-sub <- subset(bears, year == 2011)
+sub <- subset(bears, year == 2015)
 
-#sub <- sub %>% 
-  #filter(!(ord.year=='2014184'))
+sub$ymd <- ymd(sub$ymd)
 
+# sub <- sub %>% 
+  #filter(ymd > '2012-07-02') # data missing before 07-02-2012
 
 
 #---------------- SPATIAL DATA ---------------------#
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2011', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2015', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 
 # create spdf using sp
