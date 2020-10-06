@@ -183,17 +183,18 @@ date<-vector()
 
 for (i in 1:length(rasterlist)) {
   stack[[i]]<-raster(rasterlist[i])
-  stack[[i]][stack[[i]] == 120] <- NA
+  stack[[i]][stack[[i]] == 120] <- NA # change land from 120 to NA in v5.4
   tt<-unlist(strsplit(names(stack[[i]]), '[[:punct:]]+')) #https://stackoverflow.com/questions/10738729/r-strsplit-with-multiple-unordered-split-arguments
   date[i]<-tt[which(nchar(tt)==max(nchar(tt)))]
 }
 
 st <- stack(stack)
 
+# Double check that other bears don't have SIC values > 100
 
-st[st == 120] <- NA
+load("logreg.RData")
 
-
+max(logreg$SIC_30m_max) # Need to run all bears through this script again
 
 
 # for loop that runs through each point and pulls data from appropriate GeoTIFF

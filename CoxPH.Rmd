@@ -16,6 +16,8 @@ library(MuMIn)
 #library(DescTools)
 library(survival)
 library(tmap)
+library(raster)
+library(sf)
 
 rm(list = ls())
 
@@ -55,6 +57,14 @@ I included data from June 1 - Sept 30. In order to align the temporal resolution
 load("all_v2.RData")
 
 lb <- subset(all.v2, land_bear == 1)
+ss <- subset(lb, start.swim == 1) # 16 swims
+
+load("logreg.RData")
+```
+
+```{r, eval= FALSE}
+
+# Map land bears 
 
 lb <- st_as_sf(lb, coords = c("X", "Y"), crs = polar.stereo)
 
@@ -64,34 +74,36 @@ tm_shape(lb) +
   tm_symbols(col = "month") +
   tm_facets(by = "id")
 
-ss <- subset(lb, start.swim == 1) # 16 swims
 ```
+
 
 ```{r, eval= FALSE}
-# Add pb_20333.2008 per Pagano et al. 2012
 
-all.v2$ymd <- as.character(all.v2$ymd)
-all.v2$id.ymd <- paste(all.v2$id, all.v2$ymd)
 
-which(all.v2$id.ymd == "pb_20333.2008 2008-08-15") # scrolled through this date to find entry that matches Pagano et al. 2012
-all.v2[11495,]$start.swim <- 1
-
-save(all.v2, file = "all_v2.RData")
 ```
 
-# Stand-alone vectors for wind analysis (see below)
 
-start.swim.vector <- logreg$start.swim 
-animal <- logreg$animal 
+```{r}
 
-logreg <- select(logreg, -geometry)
+# Prep Data
 
-avg <- logreg %>% 
+start.swim.vector <- ss$start.swim 
+animal <- ss$animal 
+
+avg <- ss %>% # Compute daily average
   group_by(id, ymd) %>%
   dplyr::summarise(
     first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), max(Bonepile)
     ) %>%
   ungroup()
+
+
+```
+
+
+
+
+
 
 
 colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")

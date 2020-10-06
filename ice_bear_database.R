@@ -9,7 +9,7 @@ rm(list = ls())
 load('land_bears_ows.RData') # land bears 
 head(land.bears.all.ows) # need SIC data back to June 1 
 
-load('Ice_Measurements.RData')
+load('Ice_Measurements.RData') # has SIC and cumulative days below 15% threshold
 head(ice.df)
 
 load('lsm.RData')
@@ -26,3 +26,5 @@ head(ice.calc)
 
 load('ice_calc.RData')
 head(tt)
+
+load("logreg.RData")

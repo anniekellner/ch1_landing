@@ -4,6 +4,7 @@
 
 # Calculate distance from land bears to land
 # Need to merge land shapefile into one multipolygon, or distances are incorrect
+# Calculated in Alaska Albers projection
 
 rm(list = ls())
 
@@ -15,25 +16,39 @@ library(lwgeom)
 library(proj4)
 library(raster)
 
+
+load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/SIC_new.RData')
+
+new <- subset(all_SIC_new, all_SIC_new$id == "pb_20333.2008" | all_SIC_new$id == "pb_20525.2014")
+
 setwd('C:/Users/akell/Documents/ArcGIS')
+
+# ---- FUNCTIONS  -------------------------------------------------------------------------------------------------------- #
+
+st_drop_geometry <- function(x) {
+  if(inherits(x,"sf")) {
+    x <- st_set_geometry(x, NULL)
+    class(x) <- 'data.frame'
+  }
+  return(x)
+}
+
 
 # LOAD DATA --------------------------------------------------------------------------------- #
 
-load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/land_bears_ows.RData')
+# create spdf using sp
 
-#dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_052520/ans_dem_8bit.tif')
-#plot(dem)
-#dem.poly <- rasterToPolygons(dem, na.rm = TRUE) # took way too long; crashed memory
+projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
+polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +x_0=0 +y_0=0 +a=6378273 +rf=298.279411123064 +units=m +no_defs') # matches AMSRE raster
 
-# check
-#tm_shape(dem) +
-  #tm_raster(legend.show = FALSE) +
-  #tm_shape(bbox) + 
-  #tm_polygons()
+coords <- cbind(new$X, new$Y)
+pb.spdf <- SpatialPointsDataFrame(coords = coords, data = new, proj4string = projection) 
+pb.spdf.polar <-spTransform(pb.spdf, polar.stereo) #reproject points to polar stereographic
+
+pb <- st_as_sf(pb.spdf.polar)
 
 bbox <- st_read('./Land Shapefiles/bbox.shp')
 
-polar.stereo <-CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
 
 land <- st_read('./Land Shapefiles/AK_CA_5kbuff.shp')
 land.dissolve <- land %>% summarise(Shape_Area = sum(Shape_Area)) # dissolve AK and territories into one obj
@@ -52,7 +67,7 @@ land.ps <- st_transform(land.crop, polar.stereo)
 # Verify land and points look good
 
 tm_shape(pb) + # plot points first so frame is large enough to accompany points and land
-  tm_dots() +
+  tm_dots(col = "month", popup.vars = "ymd") +
   tm_shape(land.ps) +
   tm_fill()
   
@@ -64,23 +79,43 @@ dist <- st_distance(pb, land.ps, by_element = TRUE)
 
 pb$dist2land <- cbind(matrix(dist))
 
-save(pb, file = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/land_bears_ows.RData')
 
-# -------------------------------------------------------------------------- #
+# --  ADD TO EXISTING DISTANCE DATA ----------------------------------------------- #
 
-# check first ten points
+load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/logreg.RData')
+load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/all_v2.RData')
 
-test <- pb[1:10,]
+lb <- subset(all.v2, land_bear == 1)
+
+ss <- subset(lb, start.swim == 1) # 18 swims after adding data below
+ss <- unique(ss$id)
+
+bears <- subset(lb, lb$id %in% ss)
+bears <- filter(bears, month > 5 & month < 10)
+
+SIC <- all_SIC_new %>%
+  dplyr::select(id.datetime, SIC_30m_me:SIC_30m_min) 
+
+bears <- bears %>%
+  left_join(SIC, by = "id.datetime")
 
 
-library(tmap)
-tmap_mode("view")
+dist1 <- logreg %>%
+  dplyr::select(id.datetime, dist2land) %>%
+  st_drop_geometry()
 
-land.map <- tm_shape(land.ps) +
-  tm_polygons() 
 
-land.map +
-tm_shape(test) + 
-  tm_dots(col = 'day')
-  
+dist2 <- pb %>%
+  dplyr::select(id.datetime, dist2land) %>%
+  st_drop_geometry() %>%
+  bind_rows(dist1)
+
+
+bears <- bears %>%
+  left_join(dist2, by = "id.datetime")
+
+
+save(bears, file = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/land_bears_CoxPH.RData')
+
+
 
