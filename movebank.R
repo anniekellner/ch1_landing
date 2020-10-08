@@ -8,25 +8,25 @@ library(lubridate)
 library(dplyr)
 library(sf)
 
-load('logreg.RData') 
+load('land_bears_CoxPH.RData') 
+new <- subset(bears, id == "pb_20333.2008" | id == "pb_20525.2014")
 
-# add lat long data
+# select columns
 
-logreg.wgs <- st_transform(logreg, crs = 4326)
-logreg.wgs <- cbind(logreg.wgs, st_coordinates(logreg.wgs$geometry))
+movebank <- dplyr::select(bears, datetime, gps_lon, gps_lat, id)
+head(movebank)
 
-movebank <- select(logreg.wgs, id, datetime, X.1, Y.1)
-movebank <- as.data.frame(movebank)
-movebank <- movebank %>% select(-geometry)
-
-colnames(movebank) <- c('id', 'timestamp', 'location-long', 'location-lat')
+colnames(movebank) <- c('timestamp', 'location-long', 'location-lat', 'id')
 
 tz(movebank$timestamp) # should be US/Alaska
 
 movebank$timestamp <- with_tz(movebank$timestamp, "UTC") # Change date and time to UTC
+movebank$timestamp <- paste0(movebank$timestamp, ".00") # required movebank formatting
 
 movebank$ht.above.ellipsoid <-0 #need to change '.' to '-' in .csv
 
-movebank2 <- movebank[, c(2,3,4,5,1)] # reorder columns to fit Movebank format
+movebank <- movebank[, c(1:3, 5,4)] # reorder columns to fit Movebank format
+head(movebank)
 
-write.csv(movebank2, 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/Movebank_07032020.csv', row.names = FALSE)
+
+write.table(movebank, 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/Movebank_10082020.csv', row.names = FALSE, sep = ",")
