@@ -13,7 +13,6 @@ library(stringr)
 library(dplyr)
    
 load('all_v2.RData')
-load('ded_ids.RData')
 
 ows <- subset(all.v2, ows == 1)
 
