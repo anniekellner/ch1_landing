@@ -77,12 +77,6 @@ tm_shape(lb) +
 ```
 
 
-```{r, eval= FALSE}
-
-
-```
-
-
 ```{r}
 
 # Prep Data
@@ -100,11 +94,7 @@ avg <- ss %>% # Compute daily average
 
 ```
 
-
-
-
-
-
+```{r}
 
 colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
 
