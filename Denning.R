@@ -16,6 +16,19 @@ load('all_v2.RData')
 
 ows <- subset(all.v2, ows == 1)
 
+# Add data from Kate Lillie, Anthony Pagano, Aerial surveys (TA)
+
+ows <- ows %>% 
+  group_by(id) %>%
+  slice_head() %>%
+  dplyr::select(animal, year, id, ymd, coy:land_bear) %>%
+  ungroup()
+
+head(ows)
+write.csv(ows, file = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv")
+
+
+
 # import csv - denning data from TA
 den <- read.csv('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Denning collared bears_2004-15.csv')
 colnames(den) <- c("Den_Emerge", "Subpop", "BearID")
