@@ -9,7 +9,8 @@ library(dplyr)
 library(sf)
 
 load('land_bears_CoxPH.RData') 
-new <- subset(bears, id == "pb_20333.2008" | id == "pb_20525.2014")
+
+new <- subset(bears, id == "pb_20413.2006" | id == "pb_20418.2005" | id == "pb_20446.2009" | id == "pb_20520.2012")
 new <- distinct(new)
 
 # select columns
@@ -32,4 +33,4 @@ head(movebank)
 movebank$timestamp <- ymd_hms(movebank$timestamp)
 
 
-write.csv(movebank, 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/Movebank_10082020.csv', row.names = FALSE)
+write.csv(movebank, 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/Movebank_10192020.csv', row.names = FALSE)

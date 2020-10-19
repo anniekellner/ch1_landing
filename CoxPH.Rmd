@@ -54,19 +54,17 @@ I included data from June 1 - Sept 30. In order to align the temporal resolution
 
 # Prep Data
 
-load("all_v2.RData")
+load("land_bears_CoxPH.RData")
 
-lb <- subset(all.v2, land_bear == 1)
-ss <- subset(lb, start.swim == 1) # 16 swims
+bears <- distinct(bears)
 
-load("logreg.RData")
+ss <- subset(bears, start.swim == 1) # 16 swims
+
 ```
 
 ```{r, eval= FALSE}
 
 # Map land bears 
-
-lb <- st_as_sf(lb, coords = c("X", "Y"), crs = polar.stereo)
 
 tmap_mode(mode = "view")
 
@@ -81,13 +79,13 @@ tm_shape(lb) +
 
 # Prep Data
 
-start.swim.vector <- ss$start.swim 
-animal <- ss$animal 
+bears <- bears %>%
+  mutate(SICsq = SIC_30m_me^2) # Add SIC-squared
 
-avg <- ss %>% # Compute daily average
+avg <- bears %>% # Compute daily average
   group_by(id, ymd) %>%
   dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), max(Bonepile)
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), max(Bonepile)
     ) %>%
   ungroup()
 
@@ -96,18 +94,14 @@ avg <- ss %>% # Compute daily average
 
 ```{r}
 
-colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
+colnames(avg) <- c("id", "ymd", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
 
 avg <- avg %>%
   group_by(id) %>%
   mutate(tstart = row_number()) %>%
   mutate(tstop = lead(tstart))
 
-load("ded_ids.RData")
-
-sub <- subset(avg, id %in% ded) # subset land bears
-
-sub <- sub %>% # Change tstart and tstop to NA after start.swim = 1
+avg <- avg %>% # Change tstart and tstop to NA after start.swim = 1
   group_by(id) %>%
   mutate(across(starts_with('t'),
                 ~replace(., row_number() > match(1, start.swim), NA)))
@@ -127,44 +121,70 @@ First I determined which measurement of Sea Ice Concentration is best
 ```{r}
 
 
-SIC_max <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_max, data = sub)
+SIC_max <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_max, data = avg)
 
-SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = sub)
+SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = avg)
 
-SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = sub)
+SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = avg)
 
-SIC_min <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_min, data = sub)
+SIC_min <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_min, data = avg)
 
 
 aicc <- AICc(SIC_max, SIC_mean, SIC_min, SIC_sq)
 
-create_AICc_table(aicc)
+create_AICc_table(aicc) # SIC Max is best model after going back through data and changing 120 --> 0 for land. Also after adding bears. 
 
 ```
 
 ```{r results='hide'}
 
-wind <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank_07032020.csv")
+wind1 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_07032020.csv") 
+#lb <- unique(bears$id)
 
-colnames(wind) <- c("datetime", "long", "lat", "ht_above_ellips", "id", "Charnock_Parameter", "Wind_U_ECMWF_10m", "Temp_K_ECMWF_2m", "Pressure_2m", "Wind_U_NARR_10m", "Wind_V_NARR_10m", "Temp_K_NARR_2m", "Pressure_Sea_Level_ECMWF", "Wind_V_ECMWF_10m")
+#test <- subset(wind1, wind1$id %in% lb)
 
-wind$datetime <- ymd_hms(wind$datetime)
+#new <- subset(bears, id == "pb_20333.2008" | id == "pb_20525.2014")
+wind2 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_10082020.csv")
+#ss.new <- new$start.swim
+#animal <- ss$animal 
+
+wind1 <- dplyr::select(wind1, timestamp, location.long, location.lat, ht.above.ellipsoid, id, NCEP.NARR.FLX.U.Wind.at.10.m.above.Ground, NCEP.NARR.FLX.V.Wind.at.10.m.above.Ground) # This csv has data for both ice and land bears
+
+wind <- rbind(wind1, wind2)
+
+colnames(wind) <- c("datetime", "gps_lon", "gps_lat", "ht_above_ellips", "id", "Wind_U", "Wind_V") # wind vectors NCEP NARR FLX
 wind$datetime <- with_tz(wind$datetime, "US/Alaska")
 
-which(is.na(wind$Wind_U_NARR_10m))
-which(is.na(wind$Wind_V_NARR_10m))
-which(logreg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
+lb <- unique(bears$id)
+wind <- subset(wind, id %in% lb)
+
+windBears <- unique(wind$id)
+
+setdiff(lb, windBears)
+
+
+test <- left_join(bears, wind, by = c("datetime","id"))
+
+which(is.na(wind$Wind_U))
+which(is.na(wind$Wind_V))
+which(avg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
+
 
 # bind start.swim to wind so can run regressions
 
+cbind()
+
 wind <- cbind(wind, start.swim.vector)
 wind <- cbind(wind, animal)
-#wind$start.swim <- as.factor(wind$start.swim)
+
+wind$start.swim <- as.factor(wind$start.swim)
 
 # Remove NA's 
 
-wind <- wind[!is.na(wind$Wind_U_NARR_10m),]
-wind <- wind[!is.na(wind$Wind_V_NARR_10m),]
+wind <- wind[!is.na(wind$Wind_U),]
+wind <- wind[!is.na(wind$Wind_V),]
+
+
 
 
 rwind <- uv2ds(wind$Wind_U_NARR_10m, wind$Wind_V_NARR_10m)
