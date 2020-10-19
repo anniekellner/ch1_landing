@@ -22,16 +22,17 @@ library(dplyr)
 
 bone <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Bonepile_Dates.csv")
 
-bone <- bone$Dates
-bone <- mdy(bone, tz = "US/Alaska")
-bone <- unique(bone)
+bone$Dates <- mdy(bone$Dates)
+bonedates <- as.character(bone$Dates)
 
-load("logreg.RData")
+load("land_bears_CoxPH.RData")
 
-logreg <- logreg %>%
-  mutate(Bonepile = if_else(logreg$ymd %in% bone, 1, 0))
+bears <- bears %>%
+  mutate(Bonepile = if_else(ymd %in% bonedates, 1, 0))
 
-save(logreg, file = "logreg.RData")
+test <- subset(bears, Bonepile == 1) # looks good
+
+save(bears, file = "land_bears_CoxPH.RData")
 
 
 
