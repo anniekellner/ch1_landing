@@ -58,7 +58,7 @@ load("land_bears_CoxPH.RData")
 
 bears <- distinct(bears)
 
-ss <- subset(bears, start.swim == 1) # 16 swims
+ss <- subset(bears, start.swim == 1) # 19 swims
 
 ```
 
@@ -138,46 +138,31 @@ create_AICc_table(aicc) # SIC Max is best model after going back through data an
 
 ```{r results='hide'}
 
+# Combine three separate Movebank spreadsheets (data obtained in separate requests)
+
 wind1 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_07032020.csv") 
-#lb <- unique(bears$id)
-
-#test <- subset(wind1, wind1$id %in% lb)
-
-#new <- subset(bears, id == "pb_20333.2008" | id == "pb_20525.2014")
 wind2 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_10082020.csv")
-#ss.new <- new$start.swim
-#animal <- ss$animal 
+wind3 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_10192020.csv")
 
-wind1 <- dplyr::select(wind1, timestamp, location.long, location.lat, ht.above.ellipsoid, id, NCEP.NARR.FLX.U.Wind.at.10.m.above.Ground, NCEP.NARR.FLX.V.Wind.at.10.m.above.Ground) # This csv has data for both ice and land bears
+wind1 <- dplyr::select(wind1, timestamp, location.long, location.lat, ht.above.ellipsoid, id, NCEP.NARR.FLX.U.Wind.at.10.m.above.Ground, NCEP.NARR.FLX.V.Wind.at.10.m.above.Ground) # eliminate other environmental variables like Chinook parameter
 
-wind <- rbind(wind1, wind2)
+wind <- rbind(wind1, wind2, wind3)
+wind$timestamp <- ymd_hms(wind$timestamp, tz = "UTC") # datetime imported as factor from csv. Change to POSIXct object.
+
+# Eliminate ice bears (from wind1)
+
+lb <- unique(bears$id)
+wind <- subset(wind, wind$id %in% lb)
+wind <- distinct(wind)
 
 colnames(wind) <- c("datetime", "gps_lon", "gps_lat", "ht_above_ellips", "id", "Wind_U", "Wind_V") # wind vectors NCEP NARR FLX
 wind$datetime <- with_tz(wind$datetime, "US/Alaska")
 
-lb <- unique(bears$id)
-wind <- subset(wind, id %in% lb)
-
-windBears <- unique(wind$id)
-
-setdiff(lb, windBears)
-
-
-test <- left_join(bears, wind, by = c("datetime","id"))
+wind.join <- left_join(bears, wind, by = c("datetime","id", "gps_lon", "gps_lat"))
 
 which(is.na(wind$Wind_U))
 which(is.na(wind$Wind_V))
 which(avg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
-
-
-# bind start.swim to wind so can run regressions
-
-cbind()
-
-wind <- cbind(wind, start.swim.vector)
-wind <- cbind(wind, animal)
-
-wind$start.swim <- as.factor(wind$start.swim)
 
 # Remove NA's 
 
@@ -187,27 +172,33 @@ wind <- wind[!is.na(wind$Wind_V),]
 
 
 
-rwind <- uv2ds(wind$Wind_U_NARR_10m, wind$Wind_V_NARR_10m)
+rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
 
-wind <- cbind(wind, rwind)
-
-
-wind$yday <- yday(wind$datetime)
+wind.join <- cbind(wind.join, rwind)
+wind.join$yday <- yday(wind.join$datetime)
 
 # Categorize wind direction
 
-wind <- wind %>%
+wind.join <- wind.join %>%
   mutate(Wind_Type = ifelse(dir > 135 & dir < 225, "Onshore",
          ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
 
 # Find average
 # Note: for average "Wind Type", used 'first' direction of the day
 
-wind.avg <- wind %>%
-  group_by(id, yday) %>%
-  dplyr::summarize(
-    first(animal), mean(Charnock_Parameter), mean(Pressure_2m), mean(Temp_K_NARR_2m), mean(speed), max(start.swim.vector), first(Wind_Type) 
-  ) 
+avg2 <- wind.join %>% # Compute daily average
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), max(SIC_30m_max), mean(SIC_30m_max), mean(dist2land), max(start.swim), mean(speed), mean(dir), max(Bonepile)
+    ) %>%
+  ungroup()
+
+
+#wind.avg <- wind %>%
+  #group_by(id, yday) %>%
+  #dplyr::summarize(
+    #first(animal), mean(Charnock_Parameter), mean(Pressure_2m), mean(Temp_K_NARR_2m), mean(speed), max(start.swim.vector), first(Wind_Type) 
+ # ) 
   
 
 colnames(wind.avg) <- c("id", "yday_start","animal", "charnock", "pressure", "temp", "speed", "start.swim", "Wind.Type") 
