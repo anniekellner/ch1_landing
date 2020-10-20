@@ -15,11 +15,12 @@ library(tmap)
 library(lwgeom)
 library(proj4)
 library(raster)
+library(tidyr)
 
 
-load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/SIC_new.RData')
+load("land_bears_CoxPH.RData")
 
-new <- subset(all_SIC_new, all_SIC_new$id == "pb_20333.2008" | all_SIC_new$id == "pb_20525.2014")
+new <- subset(bears, bears$id == "pb_20413.2006" | bears$id == "pb_20418.2005" | bears$id == "pb_20446.2009" | bears$id == "pb_20520.2012")
 
 setwd('C:/Users/akell/Documents/ArcGIS')
 
@@ -78,42 +79,16 @@ dist <- vector()
 dist <- st_distance(pb, land.ps, by_element = TRUE)
 
 pb$dist2land <- cbind(matrix(dist))
+pb$dist2land <- as.numeric(pb$dist2land)
 
 
 # --  ADD TO EXISTING DISTANCE DATA ----------------------------------------------- #
 
-load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/logreg.RData')
-load('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/all_v2.RData')
-
-lb <- subset(all.v2, land_bear == 1)
-
-ss <- subset(lb, start.swim == 1) # 18 swims after adding data below
-ss <- unique(ss$id)
-
-bears <- subset(lb, lb$id %in% ss)
-bears <- filter(bears, month > 5 & month < 10)
-
-SIC <- all_SIC_new %>%
-  dplyr::select(id.datetime, SIC_30m_me:SIC_30m_min) 
-
-bears <- bears %>%
-  left_join(SIC, by = "id.datetime")
-
-
-dist1 <- logreg %>%
-  dplyr::select(id.datetime, dist2land) %>%
+pb.sel <- pb %>%
   st_drop_geometry()
 
-
-dist2 <- pb %>%
-  dplyr::select(id.datetime, dist2land) %>%
-  st_drop_geometry() %>%
-  bind_rows(dist1)
-
-
-bears <- bears %>%
-  left_join(dist2, by = "id.datetime")
-
+bears <- rbind(bears, pb.sel)
+bears <- drop_na(test, dist2land)
 
 save(bears, file = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/land_bears_CoxPH.RData')
 
