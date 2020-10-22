@@ -15,20 +15,18 @@ library(dplyr)
 library(tmap)
 library(lubridate)
 
-load("all_v2.RData")
-load("SIC_new.RData")
+load("land_bears_CoxPH.RData")
 
-lb <- subset(all.v2, land_bear == 1)
 
-ss <- subset(lb, start.swim == 1) # 18 swims after adding data below
-ss <- unique(ss$id)
+#ss <- subset(lb, start.swim == 1) # 18 swims after adding data below
+#ss <- unique(ss$id)
 
-bears <- subset(lb, lb$id %in% ss)
-bears <- filter(bears, month > 5 & month < 10)
+#bears <- subset(lb, lb$id %in% ss)
+#bears <- filter(bears, month > 5 & month < 10)
 
-sub <- subset(bears, year == 2015)
+sub <- subset(bears, year == 2014)
 
-sub$ymd <- ymd(sub$ymd)
+#sub$ymd <- ymd(sub$ymd)
 
 # sub <- sub %>% 
   #filter(ymd > '2012-07-02') # data missing before 07-02-2012
@@ -36,7 +34,7 @@ sub$ymd <- ymd(sub$ymd)
 
 #---------------- SPATIAL DATA ---------------------#
 
-rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2015', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+rasterlist <- list.files('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/OWS_2014', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 
 # create spdf using sp
@@ -82,11 +80,22 @@ for (i in 1:nrow(pb.spdf.polar)) {
 
 
 new <- pb.spdf.polar@data # bears just run
+new <- select(new, -date2)
 
 head(new)
 tail(new)
 
-all_SIC_new <- rbind(all_SIC_new, new) # all bears
 
-save(all_SIC_new, file = "SIC_new.RData")
+# Replace bad values in CoxPH df 
+
+head(sub)
+sub <- dplyr::select(sub, animal:id.ymd, dist2land, Bonepile)
+new <- dplyr::select(new, SIC_30m_me: SIC_30m_min)
+bears2014new <- cbind(sub, new)
+
+bears <- filter(bears, year != 2014)
+
+bears <- rbind(bears, bears2014new)
+
+save(bears, file = "land_bears_CoxPH.RData")
 

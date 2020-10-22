@@ -15,6 +15,7 @@ library(dplyr)
 library(MuMIn)
 #library(DescTools)
 library(survival)
+library(survminer)
 library(tmap)
 library(raster)
 library(sf)
@@ -85,7 +86,7 @@ bears <- bears %>%
 avg <- bears %>% # Compute daily average
   group_by(id, ymd) %>%
   dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), max(Bonepile)
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), max(SIC_30m_max), mean(SIC_30m_min), min(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), max(Bonepile)
     ) %>%
   ungroup()
 
@@ -94,7 +95,7 @@ avg <- bears %>% # Compute daily average
 
 ```{r}
 
-colnames(avg) <- c("id", "ymd", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "Bonepile")
+colnames(avg) <- c("id", "ymd", "animal", "SIC_mean", "SIC_maxMean", "SICmaxMax", "SIC_minMean", "SIC_minMin", "SICsq", "Dist2land", "start.swim", "Bonepile")
 
 avg <- avg %>%
   group_by(id) %>%
@@ -120,17 +121,31 @@ First I determined which measurement of Sea Ice Concentration is best
 
 ```{r}
 
+# CoxPH (baseline hazard not specified)
 
-SIC_max <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_max, data = avg)
+SIC_maxMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_maxMean + cluster(animal), data = avg)
+SIC_maxPH <- coxph(Surv(tstart, tstop, start.swim) ~ SICmaxMax + cluster(animal), data = avg)
+SIC_maxmax_exp <- survreg(Surv(tstart, start.swim) ~ SIC_maxMean, data = avg, dist = "exponential", cluster = animal)
 
 SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = avg)
 
 SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = avg)
 
-SIC_min <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_min, data = avg)
+SIC_minMin <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_minMin, data = avg)
+SIC_minMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_minMean, data = avg)
 
 
-aicc <- AICc(SIC_max, SIC_mean, SIC_min, SIC_sq)
+aicc <- AICc(SIC_maxMean, SIC_maxMax, SIC_mean, SIC_minMin, SIC_minMean, SIC_sq)
+
+# Survreg (hazard assumed to be constant)
+
+SICmaxExp <- survreg(Surv(tstart, start.swim) ~ SICmaxMax, data = avg, dist = "exponential", cluster = animal)
+SICmean <- survreg(Surv(tstart, start.swim) ~ SIC_mean, data = avg, dist = "exponential", cluster = animal)
+SICmin <- survreg(Surv(tstart, start.swim) ~ SIC_minMin, data = avg, dist = "exponential", cluster = animal)
+SICsq <- survreg(Surv(tstart, start.swim) ~ SICsq, data = avg, dist = "exponential", cluster = animal)
+
+aicc <- AICc(SICmax, SICmean, SICmin, SICsq)
+
 
 create_AICc_table(aicc) # SIC Max is best model after going back through data and changing 120 --> 0 for land. Also after adding bears. 
 
@@ -164,14 +179,6 @@ which(is.na(wind$Wind_U))
 which(is.na(wind$Wind_V))
 which(avg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
 
-# Remove NA's 
-
-wind <- wind[!is.na(wind$Wind_U),]
-wind <- wind[!is.na(wind$Wind_V),]
-
-
-
-
 rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
 
 wind.join <- cbind(wind.join, rwind)
@@ -187,63 +194,96 @@ wind.join <- wind.join %>%
 # Note: for average "Wind Type", used 'first' direction of the day
 
 avg2 <- wind.join %>% # Compute daily average
-  group_by(id, ymd) %>%
+  group_by(id, yday) %>%
   dplyr::summarise(
     first(animal), max(SIC_30m_max), mean(SIC_30m_max), mean(dist2land), max(start.swim), mean(speed), mean(dir), max(Bonepile)
     ) %>%
   ungroup()
 
 
-#wind.avg <- wind %>%
-  #group_by(id, yday) %>%
-  #dplyr::summarize(
-    #first(animal), mean(Charnock_Parameter), mean(Pressure_2m), mean(Temp_K_NARR_2m), mean(speed), max(start.swim.vector), first(Wind_Type) 
- # ) 
-  
 
-colnames(wind.avg) <- c("id", "yday_start","animal", "charnock", "pressure", "temp", "speed", "start.swim", "Wind.Type") 
 
-wind.avg <- wind.avg %>%
+colnames(avg2) <- c("id", "tstart", "animal", "MaxSICmax", "MeanSICmax", "MeanDist2land", "start.swim", "MeanWindspeed", "MeanDir", "Bonepile") 
+
+avg2 <- avg2 %>%
   group_by(id) %>%
-  mutate(yday_stop = lead(yday_start))
+  mutate(tstop = lead(tstart))
 
-load("ded_ids.RData")
 
-windSub <- subset(wind.avg, id %in% ded)
-
-windSub <- windSub %>%
+avg2 <- avg2 %>%
   group_by(id) %>%
-  mutate(across(starts_with('yday'),
+  mutate(across(starts_with('t'),
                 ~replace(., row_number() > match(1, start.swim), NA)))
 
 ```
 
+
 ```{r}
-SIC_max <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_max, data = sub)
+
+speed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + cluster(animal), data = avg2)
+SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MaxSICmax, data = avg2)
+Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed*MaxSICmax + cluster(animal), data = avg2)
+distance <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land, data = avg2)
+distSpeed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed, data = avg2)
+distSpeedSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed * MaxSICmax + MeanWindspeed + MaxSICmax, data = avg2)
+SpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + MaxSICmax, data = avg2)
+distSpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + MaxSICmax + MeanDist2land, data = avg2)
 
 
-Charnock <- coxph(Surv(yday_start, yday_stop, start.swim) ~ charnock, data = windSub)
-temp <- coxph(Surv(yday_start, yday_stop, start.swim) ~ temp, data = windSub)
-pressure <- coxph(Surv(yday_start, yday_stop, start.swim) ~ pressure, data = windSub)
-windspeed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ speed, data = windSub)
-type <- coxph(Surv(yday_start, yday_stop, start.swim) ~ Wind.Type, data = windSub)
+aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, distSpeedSIC, SpeedPlsSIC, distSpeedPlsSIC)
+create_AICc_table(aicc)
 
-aicc <- AICc(Charnock, temp, pressure, windspeed, type)
+
+speed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed, data = sub)
+SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean, data = sub)
+Speed_SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
+SIC_speed_dist <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land, data = sub)
+full <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land + repro, data = sub)
+
+
 
 create_AICc_table(aicc)
-```
-```{r}
-windspeed <- windSub$speed
-sub$windspeed <- windspeed
-
-speed <- coxph(Surv(tstart, tstop, start.swim) ~ windspeed, data = sub)
-SIC <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = sub)
-Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
-
 
 aicc <- AICc(speed, SIC, Speed_SIC)
-create_AICc_table(aicc)
+
 ```
+
+```{r}
+# About the model: http://www.sthda.com/english/wiki/cox-proportional-hazards-model
+
+summary(Speed_SIC)
+
+```
+
+
+z = Wald statistic value ( = ratio of each coefficient to its standard error) MaxSICmax is significant in and of itself but windspeed is not. The interaction is highly significant. 
+
+All three overall tests (likelihood ratio, Wald test, logrank test) are significant. 
+
+exp(coef) is the hazard ratio.  
+
+```{r}
+
+# Schoenfeld's residuals
+
+zph <- cox.zph(Speed_SIC)
+zph
+
+plot(zph[2], lwd = 2)
+abline(0,0, col = 1, lty = 3, lwd = 2)
+abline(h= Speed_SIC$coef[2], col=3, lwd=2, lty=2)
+legend("topleft",
+legend=c('Reference line for null effect',
+"Average hazard over time",
+"Time-varying hazard"),
+lty=c(3,2,1), col=c(1,3,1), lwd=2)
+```
+
+
+
+
+
+
 ``` {r}
 logreg <- select(logreg, -geometry)
 
@@ -288,18 +328,6 @@ No bears with COYS came ashore. Denning is significantly associated with cming t
 
 ```{r}
 
-windspeed <- windSub$speed
-sub$windspeed <- windspeed
-
-speed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed, data = sub)
-SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean, data = sub)
-Speed_SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
-SIC_speed_dist <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land, data = sub)
-full <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land + repro, data = sub)
-
-aicc <- AICc(speed, SIC, Speed_SIC, SIC_speed_dist, full)
-
-create_AICc_table(aicc)
 
 
 
