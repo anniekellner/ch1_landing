@@ -42,7 +42,14 @@ bears  <- bears %>%
   mutate(coy = ifelse(id %in% coy$id, 1, 0)) %>%
   mutate(yearling = ifelse(id %in% yearling$id, 1, 0))
 
-save(bears, file = 'land_bears_CoxPH.RData')
+# Test - check against Repro.csv
+
+test <- bears %>%
+  group_by(id) %>%
+  slice_head()
+
+
+save(bears, file = 'land_bears_CoxPH.RData') # looks good
 
 
 
