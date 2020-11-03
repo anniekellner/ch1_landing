@@ -11,82 +11,45 @@ rm(list = ls())
    
 library(stringr)
 library(dplyr)
+library(lubridate)
    
-load('all_v2.RData')
+#load('all_v2.RData')
+load('land_bears_CoxPH.RData')
 
-ows <- subset(all.v2, ows == 1)
+# Import csv - denning data from TA (Lillie et al. 2018)
 
-# Add data from Kate Lillie, Anthony Pagano, Aerial surveys (TA)
+den <- read.csv('C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv')
+den <- select(den, 1,2,4,5,6)
+den$id <- paste(den$animal, den$year, sep = '.')
 
-ows <- ows %>% 
-  group_by(id) %>%
-  slice_head() %>%
-  dplyr::select(animal, year, id, ymd, coy:land_bear) %>%
-  ungroup()
+# Remove denning data from Cox df
 
-head(ows)
-write.csv(ows, file = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv")
+bears <- select(bears, -c("coy", "DenYr", "yearling"))
 
+# create df's for repro status
 
+go_into_den <- subset(den, DenYr == 1)
 
-# import csv - denning data from TA
-den <- read.csv('C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Denning collared bears_2004-15.csv')
-colnames(den) <- c("Den_Emerge", "Subpop", "BearID")
-str(den)
-den$BearID <- str_trim(den$BearID, side = "right") # trim whitespace
+coy <- subset(den, coy == 1)
 
-# ---------------------------------------------------------------------------------------------------------------------------- #
-
-den$id.coy <- paste(den$BearID, den$Den_Emerge, sep = '.')
-
-length(which(den$id.coy %in% ows$id)) # which bears have data from year they EMERGED from den (coy) # n = 10 in OWS
-
-ows$coy <- ifelse(ows$id %in% den$id.coy, 1, 0) # Add coy to main dataframe
-
-test.coy <- subset(ows, coy == 1)
-unique(test.coy$id) # n = 10
-
-# which bears have data fall before (DenYr)
-
-den$Den_Emerge <- as.numeric(den$Den_Emerge)
-den <- den %>% mutate(DenYr = Den_Emerge - 1)
-den$id.den <- paste(den$BearID, den$DenYr, sep = '.') 
-
-length(which(den$id.den %in% ows$id)) # how many bears have data from year they entered den # 21
-
-ows$DenYr <- ifelse(ows$id %in% den$id.den, 1, 0) # add DenYr to main df
-
-# which bears have yearlings
-
-den$Den_Emerge <- as.numeric(den$Den_Emerge)
-den <- den %>% mutate(yrAfter = Den_Emerge + 1)
-den$id.yearling <- paste(den$BearID, den$yrAfter, sep = '.')
-
-length(which(den$id.yearling %in% ows$id)) # which bears have data from year AFTER denning 
-
-ows$yearling <- ifelse(ows$id %in% den$id.yearling, 1, 0) # add yearling to main df
-
-# Look at data
-
-DenYr <- subset(ows, DenYr ==1)
-unique(DenYr$id)
-coy <- subset(ows, coy==1)
-unique(coy$id)
-yearling <- subset(ows, yearling==1)
-unique(yearling$id)
-
-# Bears that lost coys
-
-lost <- subset(ows, DenYr == 1 & coy == 1)
-unique(lost$id)
+yearling <- subset(den, yearling == 1)
 
 
-# bears that den in consecutive years (account for loss of coy)
-ows$coy <- ifelse(ows$coy == 1 & ows$DenYr == 1, 0, ows$coy) # checks out
+# Add columns to Cox df
 
-ows$yearling <- ifelse(ows$DenYr == 1 & ows$yearling == 1,0, ows$yearling) # checks out
+bears  <- bears %>%
+  mutate(go_into_den = ifelse(id %in% go_into_den$id, 1, 0)) %>%
+  mutate(coy = ifelse(id %in% coy$id, 1, 0)) %>%
+  mutate(yearling = ifelse(id %in% yearling$id, 1, 0))
 
-save(all.v2, file = 'all_v2.RData')
+save(bears, file = 'land_bears_CoxPH.RData')
+
+
+
+
+
+
+
 
 
 

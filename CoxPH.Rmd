@@ -123,10 +123,8 @@ First I determined which measurement of Sea Ice Concentration is best
 
 # CoxPH (baseline hazard not specified)
 
-SIC_maxMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_maxMean + cluster(animal), data = avg)
-SIC_maxPH <- coxph(Surv(tstart, tstop, start.swim) ~ SICmaxMax + cluster(animal), data = avg)
-SIC_maxmax_exp <- survreg(Surv(tstart, start.swim) ~ SIC_maxMean, data = avg, dist = "exponential", cluster = animal)
-
+SIC_maxMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_maxMean, cluster = animal, data = avg)
+SIC_maxMax <- coxph(Surv(tstart, tstop, start.swim) ~ SICmaxMax, cluster = animal, data = avg)
 SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = avg)
 
 SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = avg)
@@ -147,7 +145,7 @@ SICsq <- survreg(Surv(tstart, start.swim) ~ SICsq, data = avg, dist = "exponenti
 aicc <- AICc(SICmax, SICmean, SICmin, SICsq)
 
 
-create_AICc_table(aicc) # SIC Max is best model after going back through data and changing 120 --> 0 for land. Also after adding bears. 
+create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 -> 0 and re-doing faulty numbers
 
 ```
 
@@ -196,14 +194,14 @@ wind.join <- wind.join %>%
 avg2 <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), max(SIC_30m_max), mean(SIC_30m_max), mean(dist2land), max(start.swim), mean(speed), mean(dir), max(Bonepile)
+    first(animal), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), mean(dir), max(Bonepile)
     ) %>%
   ungroup()
 
 
 
 
-colnames(avg2) <- c("id", "tstart", "animal", "MaxSICmax", "MeanSICmax", "MeanDist2land", "start.swim", "MeanWindspeed", "MeanDir", "Bonepile") 
+colnames(avg2) <- c("id", "tstart", "animal", "SICsq", "MeanDist2land", "start.swim", "MeanWindspeed", "MeanDir", "Bonepile") 
 
 avg2 <- avg2 %>%
   group_by(id) %>%
@@ -220,17 +218,17 @@ avg2 <- avg2 %>%
 
 ```{r}
 
-speed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + cluster(animal), data = avg2)
-SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MaxSICmax, data = avg2)
-Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed*MaxSICmax + cluster(animal), data = avg2)
-distance <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land, data = avg2)
-distSpeed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed, data = avg2)
-distSpeedSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed * MaxSICmax + MeanWindspeed + MaxSICmax, data = avg2)
-SpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + MaxSICmax, data = avg2)
-distSpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + MaxSICmax + MeanDist2land, data = avg2)
+speed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed, cluster= animal, data = avg2)
+SIC <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, cluster = animal, data = avg2)
+Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed*SICsq, cluster = animal, data = avg2)
+distance <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land, cluster = animal, data = avg2)
+distSpeed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed, cluster = animal, data = avg2)
+distSpeedSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed * SICsq + MeanWindspeed + SICsq, cluster = animal, data = avg2)
+SpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
+distSpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq + MeanDist2land, cluster = animal, data = avg2)
 
 
-aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, distSpeedSIC, SpeedPlsSIC, distSpeedPlsSIC)
+aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, SpeedPlsSIC, distSpeedPlsSIC)
 create_AICc_table(aicc)
 
 
@@ -251,7 +249,8 @@ aicc <- AICc(speed, SIC, Speed_SIC)
 ```{r}
 # About the model: http://www.sthda.com/english/wiki/cox-proportional-hazards-model
 
-summary(Speed_SIC)
+summary(SpeedPlsSIC)
+summary(SIC)
 
 ```
 
