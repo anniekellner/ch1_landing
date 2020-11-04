@@ -1,0 +1,110 @@
+---
+title: "Explore_Repro_Status"
+author: "Annie Kellner"
+date: "11/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+load("land_bears_CoxPH.RData")
+```
+
+```{r}
+
+# Functions
+
+create_AICc_table <- function(aicc){ # AICc table function
+  aicc$Model <- rownames(aicc)
+  aicc$deltaAICc <- aicc$AICc - min(aicc$AICc) 
+  aicc$L <- exp(-0.5*(aicc$deltaAICc))
+  aicc$weight <- aicc$L/(sum(aicc$L))
+  aicc$weight.pct <- aicc$weight*100
+  aicc <- arrange(aicc, aicc$deltaAICc)
+  return(aicc)
+}
+
+```
+
+
+First test whether reproductive status affects timing of migration. Reproductive status characterized as either Enter_Den, coy, yearling, or unknown.
+
+```{r cars}
+
+bears$repro <- 0
+
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
+
+avg <- bears %>% 
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), first(repro), max(Bonepile)
+    )
+
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "Dist2land", "start.swim", "repro", "Bonepile")
+
+avg$yday_start <- yday(avg$datetime) 
+
+avg <- avg %>%
+  mutate(yday_stop = lead(yday_start))
+
+
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(across(starts_with('yday'),
+                ~replace(., row_number() > match(1, start.swim), NA)))
+
+repro <- coxph(Surv(yday_start, yday_stop, start.swim) ~ repro, data = avg)
+
+summary(repro)
+```
+
+Now see whether repro status is significant if variable is binary: 1 = dependent offspring, 0 = no dependent offspring
+
+```{r pressure, echo=FALSE}
+
+bears$repro <- 0
+
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 0)) %>%
+  mutate(repro = replace(repro, coy == 1, 1)) %>%
+  mutate(repro = replace(repro, yearling == 1, 1))
+
+avg <- bears %>% 
+  group_by(id, ymd) %>%
+  dplyr::summarise(
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(dist2land[,1]), max(start.swim), first(repro), max(Bonepile)
+    )
+
+colnames(avg) <- c("id", "datetime", "animal", "SIC_mean", "SIC_max", "SIC_min", "Dist2land", "start.swim", "repro", "Bonepile")
+
+avg$tstart <- yday(avg$datetime) 
+
+avg <- avg %>%
+  mutate(tstop = lead(tstart))
+
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(across(starts_with('yday'),
+                ~replace(., row_number() > match(1, start.swim), NA)))
+
+repro <- coxph(Surv(tstart, tstop, start.swim) ~ repro, data = avg)
+
+summary(repro)
+
+```
+
+It does not appear that reproductive status affects the timing of migration. But does it affect the decision to migrate?
+
+```{r}
+
+```
+
+
+

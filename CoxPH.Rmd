@@ -226,23 +226,17 @@ distSpeed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspe
 distSpeedSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed * SICsq + MeanWindspeed + SICsq, cluster = animal, data = avg2)
 SpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
 distSpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq + MeanDist2land, cluster = animal, data = avg2)
+null <- coxph(Surv(tstart, tstop, start.swim) ~1, data = avg2)
 
 
-aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, SpeedPlsSIC, distSpeedPlsSIC)
-create_AICc_table(aicc)
+aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, SpeedPlsSIC, distSpeedPlsSIC, null)
+aicc_table <- create_AICc_table(aicc)
 
-
-speed <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed, data = sub)
-SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean, data = sub)
-Speed_SIC <- coxph(Surv(yday_start, yday_stop, start.swim) ~ windspeed + SIC_mean + windspeed*SIC_mean, data = sub)
-SIC_speed_dist <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land, data = sub)
-full <- coxph(Surv(yday_start, yday_stop, start.swim) ~ SIC_mean + windspeed + SIC_mean*windspeed + Dist2land + repro, data = sub)
-
-
+write.csv(aicc_table, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Results/aicc.csv")
 
 create_AICc_table(aicc)
 
-aicc <- AICc(speed, SIC, Speed_SIC)
+
 
 ```
 
@@ -279,23 +273,33 @@ lty=c(3,2,1), col=c(1,3,1), lwd=2)
 ```
 
 
+# Plots
+
+```{r}
+
+fit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2) # SIC + Speed - this doesn't work
 
 
+ggadjustedcurves()
 
+ggsurvplot(fit, data = avg2)
+
+```
+
+# Reproduction
 
 ``` {r}
-logreg <- select(logreg, -geometry)
 
-logreg$repro <- 0
+bears$repro <- 0
 
-logreg <- logreg %>%
-  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
   mutate(repro = replace(repro, coy == 1, 2)) %>%
   mutate(repro = replace(repro, yearling == 1, 3))
 
-logreg$repro <- factor(logreg$repro, labels = c("Unknown", "Denning", "COY", "Yearling"))
+bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
 
-avg <- logreg %>% 
+avg <- bears %>% 
   group_by(id, ymd) %>%
   dplyr::summarise(
     first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land[,1]), max(start.swim), first(repro), max(Bonepile)
@@ -308,16 +312,16 @@ avg$yday_start <- yday(avg$datetime)
 avg <- avg %>%
   mutate(yday_stop = lead(yday_start))
 
-load("ded_ids.RData")
+#load("ded_ids.RData")
 
-sub <- subset(avg, id %in% ded)
+#sub <- subset(avg, id %in% ded)
 
-sub <- sub %>%
+avg <- avg %>%
   group_by(id) %>%
   mutate(across(starts_with('yday'),
                 ~replace(., row_number() > match(1, start.swim), NA)))
 
-repro <- coxph(Surv(yday_start, yday_stop, start.swim) ~ repro, data = sub)
+repro <- coxph(Surv(yday_start, yday_stop, start.swim) ~ repro, data = avg)
 
 summary(repro)
 ```
