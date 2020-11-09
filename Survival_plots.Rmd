@@ -14,18 +14,18 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r}
 # Survival curve 
 
-null_fit <- survfit(Surv(tstart, tstop, start.swim) ~ 1, data = avg2)
-null_data <- data.frame(cbind(null_fit$time,null_fit$surv,null_fit$cumhaz,null_fit$upper,null_fit$lower))
-names(null_data) <- c("time","surv","cumhaz","upperCI","lowerCI")
+fit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, data = avg2)   
+fit_data <- data.frame(cbind(null_fit$time,null_fit$surv,null_fit$cumhaz,null_fit$upper,null_fit$lower))
+names(fit_data) <- c("time","surv","cumhaz","upperCI","lowerCI")
 
 ggplot(data=NULL) +
-  geom_line(data=null_data,aes(x=time, y=surv),colour="black",linetype="solid",size=1) +
-  geom_line(data=null_data,aes(x=time, y=upperCI),colour="black",linetype="dashed",size=.5) +
-  geom_line(data=null_data,aes(x=time, y=lowerCI),colour="black",linetype="dashed",size=.5) +
+  geom_line(data=fit_data,aes(x=time, y=surv),colour="black",linetype="solid",size=1) +
+  geom_line(data=fit_data,aes(x=time, y=upperCI),colour="black",linetype="dashed",size=.5) +
+  geom_line(data=fit_data,aes(x=time, y=lowerCI),colour="black",linetype="dashed",size=.5) +
   #scale_x_continuous(breaks=seq(0,480,120)) +
   #scale_y_continuous(breaks=seq(0,1,.25)) +
  # expand_limits(x=c(0,480),y=c(0,1)) +
-  xlab("Ordinal Day") + ylab("Survival Function") +
+  xlab("") + ylab("Survival Function") +
 theme_classic() +
 theme(axis.line.x = element_line(color = "black"),
       axis.line.y = element_line(color = "black"))
@@ -72,3 +72,27 @@ theme(axis.line.x = element_line(color = "black"),
 
 ```
 # Hold SIC constant at the mean and plot hazard for windspeed
+
+
+```{r}
+# Trial from Shane Frank email 11/5/2020
+
+library(stringr)
+
+modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
+
+model.data <- data.frame(cbind(modelfit$surv, modelfit$strata))
+
+# Extract windspeed and SICsq data from Surv object
+
+test <- attr(modelfit$strata, "names")
+test2 <-str_split(test, ",")
+test3 <- data.frame(matrix(unlist(test2), nrow=length(test2), byrow=T))
+colnames(test3) <- c("Windspeed", "SICsq")
+test4 <- test3 %>%
+  mutate_all(~gsub("MeanWindspeed=", "", .))
+
+test5 <- test4 %>%
+  mutate_all(~gsub("SICsq=", "", .))
+
+```

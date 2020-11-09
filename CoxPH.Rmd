@@ -236,6 +236,7 @@ write.csv(aicc_table, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bear
 
 create_AICc_table(aicc)
 
+summary(SpeedPlsSIC)
 
 
 ```
