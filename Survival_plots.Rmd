@@ -78,21 +78,56 @@ theme(axis.line.x = element_line(color = "black"),
 # Trial from Shane Frank email 11/5/2020
 
 library(stringr)
+library(tidyverse)
 
 modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
 
-model.data <- data.frame(cbind(modelfit$surv, modelfit$strata))
+tidy_model <- broom::tidy(modelfit)
 
 # Extract windspeed and SICsq data from Surv object
 
-test <- attr(modelfit$strata, "names")
-test2 <-str_split(test, ",")
-test3 <- data.frame(matrix(unlist(test2), nrow=length(test2), byrow=T))
-colnames(test3) <- c("Windspeed", "SICsq")
-test4 <- test3 %>%
-  mutate_all(~gsub("MeanWindspeed=", "", .))
-
-test5 <- test4 %>%
+covs <- attr(modelfit$strata, "names")
+covs <-str_split(covs, ",")
+covs <- data.frame(matrix(unlist(covs), nrow=length(covs), byrow=T))
+colnames(covs) <- c("Windspeed", "SICsq")
+covs <- covs %>%
+  mutate_all(~gsub("MeanWindspeed=", "", .)) %>%
   mutate_all(~gsub("SICsq=", "", .))
+
+covs$Windspeed <- as.numeric(covs$Windspeed)
+covs$SICsq <- as.numeric(covs$SICsq)
+
+
+# Bind back to tidy dataframe
+
+tidy_model <- tidy_model %>%
+  dplyr::select(-strata) %>%
+  bind_cols(covs)
+
+
+# Calculates mean value for all variables
+
+predict(SpeedPlsSIC, newdata = my.new.data, se.fit = TRUE, type = "survival")
+
+
+new <- tidy_model %>% make_newdata(Windspeed = seq_range(Windspeed, n = 100)) # 100 values between min and max windspeed in new dataframe
+
+predicted <- predict(SpeedPlsSIC, new, type = "survival")
+
+new <- new %>% 
+  mutate(cphfit = predict(SpeedPlsSIC, ., type = "survival"))
+ 
+
+
+gg <- ggplot(new, aes(x = MeanWindspeed, y=cphfit)) +
+    #geom_ribbon(aes(ymin=ci_lower, ymax=ci_upper), alpha=0.3) +
+    geom_line(aes(y=cphfit, col="black")) +
+  ylab(expression(hat(f)(x))) + theme(legend.position="none")
+
+speed_gg <- gg + aes(x=MeanWindspeed) + xlab("Windspeed (m/s)")
+
+t <- as.data.frame(new$cphfit)
+
+#https://adibender.github.io/pammtools/articles/tdcovar.html
 
 ```
