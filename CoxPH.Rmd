@@ -99,8 +99,8 @@ colnames(avg) <- c("id", "ymd", "animal", "SIC_mean", "SIC_maxMean", "SICmaxMax"
 
 avg <- avg %>%
   group_by(id) %>%
-  mutate(tstart = row_number()) %>%
-  mutate(tstop = lead(tstart))
+  mutate(tstart = row_number()) # %>%
+  #mutate(tstop = lead(tstart))
 
 avg <- avg %>% # Change tstart and tstop to NA after start.swim = 1
   group_by(id) %>%
@@ -182,24 +182,15 @@ rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
 wind.join <- cbind(wind.join, rwind)
 wind.join$yday <- yday(wind.join$datetime)
 
-# Categorize wind direction
-
-wind.join <- wind.join %>%
-  mutate(Wind_Type = ifelse(dir > 135 & dir < 225, "Onshore",
-         ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
-
 # Find average
 # Note: for average "Wind Type", used 'first' direction of the day
 
 avg2 <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), mean(dir), max(Bonepile)
+    first(animal), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), max(Bonepile)
     ) %>%
   ungroup()
-
-
-
 
 colnames(avg2) <- c("id", "tstart", "animal", "SICsq", "MeanDist2land", "start.swim", "MeanWindspeed", "MeanDir", "Bonepile") 
 
@@ -207,6 +198,9 @@ avg2 <- avg2 %>%
   group_by(id) %>%
   mutate(tstop = lead(tstart))
 
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(tstart = row_number()) 
 
 avg2 <- avg2 %>%
   group_by(id) %>%
@@ -260,7 +254,7 @@ exp(coef) is the hazard ratio.
 
 # Schoenfeld's residuals
 
-zph <- cox.zph(Speed_SIC)
+zph <- cox.zph(SpeedPlsSIC)
 zph
 
 plot(zph[2], lwd = 2)
