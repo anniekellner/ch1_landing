@@ -75,7 +75,8 @@ theme(axis.line.x = element_line(color = "black"),
 
 
 ```{r}
-# Trial from Shane Frank email 11/5/2020
+
+### Trial from Shane Frank email 11/5/2020
 
 library(stringr)
 library(tidyverse)
@@ -105,29 +106,78 @@ tidy_model <- tidy_model %>%
   bind_cols(covs)
 
 
-# Calculates mean value for all variables
-
-predict(SpeedPlsSIC, newdata = my.new.data, se.fit = TRUE, type = "survival")
-
-
-new <- tidy_model %>% make_newdata(Windspeed = seq_range(Windspeed, n = 100)) # 100 values between min and max windspeed in new dataframe
-
-predicted <- predict(SpeedPlsSIC, new, type = "survival")
-
-new <- new %>% 
-  mutate(cphfit = predict(SpeedPlsSIC, ., type = "survival"))
- 
-
-
-gg <- ggplot(new, aes(x = MeanWindspeed, y=cphfit)) +
-    #geom_ribbon(aes(ymin=ci_lower, ymax=ci_upper), alpha=0.3) +
-    geom_line(aes(y=cphfit, col="black")) +
-  ylab(expression(hat(f)(x))) + theme(legend.position="none")
-
-speed_gg <- gg + aes(x=MeanWindspeed) + xlab("Windspeed (m/s)")
-
-t <- as.data.frame(new$cphfit)
-
-#https://adibender.github.io/pammtools/articles/tdcovar.html
 
 ```
+
+Example: How to add variables and predict over new dataframe when using time-dependent covariates
+
+From ```{r [pammtools' Time-Dependent Covariates](https://adibender.github.io/pammtools/articles/tdcovar.html)}``` 
+
+```{r eval= FALSE}
+
+rm(list= ls())
+
+library(mgcv)
+library(dplyr)
+library(survival)
+library(pammtools)
+library(ggplot2)
+
+
+data("pbc", package = "survival")
+head(pbc)[, c(1:5, 11, 12)]
+head(pbcseq)[, c(1, 4:5, 7, 12, 13)]
+
+pbc <- pbc %>% mutate(bili = log(bili), protime = log(protime)) # log = e^x = y; y = bili
+pbcseq <- pbcseq %>% mutate(bili = log(bili), protime = log(protime))
+
+temp <- subset(pbc, id <= 312, select = c(id:sex)) # baseline
+pbc2 <- tmerge(temp, temp, id = id, death = event(time, status)) #set range
+pbc2 <- tmerge(pbc2, pbcseq, id = id, bili = tdc(day, bili),
+  protime = tdc(day, protime))
+
+fit1 <- coxph(Surv(time, status == 2) ~ bili + protime, pbc)
+fit2 <- coxph(Surv(tstart, tstop, death == 2) ~ bili + protime, pbc2)
+rbind("baseline fit" = coef(fit1), "time dependent" = coef(fit2))
+
+
+pbc <- pbc %>% filter(id <= 312) %>%
+  select(id:sex, bili, protime) %>%
+  mutate(status = 1L * (status == 2)) # Turns status == 2 to status == 1
+
+pbc_ped <- as_ped( # I don't need to do this because I'm not interested in piecewise exponential data
+  data = list(pbc, pbcseq),
+  formula = Surv(time, status) ~ . + concurrent(bili, protime, tz_var = "day"),
+  id = "id")
+
+pbc_pam <- gam(ped_status ~ s(tend) + bili + protime, data = pbc_ped,
+  family = poisson(), offset = offset)
+cbind(pam = coef(pbc_pam)[2:3], cox = coef(fit2))
+
+reference = sample_info(pbc_ped) # means for all values
+
+
+bili_df <- pbc_ped %>% ungroup() %>%
+  make_newdata(bili = seq_range(bili, n = 100)) %>% # everything held at average except bili
+  add_term(pbc_pam, term = "bili", reference = reference) %>%
+  mutate(cox = predict(fit2, ., type = "term")[, "bili"])
+
+## Effect of protime - same thing as bili but for protime
+protime_df <- pbc_ped %>% ungroup() %>%
+  make_newdata(protime = seq_range(protime, n=100)) %>%
+  add_term(pbc_pam, term = "protime", reference = reference) %>% # not needed when just using coxph?
+  mutate(cox = predict(fit2, ., type = "term")[, "protime"])
+
+# visualization
+# remember that bili and protime are log transformed
+
+p_term <- ggplot(data = NULL, aes(y = fit)) + geom_line(aes(col = "PAM")) +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2) +
+  geom_line(aes(y = cox, col = "Cox")) +
+  scale_colour_manual(name = "Method", values = c("#E41A1C", "#000000"))
+gridExtra::grid.arrange(
+  p_term %+% bili_df + aes(x = exp(bili)),
+  p_term %+% protime_df + aes(x = exp(protime)),
+  nrow = 1L)
+```
+

@@ -24,7 +24,7 @@ rm(list = ls())
 
 ```
 
-```{r}
+```{r Functions}
 # Functions
 
 create_AICc_table <- function(aicc){ # AICc table function
@@ -39,117 +39,23 @@ create_AICc_table <- function(aicc){ # AICc table function
 
 ```
 
-```{r}
-
-# Projections
-
-polar.stereo <- CRS('+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0') 
-```
-
-
-N = 23 migrations; 17 individuals
 
 I included data from June 1 - Sept 30. In order to align the temporal resolution of the spatial data (e.g., one sea ice map per day) with the GPS data, I use daily averages for all environmental variables. 
 
-```{r}
-
-# Prep Data
+```{r Prep Data}
 
 load("land_bears_CoxPH.RData")
 
 bears <- distinct(bears)
 
-ss <- subset(bears, start.swim == 1) # 19 swims
-
-```
-
-```{r, eval= FALSE}
-
-# Map land bears 
-
-tmap_mode(mode = "view")
-
-tm_shape(lb) +
-  tm_symbols(col = "month") +
-  tm_facets(by = "id")
-
-```
-
-
-```{r}
-
-# Prep Data
-
 bears <- bears %>%
   mutate(SICsq = SIC_30m_me^2) # Add SIC-squared
 
-avg <- bears %>% # Compute daily average
-  group_by(id, ymd) %>%
-  dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), max(SIC_30m_max), mean(SIC_30m_min), min(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), max(Bonepile)
-    ) %>%
-  ungroup()
-
-
-```
-
-```{r}
-
-colnames(avg) <- c("id", "ymd", "animal", "SIC_mean", "SIC_maxMean", "SICmaxMax", "SIC_minMean", "SIC_minMin", "SICsq", "Dist2land", "start.swim", "Bonepile")
-
-avg <- avg %>%
-  group_by(id) %>%
-  mutate(tstart = row_number()) # %>%
-  #mutate(tstop = lead(tstart))
-
-avg <- avg %>% # Change tstart and tstop to NA after start.swim = 1
-  group_by(id) %>%
-  mutate(across(starts_with('t'),
-                ~replace(., row_number() > match(1, start.swim), NA)))
-
 ```
 
 
-## SEA ICE CONCENTRATION 
 
-First I determined which measurement of Sea Ice Concentration is best 
-
-* SIC_max   = maximum sea ice concentation within 30 km radius
-* SIC_mean  = mean sea ice concentration within 30 km radius
-* SIC_min   = minimum sea ice concentration within 30 km radius
-* SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
-
-```{r}
-
-# CoxPH (baseline hazard not specified)
-
-SIC_maxMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_maxMean, cluster = animal, data = avg)
-SIC_maxMax <- coxph(Surv(tstart, tstop, start.swim) ~ SICmaxMax, cluster = animal, data = avg)
-SIC_mean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_mean, data = avg)
-
-SIC_sq <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, data = avg)
-
-SIC_minMin <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_minMin, data = avg)
-SIC_minMean <- coxph(Surv(tstart, tstop, start.swim) ~ SIC_minMean, data = avg)
-
-
-aicc <- AICc(SIC_maxMean, SIC_maxMax, SIC_mean, SIC_minMin, SIC_minMean, SIC_sq)
-
-# Survreg (hazard assumed to be constant)
-
-SICmaxExp <- survreg(Surv(tstart, start.swim) ~ SICmaxMax, data = avg, dist = "exponential", cluster = animal)
-SICmean <- survreg(Surv(tstart, start.swim) ~ SIC_mean, data = avg, dist = "exponential", cluster = animal)
-SICmin <- survreg(Surv(tstart, start.swim) ~ SIC_minMin, data = avg, dist = "exponential", cluster = animal)
-SICsq <- survreg(Surv(tstart, start.swim) ~ SICsq, data = avg, dist = "exponential", cluster = animal)
-
-aicc <- AICc(SICmax, SICmean, SICmin, SICsq)
-
-
-create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 -> 0 and re-doing faulty numbers
-
-```
-
-```{r results='hide'}
+```{r add wind}
 
 # Combine three separate Movebank spreadsheets (data obtained in separate requests)
 
@@ -173,10 +79,6 @@ wind$datetime <- with_tz(wind$datetime, "US/Alaska")
 
 wind.join <- left_join(bears, wind, by = c("datetime","id", "gps_lon", "gps_lat"))
 
-which(is.na(wind$Wind_U))
-which(is.na(wind$Wind_V))
-which(avg$start.swim == 1) # no start swim has NA for wind vectors - can delete these rows where wind = NA
-
 rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
 
 wind.join <- cbind(wind.join, rwind)
@@ -185,42 +87,78 @@ wind.join$yday <- yday(wind.join$datetime)
 # Find average
 # Note: for average "Wind Type", used 'first' direction of the day
 
-avg2 <- wind.join %>% # Compute daily average
+avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), max(Bonepile)
-    ) %>%
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), mean(speed)) %>%
   ungroup()
 
-colnames(avg2) <- c("id", "tstart", "animal", "SICsq", "MeanDist2land", "start.swim", "MeanWindspeed", "MeanDir", "Bonepile") 
-
-avg2 <- avg2 %>%
-  group_by(id) %>%
-  mutate(tstop = lead(tstart))
+colnames(avg) <- c("id", "ordinal_day", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "MeanDist2land", "start.swim", "Windspeed") 
 
 avg <- avg %>%
   group_by(id) %>%
-  mutate(tstart = row_number()) 
+  mutate(day = row_number()) 
 
-avg2 <- avg2 %>%
+avg <- avg %>%
   group_by(id) %>%
-  mutate(across(starts_with('t'),
+  mutate(across(everything(),
                 ~replace(., row_number() > match(1, start.swim), NA)))
+
+```
+
+```{r use tmerge function to create tdc dataframe}
+
+temp <- subset(avg, start.swim == 1)
+temp <- temp %>%
+  dplyr::select(id, day, start.swim) 
+
+baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim))
+
+cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
+
+```
+
+
+## SEA ICE CONCENTRATION 
+
+First I determined which measurement of Sea Ice Concentration is best 
+
+* SIC_max   = maximum sea ice concentation within 30 km radius
+* SIC_mean  = mean sea ice concentration within 30 km radius
+* SIC_min   = minimum sea ice concentration within 30 km radius
+* SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
+
+```{r}
+
+# CoxPH (baseline hazard not specified)
+
+SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SIC_max, cluster = id, data = cox_tdc)
+#SIC_maxMax <- coxph(Surv(tstart, tstop, migrate) ~ SICmaxMax, cluster = animal, data = avg)
+SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = cox_tdc)
+
+SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
+
+SIC_min <- coxph(Surv(tstart, tstop, migrate) ~ SIC_min, cluster = id, data = cox_tdc) # Does not converge
+#SIC_minMean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_minMean, data = cox_tdc)
+
+aicc <- AICc(SIC_mean, SIC_max, SIC_sq)
+
+create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 -> 0 and re-doing faulty numbers
 
 ```
 
 
 ```{r}
 
-speed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed, cluster= animal, data = avg2)
-SIC <- coxph(Surv(tstart, tstop, start.swim) ~ SICsq, cluster = animal, data = avg2)
-Speed_SIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed*SICsq, cluster = animal, data = avg2)
-distance <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land, cluster = animal, data = avg2)
-distSpeed <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed, cluster = animal, data = avg2)
-distSpeedSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanDist2land + MeanWindspeed * SICsq + MeanWindspeed + SICsq, cluster = animal, data = avg2)
-SpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
-distSpeedPlsSIC <- coxph(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq + MeanDist2land, cluster = animal, data = avg2)
-null <- coxph(Surv(tstart, tstop, start.swim) ~1, data = avg2)
+speed <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed, cluster= id, data = cox_tdc)
+SIC <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
+Speed_SIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed*SICsq, cluster = id, data = cox_tdc)
+distance <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land, cluster = id, data = cox_tdc)
+distSpeed <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed, cluster = id, data = cox_tdc)
+distSpeedSIC <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed * SICsq + Windspeed + SICsq, cluster = id, data = cox_tdc)
+SpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq, cluster = id, data = cox_tdc)
+distSpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq + Distance_to_land, cluster = id, data = cox_tdc)
+null <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc)
 
 
 aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, SpeedPlsSIC, distSpeedPlsSIC, null)
@@ -272,7 +210,7 @@ lty=c(3,2,1), col=c(1,3,1), lwd=2)
 
 ```{r}
 
-fit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2) # SIC + Speed - this doesn't work
+fit <- survfit(Surv(tstart, tstop, start.swim) ~ Windspeed + SICsq, cluster = animal, data = avg2) # SIC + Speed - this doesn't work
 
 
 ggadjustedcurves()
