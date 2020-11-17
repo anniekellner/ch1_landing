@@ -110,7 +110,7 @@ avg <- avg %>%
 
 temp <- subset(avg, start.swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start.swim) 
+  dplyr::select(id, day, start.swim, animal) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
 
@@ -128,12 +128,12 @@ First I determined which measurement of Sea Ice Concentration is best
 * SIC_min   = minimum sea ice concentration within 30 km radius
 * SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
 
-```{r}
+```{r Sea Ice Concentration AIC}
 
 # CoxPH (baseline hazard not specified)
 
 SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SIC_max, cluster = id, data = cox_tdc)
-#SIC_maxMax <- coxph(Surv(tstart, tstop, migrate) ~ SICmaxMax, cluster = animal, data = avg)
+#SIC_maxMax <- coxph(Surv(tstart, tstop, migrate) ~ SICmaxMax, , data = avg)
 SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = cox_tdc)
 
 SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
@@ -148,17 +148,19 @@ create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 ->
 ```
 
 
-```{r}
+```{r Model Selection}
 
-speed <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed, cluster= id, data = cox_tdc)
-SIC <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
-Speed_SIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed*SICsq, cluster = id, data = cox_tdc)
-distance <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land, cluster = id, data = cox_tdc)
-distSpeed <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed, cluster = id, data = cox_tdc)
-distSpeedSIC <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed * SICsq + Windspeed + SICsq, cluster = id, data = cox_tdc)
-SpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq, cluster = id, data = cox_tdc)
-distSpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq + Distance_to_land, cluster = id, data = cox_tdc)
-null <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc)
+# About the model: http://www.sthda.com/english/wiki/cox-proportional-hazards-model
+
+speed <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed, cluster= animal, data = cox_tdc)
+SIC <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = animal, data = cox_tdc)
+Speed_SIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed*SICsq, cluster = animal , data = cox_tdc)
+distance <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land, cluster = animal , data = cox_tdc)
+distSpeed <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed, cluster = animal, data = cox_tdc)
+distSpeedSIC <- coxph(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed * SICsq + Windspeed + SICsq, cluster = animal, data = cox_tdc)
+SpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq, cluster = animal, data = cox_tdc)
+distSpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq + Distance_to_land, cluster = animal, data = cox_tdc)
+null <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, cluster = animal)
 
 
 aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, distSpeedSIC, SpeedPlsSIC, distSpeedPlsSIC, null)
@@ -168,31 +170,97 @@ write.csv(aicc_table, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bear
 
 create_AICc_table(aicc)
 
-summary(SpeedPlsSIC)
+summary(distSpeedPlsSIC)
 
 
 ```
 
-```{r}
-# About the model: http://www.sthda.com/english/wiki/cox-proportional-hazards-model
-
-summary(SpeedPlsSIC)
-summary(SIC)
-
-```
-
-
-z = Wald statistic value ( = ratio of each coefficient to its standard error) MaxSICmax is significant in and of itself but windspeed is not. The interaction is highly significant. 
+z = Wald statistic value ( = ratio of each coefficient to its standard error) 
 
 All three overall tests (likelihood ratio, Wald test, logrank test) are significant. 
 
 exp(coef) is the hazard ratio.  
 
-```{r}
+```{r Constant Hazard, eval=FALSE}
+
+library(flexsurv)
+
+speed_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Windspeed, data = cox_tdc, dist = "exp")
+SIC_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq, data = cox_tdc, dist = "exp")
+Speed_SIC_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Windspeed*SICsq, data = cox_tdc, dist = "exp")
+distance_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Distance_to_land, data = cox_tdc, dist = "exp")
+distSpeed_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed, data = cox_tdc, dist = "exp")
+distSpeedSIC_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Distance_to_land + Windspeed * SICsq + Windspeed + SICsq, data = cox_tdc, dist = "exp")
+SpeedPlsSIC_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq, data = cox_tdc, dist = "exp")
+distSpeedPlsSIC_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq + Distance_to_land, data = cox_tdc, dist = "exp")
+null_AFT <- flexsurvreg(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, dist = "exp")
+
+aicc <- AICc(speed_AFT, SIC_AFT, Speed_SIC_AFT, distance_AFT, distSpeed_AFT, distSpeedSIC_AFT, SpeedPlsSIC_AFT, distSpeedPlsSIC_AFT, null_AFT)
+
+create_AICc_table(aicc)
+
+```
+
+Results are the same but model is more confusing and Nans are produced. 
+
+```{r Moving Window for all variables - 3 days}
+
+# 3 days
+
+library(zoo)
+
+cox_tdc <- cox_tdc %>%
+  mutate(SICsq_3davg = rollmean(SICsq, 3, fill = NA, align = "right")) %>%
+  mutate(Windspeed_3davg = rollmean(Windspeed, 3, fill = NA, align = "right")) %>%
+  mutate(Dist2land_3davg = rollmean(Distance_to_land, 3, fill = NA, align = "right"))
+
+# Same models using 3 day rolling averaqes for all variables
+
+speed3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg, cluster= animal, data = cox_tdc)
+SIC3 <- coxph(Surv(tstart, tstop, migrate) ~ SICsq_3davg, cluster = animal, data = cox_tdc)
+Speed_SIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg*SICsq_3davg, cluster = animal , data = cox_tdc)
+distance3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg, cluster = animal , data = cox_tdc)
+distSpeed3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
+distSpeedSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg * SICsq_3davg, cluster = animal, data = cox_tdc)
+SpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg, cluster = animal, data = cox_tdc)
+distSpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg + Dist2land_3davg, cluster = animal, data = cox_tdc)
+null3 <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, cluster = animal)
+
+
+aicc <- AICc(speed3, SIC3, Speed_SIC3, distance3, distSpeed3, distSpeedSIC3, SpeedPlsSIC3, distSpeedPlsSIC3, null3)
+create_AICc_table(aicc)
+
+summary(distSpeed3)
+
+```
+
+# Rolling day average for Distance and Speed but same day values for SIC
+
+```{r Moving window for Speed and Distance but not SIC - 3 days, eval=FALSE}
+
+SIC4 <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = animal, data = cox_tdc)
+Speed_SIC4 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg*SICsq, cluster = animal , data = cox_tdc)
+distSpeedSIC4 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg * SICsq, cluster = animal, data = cox_tdc)
+SpeedPlsSIC4 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq, cluster = animal, data = cox_tdc)
+distSpeedPlsSIC4 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq + Dist2land_3davg, cluster = animal, data = cox_tdc)
+
+aicc <- AICc(speed3, SIC4, Speed_SIC4, distance3, distSpeed3, distSpeedSIC4, SpeedPlsSIC4, distSpeedPlsSIC4, null)
+create_AICc_table(aicc)
+
+# Similar results to above but less sensible
+
+```
+
+
+
+```{r Schoenfeld's Residuals}
 
 # Schoenfeld's residuals
 
-zph <- cox.zph(SpeedPlsSIC)
+# How to deal with invalid assumptions for Cox model: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6015946/
+
+
+zph <- cox.zph(distSpeed3)
 zph
 
 plot(zph[2], lwd = 2)
@@ -210,7 +278,7 @@ lty=c(3,2,1), col=c(1,3,1), lwd=2)
 
 ```{r}
 
-fit <- survfit(Surv(tstart, tstop, start.swim) ~ Windspeed + SICsq, cluster = animal, data = avg2) # SIC + Speed - this doesn't work
+fit <- survfit(Surv(tstart, tstop, start.swim) ~ Windspeed + SICsq, , data = avg2) # SIC + Speed - this doesn't work
 
 
 ggadjustedcurves()
