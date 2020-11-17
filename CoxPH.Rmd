@@ -112,9 +112,9 @@ temp <- subset(avg, start.swim == 1)
 temp <- temp %>%
   dplyr::select(id, day, start.swim) 
 
-baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim))
+baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
 
-cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
+cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, MeanWindspeed))
 
 ```
 
@@ -138,7 +138,7 @@ SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = 
 
 SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
 
-SIC_min <- coxph(Surv(tstart, tstop, migrate) ~ SIC_min, cluster = id, data = cox_tdc) # Does not converge
+#SIC_min <- coxph(Surv(tstart, tstop, migrate) ~ SIC_min, cluster = id, data = cox_tdc) # Does not converge
 #SIC_minMean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_minMean, data = cox_tdc)
 
 aicc <- AICc(SIC_mean, SIC_max, SIC_sq)
@@ -161,7 +161,7 @@ distSpeedPlsSIC <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed + SICsq + Dist
 null <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc)
 
 
-aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, SpeedPlsSIC, distSpeedPlsSIC, null)
+aicc <- AICc(speed, SIC, Speed_SIC, distance, distSpeed, distSpeedSIC, SpeedPlsSIC, distSpeedPlsSIC, null)
 aicc_table <- create_AICc_table(aicc)
 
 write.csv(aicc_table, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Results/aicc.csv")
