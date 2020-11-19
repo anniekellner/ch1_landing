@@ -14,7 +14,9 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r}
 # Survival curve 
 
-fit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, data = avg2)   
+distSpeed3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
+
+surv_curve <- survfit(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)   
 fit_data <- data.frame(cbind(null_fit$time,null_fit$surv,null_fit$cumhaz,null_fit$upper,null_fit$lower))
 names(fit_data) <- c("time","surv","cumhaz","upperCI","lowerCI")
 
@@ -48,7 +50,7 @@ theme(axis.line.x = element_line(color = "black"),
 
 ```{r}
 
-modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
+modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ Windspeed + SICsq, cluster = animal, data = cox_tdc)
 print(modelfit)
 summary(modelfit)
 
@@ -81,16 +83,17 @@ theme(axis.line.x = element_line(color = "black"),
 library(stringr)
 library(tidyverse)
 
-modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ MeanWindspeed + SICsq, cluster = animal, data = avg2)
+fit.one <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
 
-tidy_model <- broom::tidy(modelfit)
+fit.two <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg + Dist2land_3davg, cluster = animal, data = cox_tdc)
+
 
 # Extract windspeed and SICsq data from Surv object
 
-covs <- attr(modelfit$strata, "names")
+covs <- attr(fit.one$strata, "names")
 covs <-str_split(covs, ",")
 covs <- data.frame(matrix(unlist(covs), nrow=length(covs), byrow=T))
-colnames(covs) <- c("Windspeed", "SICsq")
+colnames(covs) <- c("Windspeed_3davg", "SICsq")
 covs <- covs %>%
   mutate_all(~gsub("MeanWindspeed=", "", .)) %>%
   mutate_all(~gsub("SICsq=", "", .))
@@ -179,5 +182,61 @@ gridExtra::grid.arrange(
   p_term %+% bili_df + aes(x = exp(bili)),
   p_term %+% protime_df + aes(x = exp(protime)),
   nrow = 1L)
+```
+
+Attempting to follow this procedure for pb data
+
+```{r}
+
+library(dplyr)
+library(survival)
+library(pammtools)
+library(ggplot2)
+library(tidyverse)
+library(stringr)
+
+fit <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc) # Model = DistSpeed3
+
+surv_fit <- survfit(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
+
+tidyfit <- broom::tidy(fit)
+
+tidy_survfit <- broom::tidy(surv_fit)
+
+# Extract windspeed and SICsq data from Surv object
+
+covs <- attr(surv_fit$strata, "names")
+covs <-str_split(covs, ",")
+covs <- data.frame(matrix(unlist(covs), nrow=length(covs), byrow=T))
+colnames(covs) <- c("Dist2land_3davg", "Windspeed_3davg")
+covs <- covs %>%
+  mutate_all(~gsub("Dist2land_3davg=", "", .)) %>%
+  mutate_all(~gsub("Windspeed_3davg=", "", .))
+ 
+covs$Windspeed_3davg <- as.numeric(covs$Windspeed_3davg)
+covs$Dist2land_3davg <- as.numeric(covs$Dist2land_3davg)
+
+covs <- cbind(tidy_survfit, covs)
+covs <- dplyr::select(covs, -strata)
+windspeed <- covs$Windspeed_3davg
+
+cox_tdc$risk <- predict(fit, newdata = cox_tdc, type = "risk", reference = "sample", na.action = na.pass)
+
+cox_tdc <- na.omit(cox_tdc)
+cox_tdc
+
+new <- covs %>%
+  make_newdata(Windspeed_3davg = seq_range(Windspeed_3davg, n = 100)) 
+
+new <- new %>%
+  mutate(HR = predict(fit, ., type = "risk", na.action = na.pass))
+
+
+  mutate(risk = predict(fit, ., type = "risk", na.action = na.pass))
+
+ggplot(data = new) + 
+  aes(x = Windspeed_3davg, y = HR) + 
+  geom_line()
+
 ```
 
