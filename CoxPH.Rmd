@@ -114,7 +114,7 @@ temp <- temp %>%
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
 
-cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, MeanWindspeed))
+cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
 
 ```
 
@@ -230,7 +230,7 @@ null3 <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, cluster = animal
 aicc <- AICc(speed3, SIC3, Speed_SIC3, distance3, distSpeed3, distSpeedSIC3, SpeedPlsSIC3, distSpeedPlsSIC3, null3)
 create_AICc_table(aicc)
 
-summary(distSpeed3)
+summary(distSpeedPlsSIC3)
 
 ```
 
@@ -260,8 +260,8 @@ create_AICc_table(aicc)
 # How to deal with invalid assumptions for Cox model: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6015946/
 
 
-zph <- cox.zph(distSpeed3)
-zph
+zph <- cox.zph(distSpeedPlsSIC3)
+zph # p > 0.05 for all variables in top two 3-day models
 
 plot(zph[2], lwd = 2)
 abline(0,0, col = 1, lty = 3, lwd = 2)
