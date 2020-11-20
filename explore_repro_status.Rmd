@@ -104,6 +104,18 @@ It does not appear that reproductive status affects the timing of migration. But
 
 ```{r}
 
+load('all_v2.RData')
+
+# Import csv - denning data from TA (Lillie et al. 2018)
+
+den <- read.csv('C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv')
+den <- select(den, 1,2,4,5,6)
+den$id <- paste(den$animal, den$year, sep = '.')
+
+repro <- full_join(all.v2, den)
+
+repro <- filter(repro, ows == 1)
+
 ```
 
 

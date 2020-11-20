@@ -15,6 +15,22 @@ rm(list = ls())
 
 ```
 
+```{r Functions}
+
+create_AICc_table <- function(aicc){ # AICc table function
+  aicc$Model <- rownames(aicc)
+  aicc$deltaAICc <- aicc$AICc - min(aicc$AICc) 
+  aicc$L <- exp(-0.5*(aicc$deltaAICc))
+  aicc$weight <- aicc$L/(sum(aicc$L))
+  aicc$weight.pct <- aicc$weight*100
+  aicc <- arrange(aicc, aicc$deltaAICc)
+  return(aicc)
+}
+
+```
+
+
+
 ```{r Load data}
 
 load("Cox_TDC.RData")
@@ -85,40 +101,7 @@ summary(distSpeed3)
 
 The effect size of windspeed is HUGE. The hazard ratio is 2.51, meaning that each increase in windspeed by 1 m/s (over a 3-day average) increases the hazard by 151% (check this interpretation). Distance to land is significant but since the value is 1 we cannot conclude any directional effect. 
 
-```{r}
 
-
-library(stringr)
-library(tidyverse)
-
-fit.one <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
-
-fit.two <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg + Dist2land_3davg, cluster = animal, data = cox_tdc)
-
-
-# Extract windspeed and SICsq data from Surv object
-
-covs <- attr(fit.one$strata, "names")
-covs <-str_split(covs, ",")
-covs <- data.frame(matrix(unlist(covs), nrow=length(covs), byrow=T))
-colnames(covs) <- c("Windspeed_3davg", "SICsq")
-covs <- covs %>%
-  mutate_all(~gsub("MeanWindspeed=", "", .)) %>%
-  mutate_all(~gsub("SICsq=", "", .))
-
-covs$Windspeed <- as.numeric(covs$Windspeed)
-covs$SICsq <- as.numeric(covs$SICsq)
-
-
-# Bind back to tidy dataframe
-
-tidy_model <- tidy_model %>%
-  dplyr::select(-strata) %>%
-  bind_cols(covs)
-
-
-
-```
 
 Example: How to add variables and predict over new dataframe when using time-dependent covariates
 
@@ -226,25 +209,25 @@ covs$Dist2land_3davg <- as.numeric(covs$Dist2land_3davg)
 
 covs <- cbind(tidy_survfit, covs)
 covs <- dplyr::select(covs, -strata)
-windspeed <- covs$Windspeed_3davg
 
-cox_tdc$risk <- predict(fit, newdata = cox_tdc, type = "risk", reference = "sample", na.action = na.pass)
+# Run model over new data
 
-cox_tdc <- na.omit(cox_tdc)
-cox_tdc
+#cox_tdc$risk <- predict(fit, newdata = cox_tdc, type = "risk", reference = "sample", na.action = na.pass) 
 
-new <- covs %>%
-  make_newdata(Windspeed_3davg = seq_range(Windspeed_3davg, n = 100)) 
+#cox_tdc <- na.omit(cox_tdc)
+#cox_tdc
+
+new <- covs %>% 
+  make_newdata(Windspeed_3davg = seq_range(Windspeed_3davg, n = 100)) # holds all variables constant
 
 new <- new %>%
   mutate(HR = predict(fit, ., type = "risk", na.action = na.pass))
 
-
-  mutate(risk = predict(fit, ., type = "risk", na.action = na.pass))
-
 ggplot(data = new) + 
   aes(x = Windspeed_3davg, y = HR) + 
-  geom_line()
+  geom_line() + 
+  xlab("Windspeed (3-day mean)") + 
+  ylab("Hazard Ratio")
 
 ```
 

@@ -48,8 +48,21 @@ load("land_bears_CoxPH.RData")
 
 bears <- distinct(bears)
 
+# Add SIC-squared
+
 bears <- bears %>%
-  mutate(SICsq = SIC_30m_me^2) # Add SIC-squared
+  mutate(SICsq = SIC_30m_me^2) 
+
+# Add columns for reproductive status
+
+bears$repro <- 0
+
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+bears$repro <- factor(bears$repro, labels = c("Unknown", "Denning", "COY", "Yearling"))
 
 ```
 
@@ -85,15 +98,14 @@ wind.join <- cbind(wind.join, rwind)
 wind.join$yday <- yday(wind.join$datetime)
 
 # Find average
-# Note: for average "Wind Type", used 'first' direction of the day
 
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), mean(speed)) %>%
+    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), first(repro)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "MeanDist2land", "start.swim", "Windspeed") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "MeanDist2land", "start.swim", "Windspeed", "repro") 
 
 avg <- avg %>%
   group_by(id) %>%
@@ -110,11 +122,13 @@ avg <- avg %>%
 
 temp <- subset(avg, start.swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start.swim, animal) 
+  dplyr::select(id, day, start.swim, animal, repro) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
 
 cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
+
+save(cox_tdc, file = "Cox_TDC.RData")
 
 ```
 
@@ -226,6 +240,17 @@ SpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3da
 distSpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg + Dist2land_3davg, cluster = animal, data = cox_tdc)
 null3 <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, cluster = animal)
 
+# Test time x Windspeed interaction
+
+test <- cox_tdc %>%
+  mutate(time = row_number())
+
+test$time <- as.numeric(test$time)
+test2 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg*time, cluster = animal, data = test)
+
+aicc <- AICc(test2, speed3)
+# Model is not improved with Windspeed * time interaction 
+
 
 aicc <- AICc(speed3, SIC3, Speed_SIC3, distance3, distSpeed3, distSpeedSIC3, SpeedPlsSIC3, distSpeedPlsSIC3, null3)
 create_AICc_table(aicc)
@@ -260,17 +285,44 @@ create_AICc_table(aicc)
 # How to deal with invalid assumptions for Cox model: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6015946/
 
 
-zph <- cox.zph(distSpeedPlsSIC3)
+zph <- cox.zph(distSpeed3)
 zph # p > 0.05 for all variables in top two 3-day models
 
 plot(zph[2], lwd = 2)
 abline(0,0, col = 1, lty = 3, lwd = 2)
-abline(h= Speed_SIC$coef[2], col=3, lwd=2, lty=2)
+abline(h= distSpeed3$coef[2], col=3, lwd=2, lty=2)
 legend("topleft",
 legend=c('Reference line for null effect',
 "Average hazard over time",
 "Time-varying hazard"),
 lty=c(3,2,1), col=c(1,3,1), lwd=2)
+```
+```{r CHeck Assumptions: Influential Observations/Outliers}
+
+# Test for influential observations
+
+ggcoxdiagnostics(distSpeed3, type = "dfbeta", linear.predictions = FALSE, ggtheme = theme_bw())
+
+```
+Observations may be relatively large or small but none are influential (because the values on the y-axis are very low)
+
+```{r Check Assumptions: Non-linearity}
+
+cox_tdc <- na.omit(cox_tdc)
+
+ggcoxfunctional(coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + log(Windspeed_3davg) + sqrt(Windspeed_3davg), cluster = animal, data = cox_tdc))
+
+
+```
+
+```{r Correlation matrix}
+
+vars <- dplyr::select(cox_tdc, SICsq_3davg, Windspeed_3davg, Dist2land_3davg)
+
+res <- cor(vars)
+res
+
+
 ```
 
 

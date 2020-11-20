@@ -9,16 +9,16 @@
 # compared to the average difference of observed bears within a year.
 
 
-# 12 original datapoints
+# 22 original datapoints
 
 rm(list = ls())
 
 library(lubridate)
 library(dplyr)
 
-load("logreg.RData")
+load("land_bears_CoxPH.RData")
 
-start <- subset(logreg, start.swim == 1)
+start <- subset(bears, start.swim == 1)
 start$ordinal <- yday(start$datetime)
 
 table(start$year)
@@ -26,17 +26,16 @@ table(start$year)
 first <- min(start$ordinal)
 last <- max(start$ordinal)
 
-sample <- matrix(nrow = 4, ncol)
+# Assign random start dates to all bears
 
-year1 <- sample(199:264, 2, replace = TRUE) 
-year2 <- sample(199:264, 2, replace = TRUE)
-year3 <- sample(199:264, 3, replace = TRUE)
-year4 <- sample(199:264, 2, replace = TRUE)
+random <- sample(199:264, 22, replace = TRUE) 
 
-as.numeric(dist(year3))
-sample_diffs <- c(diff(year1), diff(year2), dist(year3), diff(year4))
+start$random <- random
 
-start <- subset(start, year == "2009" | year == "2011" | year == "2013" | year == "2014")
+data <- dplyr::select(start, year, ordinal, random)
 
-test <- start %>%
+diff <- data %>%
+  group_by(year) %>%
+  
+  
   
