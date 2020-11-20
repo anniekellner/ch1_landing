@@ -7,78 +7,86 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+
+library(MuMIn)
+library(survival)
+
+rm(list = ls())
+
 ```
 
-# Null model 
+```{r Load data}
 
-```{r}
-# Survival curve 
+load("Cox_TDC.RData")
+head(cox_tdc)
+
+```
+
+# Hold SIC constant at the mean and plot hazard for windspeed
+
+```{r AICc Sea Ice Concentration}
+
+SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SIC_max, cluster = id, data = cox_tdc) # This is the mean value of the maximum sea ice concentration over all observations in one day
+SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = cox_tdc)
+SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
+#SIC_min <- coxph(Surv(tstart, tstop, migrate) ~ SIC_min, cluster = id, data = cox_tdc) # Does not converge
+
+aicc <- AICc(SIC_mean, SIC_max, SIC_sq)
+
+create_AICc_table(aicc) 
+
+```
+
+Using the square of the mean sea ice concentration is the best way to measure sea ice concentration.
+
+```{r AICc CoxPH 3 day moving window}
+
+# About the model: http://www.sthda.com/english/wiki/cox-proportional-hazards-model
+
+# 3 days rolling mean for all variables
+
+library(zoo)
+
+cox_tdc <- cox_tdc %>%
+  mutate(SICsq_3davg = rollmean(SICsq, 3, fill = NA, align = "right")) %>%
+  mutate(Windspeed_3davg = rollmean(Windspeed, 3, fill = NA, align = "right")) %>%
+  mutate(Dist2land_3davg = rollmean(Distance_to_land, 3, fill = NA, align = "right"))
+
+# Same models using 3 day rolling averaqes for all variables
+
+speed3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg, cluster= animal, data = cox_tdc)
+
+SIC3 <- coxph(Surv(tstart, tstop, migrate) ~ SICsq_3davg, cluster = animal, data = cox_tdc)
+
+Speed_SIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg*SICsq_3davg, cluster = animal , data = cox_tdc)
+
+distance3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg, cluster = animal , data = cox_tdc)
 
 distSpeed3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)
 
-surv_curve <- survfit(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg, cluster = animal, data = cox_tdc)   
-fit_data <- data.frame(cbind(null_fit$time,null_fit$surv,null_fit$cumhaz,null_fit$upper,null_fit$lower))
-names(fit_data) <- c("time","surv","cumhaz","upperCI","lowerCI")
+distSpeedSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Dist2land_3davg + Windspeed_3davg * SICsq_3davg, cluster = animal, data = cox_tdc)
+SpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg, cluster = animal, data = cox_tdc)
+distSpeedPlsSIC3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg + SICsq_3davg + Dist2land_3davg, cluster = animal, data = cox_tdc)
+null3 <- coxph(Surv(tstart, tstop, migrate) ~1, data = cox_tdc, cluster = animal)
 
-ggplot(data=NULL) +
-  geom_line(data=fit_data,aes(x=time, y=surv),colour="black",linetype="solid",size=1) +
-  geom_line(data=fit_data,aes(x=time, y=upperCI),colour="black",linetype="dashed",size=.5) +
-  geom_line(data=fit_data,aes(x=time, y=lowerCI),colour="black",linetype="dashed",size=.5) +
-  #scale_x_continuous(breaks=seq(0,480,120)) +
-  #scale_y_continuous(breaks=seq(0,1,.25)) +
- # expand_limits(x=c(0,480),y=c(0,1)) +
-  xlab("") + ylab("Survival Function") +
-theme_classic() +
-theme(axis.line.x = element_line(color = "black"),
-      axis.line.y = element_line(color = "black"))
 
-# Cumulative hazard
+aicc <- AICc(speed3, SIC3, Speed_SIC3, distance3, distSpeed3, distSpeedSIC3, SpeedPlsSIC3, distSpeedPlsSIC3, null3)
 
-ggplot(data=NULL) +
-  geom_line(data=null_data,aes(x=time, y=cumhaz),colour="black",linetype="solid",size=1) +
-  #scale_x_continuous(breaks=seq(0,480,120)) +
- # scale_y_continuous(breaks=seq(0,1,.25)) +
-  #expand_limits(x=c(0,480),y=c(0,1)) +
-  xlab("Ordinal Day") + ylab("Cumulative Hazard Function") +
-theme_classic() +
-theme(axis.line.x = element_line(color = "black"),
-      axis.line.y = element_line(color = "black"))
+create_AICc_table(aicc)
 
 ```
 
-# Plot cumulative hazard for whole model
+The top model using a 3-day moving window is Distance + Speed.
 
-```{r}
+```{r 3-day summary}
 
-modelfit <- survfit(Surv(tstart, tstop, start.swim) ~ Windspeed + SICsq, cluster = animal, data = cox_tdc)
-print(modelfit)
-summary(modelfit)
-
-modeldata <- data.frame(cbind(modelfit$time,modelfit$surv,modelfit$cumhaz,modelfit$upper,modelfit$lower))
-
-cumhaz <- modeldata %>%
-  group_by(time) %>%
-  summarize(mean_cumhaz = mean(cumhaz))
-
-ggplot(data=NULL) +
-  geom_line(data=cumhaz,aes(x=time, y=mean_cumhaz),colour="black",linetype="solid",size=1) +
-  #scale_x_continuous(breaks=seq(0,480,120)) +
- # scale_y_continuous(breaks=seq(0,1,.25)) +
-  #expand_limits(x=c(0,480),y=c(0,1)) +
-  xlab("Ordinal Day") + ylab("Cumulative Hazard Function") +
-theme_classic() +
-theme(axis.line.x = element_line(color = "black"),
-      axis.line.y = element_line(color = "black"))
-
-
-
+summary(distSpeed3)
 ```
-# Hold SIC constant at the mean and plot hazard for windspeed
 
+The effect size of windspeed is HUGE. The hazard ratio is 2.51, meaning that each increase in windspeed by 1 m/s (over a 3-day average) increases the hazard by 151% (check this interpretation). Distance to land is significant but since the value is 1 we cannot conclude any directional effect. 
 
 ```{r}
 
-### Trial from Shane Frank email 11/5/2020
 
 library(stringr)
 library(tidyverse)
