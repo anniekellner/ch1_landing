@@ -112,11 +112,47 @@ den <- read.csv('C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv')
 den <- select(den, 1,2,4,5,6)
 den$id <- paste(den$animal, den$year, sep = '.')
 
-repro <- full_join(all.v2, den)
+repro_df <- full_join(all.v2, den) # Join repro data to all.v2
+head(repro_df)
 
-repro <- filter(repro, ows == 1)
+repro_df <- filter(repro, ows == 1)
+
+# Consolidate repro data into a single column with factors
+
+repro_df$repro <- NA
+
+repro_df <- repro_df %>%
+  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+repro_df$repro <- factor(repro_df$repro, labels = c("Enter_Den", "COY", "Yearling"))
+
+repro_df <- repro_df %>%
+  dplyr::select(id, animal, year, datetime, start.swim, land_bear, repro) 
+  
+repro_df$ordinal <- yday(repro_df$datetime)
+
+repro_df <- repro_df %>%
+  group_by(id, ordinal) %>%
+  summarise(first(animal), first(year), max(start.swim), first(repro))
+
+colnames(repro_df) <- c("id", "ordinal", "animal", "year", "migrate", "repro")
+
+# Numbers
+# 45 bears with coys
+# 25 bears denning
+# 36 bears with yearlings
+
+repro_fit <- coxph(Surv(ordinal, migrate) ~ repro, cluster = animal, data = repro_df)
+
+summary(repro_fit) # not significant
+
+
 
 ```
+
+When bears' repro status is divided into 3 factors, the result is not significant. There is no increased or decreased risk of migration for any of the factors.
 
 
 
