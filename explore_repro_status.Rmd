@@ -107,35 +107,16 @@ It does not appear that reproductive status affects the timing of migration. But
 ice <- subset(all.v2, ows == 1 & land_bear_ows == 0)
 
 noData <- ice %>% # remove bears with < 100 data points
-  add_count(id) %>%
-  filter(n < 100) %>%
-  filter(id != "pb_20296.2015") %>% # all bears with < 2 mos data after visual inspection 11/21/20
-  filter(id != "pb_20423.2014") %>%
-  filter(id != "pb_20474.2009") %>%
-  filter(id != "pb_20520.2013") %>%
-  filter(id != "pb_20520.2012") %>%
-  filter(id != "pb_20521.2014") %>%
-  filter(id != "pb_20694.2004") %>%
-  filter(id != "pb_20783.2005") %>%
-  filter(id != "pb_20845.2009") %>%
-  filter(id != "pb_20910.2009") %>%
-  filter(id != "pb_20965.2008") %>%
-  filter(id != "pb_20982.2008") %>%
-  filter(id != "pb_21015.2012") %>%
-  filter(id != "pb_21015.2014") %>%
-  filter(id != "pb_21291.2013") %>%
-  filter(id != "pb_21307.2013") %>%
-  filter(id != "pb_21343.2015") %>%
-  filter(id != "pb_21402.2016") %>%
-  filter(id != "pb_21403.2016") %>%
-  filter(id != "pb_22299.2015") %>%
-  filter(id != "pb_22305.2015") %>%
-  filter(id != "pb_22318.2016") %>%
-  filter(id != "pb_32362.2015") %>%
-  filter(id != "pb_32608.2008") %>%
-  filter(id != "pb_32921.2016")
+ add_count(id) %>%
+  filter(n < 100)
+
+noData2 <- ice %>%
+  filter(id == "pb_20296.2015" | id == "pb_20423.2014" | id == "pb_20474.2009" | id == "pb_20520.2013" |
+          id == "pb_20520.2012" | id == "pb_20521.2014" | id == "pb_20694.2004" | id == "pb_20783.2005" | id == "pb_20845.2009" |id == "pb_20910.2009" | id == "pb_20965.2008" | id == "pb_20982.2008" | id == "pb_21015.2012" | 
+          id == "pb_21015.2014" | id == "pb_21291.2013" | id == "pb_21307.2013" | id == "pb_21343.2015" | id == "pb_21402.2016" | id == "pb_21403.2016" | id == "pb_22299.2015" | id == "pb_22305.2015" | id == "pb_22318.2016" | id == "pb_32362.2015" | id == "pb_32608.2008" | id == "pb_32921.2016")  # all bears with < 2 mos data after visual inspection 11/21/20
 
 ice <- anti_join(ice, noData)
+ice <- anti_join(ice, noData2)
 
 ```
 
