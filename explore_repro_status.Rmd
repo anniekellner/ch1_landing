@@ -126,7 +126,7 @@ save(ice, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_
 
 
 
-```{r All bears repro as factor}
+```{r Merge denning data}
 
 # TO DO: instead of migrate, do 'land bears' 
 
@@ -143,6 +143,11 @@ bears_cox <- rbind(ice2, land)
 den <- read.csv('C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv')
 den <- select(den, 1,2,4,5,6)
 den$id <- paste(den$animal, den$year, sep = '.')
+
+infer <- den %>%
+  filter(id == "pb_20521.2014" | id == "pb_20525.2014" | id == "pb_20794.2006" | id == "pb_20797.2006" | id == "pb_20840.2007" | id == "pb_20925" | id == "pb_21219.2011")
+
+den <- anti_join(den, infer)
 
 bears_cox <- full_join(bears_cox, den) # Join repro data
 head(bears_cox)
@@ -166,26 +171,39 @@ colnames(bears_cox) <- c("id", "ordinal", "animal", "year", "migrate", "repro", 
 
 bears_cox$repro <- as.factor(bears_cox$repro)
 
-repro_fit <- coxph(Surv(ordinal, migrate) ~ repro, cluster = id, data = bears_cox)
+
+
+```
+
+
+```{r Run CoxPH with repro as factors}
+repro_fit <- coxph(Surv(ordinal, land_bear) ~ repro, cluster = id, data = bears_cox)
 
 summary(repro_fit) # not significant
 
 ```
 
-When bears' repro status is divided into 3 factors, the result is not significant. There is no increased or decreased risk of migration for any of the factors.
+When bears' repro status is divided into 3 factors, the result is not significant. There is no increased or decreased risk of migration for any of the factors. I removed all incomplete data and bears for which reproductive status was assumed but not confirmed.
 
 ```{r All bears binary offspring v no offspring}
 
-repro_df <- na.omit(repro_df)
+bears_cox <- na.omit(bears_cox)
 
-repro_df <- repro_df %>%
-  mutate(depend_offspring = ifelse(repro == "COY" | repro == "Yearling", 1, 0))
+bears_cox <- bears_cox %>%
+  mutate(depend_offspring = ifelse(repro == "coy" | repro == "yearling", 1, 0))
 
-fit_binary <- coxph(Surv(ordinal, migrate) ~ depend_offspring, cluster = id, data = repro_df)
+fit_binary <- coxph(Surv(ordinal, land_bear) ~ depend_offspring, cluster = id, data = bears_cox)
 
 summary(fit_binary)
 
 ```
 
-Reproductive status is still not significant when all bears are considered. Should check to make sure all bears included are appropriate.  
+Reproductive status is still not significant when all bears are considered. Should check to make sure all bears included are appropriate. Reproductive status is also not significant  
+
+```{r}
+coys <- subset(bears_cox, repro == "coy")
+
+table(coys$id, coys$land_bear)
+```
+
 
