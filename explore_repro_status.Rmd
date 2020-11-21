@@ -118,15 +118,25 @@ noData2 <- ice %>%
 ice <- anti_join(ice, noData)
 ice <- anti_join(ice, noData2)
 
+ice <- droplevels(ice)
+
+save(ice, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/ice_bears_CoxPH.RData")
+
 ```
 
 
 
 ```{r All bears repro as factor}
 
-# TO DO: remove bears with insufficient data, instead of migrate, do 'land bears' 
+# TO DO: instead of migrate, do 'land bears' 
 
-load('all_v2.RData')
+load('land_bears_CoxPH.RData')
+load('ice_bears_CoxPH.RData')
+
+ice2 <- dplyr::select(ice, animal, year, datetime, start.swim, land_bear)
+land <- dplyr::select(bears, animal, year, datetime, start.swim, land_bear)
+
+bears_cox <- rbind(ice2, land)
 
 # Import csv - denning data from TA (Lillie et al. 2018)
 
@@ -134,39 +144,29 @@ den <- read.csv('C:/Users/akell/Documents/PhD/Polar_Bears/Data/Repro/Repro.csv')
 den <- select(den, 1,2,4,5,6)
 den$id <- paste(den$animal, den$year, sep = '.')
 
-repro_df <- full_join(all.v2, den) # Join repro data to all.v2
-head(repro_df)
-
-repro_df <- filter(repro, ows == 1)
+bears_cox <- full_join(bears_cox, den) # Join repro data
+head(bears_cox)
 
 # Consolidate repro data into a single column with factors
 
-repro_df$repro <- NA
+bears_cox$repro <- NA
 
-repro_df <- repro_df %>%
-  mutate(repro = replace(repro, DenYr == 1, 1)) %>%
-  mutate(repro = replace(repro, coy == 1, 2)) %>%
-  mutate(repro = replace(repro, yearling == 1, 3))
-
-repro_df$repro <- factor(repro_df$repro, labels = c("Enter_Den", "COY", "Yearling"))
-
-repro_df <- repro_df %>%
-  dplyr::select(id, animal, year, datetime, start.swim, land_bear, repro) 
+bears_cox <- bears_cox %>%
+  mutate(repro = replace(repro, DenYr == 1, "enter_den")) %>%
+  mutate(repro = replace(repro, coy == 1, "coy")) %>%
+  mutate(repro = replace(repro, yearling == 1, "yearling"))
   
-repro_df$ordinal <- yday(repro_df$datetime)
+bears_cox$ordinal <- yday(bears_cox$datetime)
 
-repro_df <- repro_df %>%
+bears_cox <- bears_cox %>%
   group_by(id, ordinal) %>%
-  summarise(first(animal), first(year), max(start.swim), first(repro))
+  summarise(first(animal), first(year), max(start.swim), first(repro), max(land_bear))
 
-colnames(repro_df) <- c("id", "ordinal", "animal", "year", "migrate", "repro")
+colnames(bears_cox) <- c("id", "ordinal", "animal", "year", "migrate", "repro", "land_bear")
 
-# Numbers
-# 45 bears with coys
-# 25 bears denning
-# 36 bears with yearlings
+bears_cox$repro <- as.factor(bears_cox$repro)
 
-repro_fit <- coxph(Surv(ordinal, migrate) ~ repro, cluster = id, data = repro_df)
+repro_fit <- coxph(Surv(ordinal, migrate) ~ repro, cluster = id, data = bears_cox)
 
 summary(repro_fit) # not significant
 
