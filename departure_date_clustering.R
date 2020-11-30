@@ -19,6 +19,8 @@ library(dplyr)
 load("land_bears_CoxPH.RData")
 
 start <- subset(bears, start.swim == 1)
+start <- distinct(start)
+
 start$ordinal <- yday(start$datetime)
 
 table(start$year)
@@ -26,16 +28,63 @@ table(start$year)
 first <- min(start$ordinal)
 last <- max(start$ordinal)
 
-# Assign random start dates to all bears
+start$year <- as.numeric(start$year)
 
-random <- sample(199:264, 22, replace = TRUE) 
+# create dataframe with range of departure dates per year
 
-start$random <- random
-
-data <- dplyr::select(start, year, ordinal, random)
-
-diff <- data %>%
+data <- start %>%
   group_by(year) %>%
+  filter(n() > 1) %>% # exclude years with only one departure
+  dplyr::select(id, year, ordinal) %>%
+  arrange(year, ordinal) %>%
+  filter(row_number() == 1 | row_number() == n()) %>% # select two numbers at extreme ends of range
+  mutate(diff = ordinal - min(ordinal)) %>% # calculate difference in number of days
+  filter(diff != 0)
+
+values <- data.frame("year" = c(2005, 2006, 2009, 2011, 2013, 2014))
+values$Pct_fewer <- 0
   
-  
+# 2005
+
+set.seed(13) 
+r1 <- sapply(1:10000, function(i) diff(range(sample(first:last, 2, replace = T))))
+yr2005 <- mean(r1 > 32)
+values[1,2] <- yr2005
+head(values)
+
+# 2006
+
+set.seed(13)
+r2 <- sapply(1:10000, function(i) diff(range(sample(first:last, 2, replace = T))))
+yr2006 <- mean(r2 > 7)
+values[2,2] <- yr2006
+
+# 2009
+
+set.seed(13)
+r3 <- sapply(1:10000, function(i) diff(range(sample(first:last, 3, replace = T))))
+yr2009 <- mean(r3 > 10)
+values[3,2] <- yr2009
+
+#2011
+
+set.seed(13)
+r4 <- sapply(1:10000, function(i) diff(range(sample(first:last, 2, replace = T))))
+yr2011 <- mean(r4 > 9)
+values[4,2] <- yr2011
+
+# 2013
+
+set.seed(13)
+r5 <- sapply(1:10000, function(i) diff(range(sample(first:last, 3, replace = T))))
+yr2013 <- mean(r5 > 3)
+values[5,2] <- yr2013
+
+# 2014
+
+set.seed(13)
+r6 <- sapply(1:10000, function(i) diff(range(sample(first:last, 4, replace = T))))
+yr2014 <- mean(r6 > 3)
+values[6,2] <- yr2014
+
   
