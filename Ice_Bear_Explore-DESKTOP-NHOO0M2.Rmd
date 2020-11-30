@@ -21,12 +21,19 @@ rm(list = ls())
 load('all_v2.RData')
 setwd('C:/Users/akell/Documents/ArcGIS') # GIS data
 
-# ------------------------------------------------------------------------------------- #
+```
+
+
+```{r Projections}
 
 # projection
 
 albers.proj <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") # Albers Equal Area Conic (same as ArcMap doc)
+```
 
+
+
+``` {r Functions}
 # Function to turn df into sf (cannot droplevels in sf object so always need to start w df)
 
 DFtoSF <- function(df) {
@@ -86,13 +93,15 @@ tm_shape(yearling) +
 
 ```{r}
 
-ice <- subset(all.v2, yearling == 0 & coy == 0 & DenYr == 0 & ows == 1 & land_bear_ows == 0)
+ice <- subset(all.v2, ows == 1 & land_bear_ows == 0)
 
 noData <- ice %>% # remove bears with < 100 data points
   add_count(id) %>%
   filter(n < 100)
 
 ice <- anti_join(ice, noData)
+
+# View all ice bears 
 
 # function to subset ice df to view individual ice bears
 viewPB <- function(bear){ 
@@ -104,7 +113,7 @@ viewPB <- function(bear){
   
 }
 
-#viewPB('pb_20479.2006') # view individual bear
+
 ```
 
 # View all ice bears
@@ -114,9 +123,11 @@ viewPB <- function(bear){
 
 ice <- DFtoSF(ice)
 
+tmap_mode("view")
+
 tm_shape(ice) +
   tm_symbols(col = "month", popup.vars = c("year", "month", "day")) +
-  tmap_options(limits = c(facets.view = 105)) +
+  tmap_options(limits = c(facets.view = 133)) +
   tm_facets("id", free.coords = TRUE)
 
 ```

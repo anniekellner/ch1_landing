@@ -33,8 +33,8 @@ library(sf)
 polar <- "+proj=stere +lat_0=90 +lat_ts=71 +lon_0=-152.5 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 bbox <- st_bbox()
 
-#geog_lines <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/ne_10m_geographic_lines/ne_10m_geographic_lines.shp")
-#arctic_circle <- geog_lines[4,]
+geog_lines <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/ne_10m_geographic_lines/ne_10m_geographic_lines.shp")
+arctic_circle <- geog_lines[4,]
 #arctic_circle <- st_transform(arctic_circle, crs = polar)
 #arctic_circle <- st_crop()
 
@@ -46,7 +46,11 @@ borders <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/ne_10m_admi
 
 
 inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") + 
-  theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2))  
+  theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
+  geom_sf(data = mcp, color = "red", fill = NA, lwd = 1, show.legend = TRUE)  
+
+mcp <- st_read("./Shapefiles/95ca_ows_all.shp")
+mcp <- st_transform(mcp, crs = 4326)
   
 
 ggsave("arctic_birdseye.png", plot = inset, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
@@ -57,7 +61,7 @@ main <- basemap(limits = c(-175, -130, 65, 80), rotate = TRUE, bathymetry = TRUE
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank()) + 
   geom_sf(data = arctic_circle, color = "black") + 
-  coord_sf(xlim = c(-175, -130), ylim = c(65, 80))
+  coord_sf(xlim = c(-175, -130), ylim = c(65, 80)) 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
 
