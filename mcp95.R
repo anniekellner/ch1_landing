@@ -1,12 +1,13 @@
 rm(list = ls())
+
 library(adehabitatHR)
 library(dplyr)
 
-load('all.RData')
+load('all_v2.RData')
 
 #set up data
 
-use <- subset(all, month==7 | month==8 | month==9)
+use <- subset(all.v2, month == 6 | month==7 | month==8 | month==9)
 use <- dplyr::select(use, gps_lat, gps_lon)
 
 #convert to grid
