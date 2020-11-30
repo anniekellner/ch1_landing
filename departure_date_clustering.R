@@ -87,4 +87,6 @@ r6 <- sapply(1:10000, function(i) diff(range(sample(first:last, 4, replace = T))
 yr2014 <- mean(r6 > 3)
 values[6,2] <- yr2014
 
+write.csv(values, file = "C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Results/dep_date_cluster.csv", row.names = FALSE)
+
   
