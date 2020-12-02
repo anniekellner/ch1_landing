@@ -3,11 +3,11 @@ rm(list = ls())
 library(adehabitatHR)
 library(dplyr)
 
-load('all_v2.RData')
+load('land_bears_CoxPH.RData')
 
 #set up data
 
-use <- subset(all.v2, month == 6 | month==7 | month==8 | month==9)
+use <- subset(bears, month == 6 | month==7 | month==8 | month==9)
 use <- dplyr::select(use, gps_lat, gps_lon)
 
 #convert to grid
@@ -30,5 +30,5 @@ ca <- mcp(XY.sp, percent=95) #95% core area - can change to any percent
 plot(ca)
 
 #write to shapefile
-writeOGR(ca, dsn = './Shapefiles', layer ="95ca_ows_all", driver='ESRI Shapefile')
+writeOGR(ca, dsn = './Shapefiles', layer ="95ca_ows_land_bears", driver='ESRI Shapefile')
 
