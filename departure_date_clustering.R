@@ -21,6 +21,8 @@ load("land_bears_CoxPH.RData")
 start <- subset(bears, start.swim == 1)
 start <- distinct(start)
 
+start <- start[-16,]
+
 start$ordinal <- yday(start$datetime)
 
 table(start$year)
@@ -83,7 +85,7 @@ values[5,2] <- yr2013
 # 2014
 
 set.seed(13)
-r6 <- sapply(1:10000, function(i) diff(range(sample(first:last, 4, replace = T))))
+r6 <- sapply(1:10000, function(i) diff(range(sample(first:last, 3, replace = T))))
 yr2014 <- mean(r6 > 3)
 values[6,2] <- yr2014
 
