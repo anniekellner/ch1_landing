@@ -12,7 +12,7 @@ library(rgdal)
 library(dplyr)
 library(lubridate)
 
-setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
+setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters")
 
 # load data
 
@@ -88,34 +88,28 @@ mean(points2$dist2pack)
 # pb_20446 is minimum distance from pack ice
 # pb_20945 is max
 
-##Load rasters and find mean value of SIC
+# Find rasters with min and max extent
 
-ras_files <- dir("./rasters/all_ice_vals", pattern = '.tif', all.files = TRUE, recursive = TRUE, full.names = TRUE)
+filelist <- dir(path = "./RCC", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
-rasterlist <- list()
+pack <- list()
 
-for(i in 1:length(ras_files)){
-  rasterlist[[i]] <- raster(ras_files[i])
-  rasterlist[[i]][rasterlist[[i]] == 120] <- NA # 120 = land. Change to NA. 
+for (i in 1:length(filelist)) {
+    r <- raster(filelist[i]) #read in raster
+    gv <- getValues(r) # change values to vector so can get mode
+    mode <- modal(gv, na.rm=TRUE) # find mode
+    new <- calc(r, fun=function(x){x==mode})
+    pack[[i]] <- new
+  }
+  
+size <- vector()
+
+for(i in 1:length(pack)){
+  size[i] <- cellStats(pack[[i]], 'sum')
 }
 
-rasterstack <- stack(rasterlist)
-
-avg_ice <- calc(rasterstack, fun = mean, na.rm = TRUE)
-plot(avg_ice)
-
-m <- c(1,15,0, 15,100,1, 100,255,0)
-rclmat <- matrix(m, ncol=3, byrow=TRUE)
-
-rc <- reclassify(avg_ice, rclmat) #reclassify such that SIC>15% = 1, else 0
-
-plot(rc)
-rcc <- clump(rc, directions=8) # clumping algorithm
-
-    
-swim$datetime
-
-
+# minimum ice extent is 2012
+# maximum is 2009 (07/18/2009)
 
 
 
