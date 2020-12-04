@@ -12,6 +12,8 @@ library(rgdal)
 library(dplyr)
 library(lubridate)
 
+setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
+
 # load data
 
 load('coxph.RData') #GPS data
@@ -75,7 +77,59 @@ points$dist2pack <- dist
 
 # ----- STATS ------------------------------------------------------------- #
 
-mean(points$dist2pack)
+points2 <- points %>%
+  select(id, datetime, dist2pack) %>%
+  arrange(dist2pack)
+
+mean(points2$dist2pack)
+
+# ---- MAP ----------------------------------------------------------------- #
+
+# pb_20446 is minimum distance from pack ice
+# pb_20945 is max
+
+##Load rasters and find mean value of SIC
+
+ras_files <- dir("./rasters/all_ice_vals", pattern = '.tif', all.files = TRUE, recursive = TRUE, full.names = TRUE)
+
+rasterlist <- list()
+
+for(i in 1:length(ras_files)){
+  rasterlist[[i]] <- raster(ras_files[i])
+  rasterlist[[i]][rasterlist[[i]] == 120] <- NA # 120 = land. Change to NA. 
+}
+
+rasterstack <- stack(rasterlist)
+
+avg_ice <- calc(rasterstack, fun = mean, na.rm = TRUE)
+plot(avg_ice)
+
+m <- c(1,15,0, 15,100,1, 100,255,0)
+rclmat <- matrix(m, ncol=3, byrow=TRUE)
+
+rc <- reclassify(avg_ice, rclmat) #reclassify such that SIC>15% = 1, else 0
+
+plot(rc)
+rcc <- clump(rc, directions=8) # clumping algorithm
+
+    
+swim$datetime
 
 
+
+
+
+plot(avg_ice)
+
+
+min_shp <- st_read("asi-n3125-20110728-v5.4.tif.shp")
+max_shp <- st_read("asi-AMSR2-n3125-20150827-v5.4.shp")
+
+min_pt <- filter(points, id == "pb_20446.2009")
+max_pt <- filter(points, id == "pb_20845.2015")
+
+min <- tm_shape(min_shp) + 
+  tm_borders() + 
+  tm_shape(min_pt) + 
+  tm_dots()
 
