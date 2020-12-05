@@ -2,14 +2,15 @@
 ###     Map of Distance to Pack Ice   #############
 ###################################################
 
+rm(list = ls())
+
 library(dplyr)
 library(sf)
 library(stars)
 library(tmap)
+library(raster)
 
 load('coxph.RData') #GPS data
-
-setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
 
 swim <- subset(bears, start.swim == 1)
 swim <- distinct(swim)
@@ -25,17 +26,16 @@ plot(st_geometry(swim.sf))
 
 # Load spatial data
 
-load("rasters.RData")
+load("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters.RData")
 
 min <- st_as_stars(pack[[1]])
 min <- na_if(min, "FALSE") # eliminate ice not connected to pack
 
-min_shp <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-AMSR2-n3125-20120815-v5.4.shp") 
-
 max <- st_as_stars(pack[[14]])
+max <- na_if(max, "FALSE") # eliminate ice not connected to pack
 
 min <- st_transform(min, st_crs(swim.sf))
-min_shp <- st_transform(min_shp, st_crs(swim.sf))
+max <- st_transform(max, st_crs(swim.sf))
 
 # Bounding box
 bb.swim <- tmaptools::bb(swim.sf, width = 2, height = 3, relative = TRUE)
@@ -50,16 +50,19 @@ library(rnaturalearthdata)
 nor_america <- ne_countries(continent = 'north america', returnclass = 'sf')
 nor_america <- st_transform(nor_america, st_crs(swim.sf))
 
-asia <- ne_countries(continent = 'asia', returnclass = 'sf')
-asia <- st_transform(asia, st_crs(swim.sf))
-
-
-tm_shape(min, bbox = bb.swim2) + 
-  tm_raster(legend.show = FALSE) + 
-  tm_shape(swim.sf, bbox = bb.swim2) + 
+tm_shape(min, bbox = bb.swim2) + # this works with min raster
+  tm_raster(col = "#7991FA", alpha = 0.5, legend.show = FALSE) + 
+  tm_shape(max, bbox = bb.swim2) + 
+  tm_raster(col = "#F52636", alpha = 0.2, legend.show = FALSE) + 
+  tm_shape(swim.sf) + 
   tm_dots(size = 0.25) + 
   tm_shape(nor_america, bbox = bb.swim2) + 
   tm_fill(col = "#9CD3AA")
 
-vignette('rnaturalearth', package='rnaturalearth')
+tm_shape(max, bbox = bb.swim2) + # this one works with max raster
+  tm_raster() + 
+  tm_shape(swim.sf) +
+  tm_dots() + 
+  tm_shape(nor_america) + 
+  tm_fill(col = "#9CD3AA")
   

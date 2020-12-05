@@ -92,16 +92,16 @@ mean(points2$dist2pack)
 
 filelist <- dir(path = "./RCC", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
-pack <- list()
-
 for (i in 1:length(filelist)) {
-    r <- raster(filelist[i]) #read in raster
-    gv <- getValues(r) # change values to vector so can get mode
-    mode <- modal(gv, na.rm=TRUE) # find mode
-    new <- calc(r, fun=function(x){x==mode})
-    pack[[i]] <- new
-  }
-  
+  r <- raster(filelist[i]) #read in raster
+  gv <- getValues(r) # change values to vector so can get mode
+  mode <- modal(gv, na.rm=TRUE) # find mode
+  new <- calc(r, fun=function(x){x==mode})
+  pack[[i]] <- new
+}
+
+save(pack, file = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters.RData")
+
 size <- vector()
 
 for(i in 1:length(pack)){
@@ -111,13 +111,7 @@ for(i in 1:length(pack)){
 # minimum ice extent is 2012
 # maximum is 2009 (07/18/2009)
 
-
-
-plot(avg_ice)
-
-
-min_shp <- st_read("asi-n3125-20110728-v5.4.tif.shp")
-max_shp <- st_read("asi-AMSR2-n3125-20150827-v5.4.shp")
+## Map
 
 min_pt <- filter(points, id == "pb_20446.2009")
 max_pt <- filter(points, id == "pb_20845.2015")
