@@ -52,7 +52,15 @@ q75 <- st_transform(q75, st_crs(swim.sf))
 
 # Bounding box
 bb.swim <- tmaptools::bb(swim.sf, width = 2, height = 3, relative = TRUE)
-bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.25,2), relative = TRUE)
+bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.2, 2), relative = TRUE)
+
+tm_shape(swim.sf, bbox = bb.swim) + 
+  tm_dots()
+
+tm_shape(swim.sf, bbox = bb.swim2) + 
+  tm_dots() +
+  tm_shape(nor_america) + 
+  tm_fill(col = "#9CD3AA" )
 
 
 # Make map
