@@ -65,7 +65,7 @@ q25 <- sf::st_transform(q25, sf::st_crs(swim.sf))
 q75 <- sf::st_read('./shapefiles/asi-AMSR2-n3125-20140811-v5.4.shp')
 q75 <- sf::st_transform(q75, sf::st_crs(swim.sf))
 
-# Make map
+# ------------ Make map ------------------------------------------------------------------ #
 
 library(rnaturalearth)
 library(rnaturalearthdata)
@@ -73,31 +73,12 @@ library(rnaturalearthdata)
 nor_america <- ne_countries(continent = 'north america', returnclass = 'sf')
 nor_america <- sf::st_transform(nor_america, sf::st_crs(swim.sf))
 
-
 # Bounding box
 bb.swim <- tmaptools::bb(swim.sf, width = 2, height = 3, relative = TRUE)
+bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.3, 1.75), relative = TRUE)
 
-bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.1, 2), relative = TRUE)
+# Map
 
-tm_shape(swim.sf, bbox = bb.swim2) + # works
-  tm_dots(size = 0.5) + 
-  tm_shape(nor_america) + 
-  tm_fill('#9CD3AA') +
-  tm_shape(min) + 
-  tm_fill(col = "#810f7c") + 
-  tm_shape(max) + 
-  tm_fill(col = "#edf8fb") + 
-  tm_shape(med) + 
-  tm_fill(col = "#8c96c6") + 
-  ##tm_shape(q25) + 
-  #tm_fill(col = "#b3cde3") + 
-  #tm_shape(q75) + 
-  #tm_fill(col = "#8856a7") + 
-  tm_compass() +
-  tm_layout(main.title = "Migration Departure Points Relative to Range of Sea Ice Extents", main.title.position = "center",
-            legend.outside = TRUE) + 
-  tm_add_legend(type = "fill", labels = c())
-  
 tm_shape(max, bbox = bb.swim2) +
   tm_fill("#edf8fb") + 
   tm_shape(med) + 
@@ -107,10 +88,9 @@ tm_shape(max, bbox = bb.swim2) +
   tm_shape(nor_america) + 
   tm_fill('#9CD3AA') +
   tm_shape(swim.sf) + 
-  tm_dots(size = 0.5) + 
+  tm_dots(size = 0.3) + 
   tm_compass(position = "left") + 
-  tm_layout(main.title = "Migration Departure Points Relative to Range of Sea Ice Extents", main.title.position = "center",
+  tm_layout(main.title = "Migration Departure Points Relative to Pack Ice", main.title.position = "center",
             legend.outside = TRUE) + 
-tm_add_legend(type = "fill", labels = c("minimum", "median", "maximum"), col = c("#810f7c","#8c96c6","#edf8fb"), border.col = "black", title = "Sea Ice Extent")
+tm_add_legend(type = "fill", labels = c("minimum (2012)", "median (2005)", "maximum (2009)"), col = c("#810f7c","#8c96c6","#edf8fb"), border.col = "black", title = "Pack Ice Extent")
 
-tm_add_legend(type = "symbol", labels = "Karner Blue current range", shape = 1, col = "black", size = 2, z = 2, border.lwd = 2, is.portrait = TRUE) +
