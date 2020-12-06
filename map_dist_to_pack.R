@@ -31,6 +31,10 @@ plot(st_geometry(swim.sf))
 
 load("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters.RData")
 
+filelist <- dir(path = "./rasters/RCC", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+
+# Max ice extent
+
 max <- sf::st_read('./shapefiles/asi-n3125-20090718-v5.4.tif.shp')
 max <- sf::st_transform(max, sf::st_crs(swim.sf))
 
@@ -43,41 +47,20 @@ max <- sf::st_transform(max, sf::st_crs(swim.sf))
 #writeOGR(poly, dsn = './shapefiles', layer = r, driver = 'ESRI Shapefile')
   
 
+# Median ice extent
 
+med <- sf::st_read('./shapefiles/asi-n3125-20050819-v5.4.tif.shp')
+med <- sf::st_transform(med, sf::st_crs(swim.sf))
 
+# 1st Quartile
 
-# Median raster
+q25 <- sf::st_read('./shapefiles/asi-n3125-20060914-v5.4.tif.shp')
+q25 <- sf::st_transform(q25, sf::st_crs(swim.sf))
 
-med_ras <- raster('./RCC/asi-n3125-20050819-v5.4.tif')
-gv <- getValues(med_ras)
-mode <- modal(gv, na.rm = TRUE) # 216
+# 3rd quartile
 
-m <- c(0,216,0, 216,217,1, 217,100000,0) 
-rclmat <- matrix(m, ncol=3, byrow=TRUE)
-
-rc_med <- reclassify(med_ras, rclmat) 
-
-
-
-max <- st_as_stars(pack[[14]])
-max <- na_if(max, "FALSE") # eliminate ice not connected to pack
-#max <- st_transform(max, st_crs(swim.sf))
-
-
-
-q25 <- st_as_stars(pack[[11]])
-q25 <- na_if(q25, "FALSE")
-#q25 <- st_transform(q25, st_crs(swim.sf))
-
-q50 <- st_as_stars(pack[[9]])
-q50 <- na_if(q50, "FALSE")
-q50 <- st_transform(q50, st_crs(swim.sf))
-
-q75 <- st_as_stars(pack[[5]])
-q75 <- na_if(q75, "FALSE")
-#q75 <- st_transform(q75, st_crs(swim.sf))
-
-
+q75 <- sf::st_read('./shapefiles/asi-AMSR2-n3125-20140811-v5.4.shp')
+q75 <- sf::st_transform(q75, sf::st_crs(swim.sf))
 
 # Make map
 
@@ -98,9 +81,15 @@ tm_shape(swim.sf, bbox = bb.swim2) + # works
   tm_shape(nor_america) + 
   tm_fill('#9CD3AA') +
   tm_shape(min) + 
-  tm_borders(col = "#810f7c") + 
+  tm_polygons(col = "#810f7c") + 
   tm_shape(max) + 
-  tm_borders(col = "#edf8fb")
+  tm_polygons(col = "#edf8fb") + 
+  tm_shape(med) + 
+  tm_polygons(col = "#8c96c6") + 
+  tm_shape(q25) + 
+  tm_polygons(col = "#b3cde3") + 
+  tm_shape(q75) + 
+  tm_polygons(col = "#8856a7")
   
 
 
