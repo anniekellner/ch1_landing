@@ -6,9 +6,9 @@ rm(list = ls())
 
 library(dplyr)
 library(sf)
-library(stars)
 library(tmap)
 library(raster)
+library(rgdal)
 
 load('coxph.RData') #GPS data
 
@@ -44,8 +44,11 @@ max <- sf::st_transform(max, sf::st_crs(swim.sf))
 #gv <- getValues(r) # change values to vector so can get mode
 #mode <- modal(gv, na.rm=TRUE) # find mode
 #poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
-#writeOGR(poly, dsn = './shapefiles', layer = r, driver = 'ESRI Shapefile')
-  
+#writeOGR(poly, dsn = './shapefiles', layer = 'asi-AMSR2-n3125-20120815-v5.4.tif.shp', driver = 'ESRI Shapefile')
+
+min <- st_read('./shapefiles/asi-AMSR2-n3125-20120815-v5.4.tif.shp.shp')
+min <- sf::st_transform(min, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
+min <- sf::st_transform(min, sf::st_crs(swim.sf))
 
 # Median ice extent
 
@@ -74,23 +77,40 @@ nor_america <- sf::st_transform(nor_america, sf::st_crs(swim.sf))
 # Bounding box
 bb.swim <- tmaptools::bb(swim.sf, width = 2, height = 3, relative = TRUE)
 
-bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.23, 2), relative = TRUE)
+bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.1, 2), relative = TRUE)
 
 tm_shape(swim.sf, bbox = bb.swim2) + # works
-  tm_dots() + 
+  tm_dots(size = 0.5) + 
   tm_shape(nor_america) + 
   tm_fill('#9CD3AA') +
   tm_shape(min) + 
-  tm_polygons(col = "#810f7c") + 
+  tm_fill(col = "#810f7c") + 
   tm_shape(max) + 
-  tm_polygons(col = "#edf8fb") + 
+  tm_fill(col = "#edf8fb") + 
   tm_shape(med) + 
-  tm_polygons(col = "#8c96c6") + 
-  tm_shape(q25) + 
-  tm_polygons(col = "#b3cde3") + 
-  tm_shape(q75) + 
-  tm_polygons(col = "#8856a7")
+  tm_fill(col = "#8c96c6") + 
+  ##tm_shape(q25) + 
+  #tm_fill(col = "#b3cde3") + 
+  #tm_shape(q75) + 
+  #tm_fill(col = "#8856a7") + 
+  tm_compass() +
+  tm_layout(main.title = "Migration Departure Points Relative to Range of Sea Ice Extents", main.title.position = "center",
+            legend.outside = TRUE) + 
+  tm_add_legend(type = "fill", labels = c())
   
+tm_shape(max, bbox = bb.swim2) +
+  tm_fill("#edf8fb") + 
+  tm_shape(med) + 
+  tm_fill(col = "#8c96c6") + 
+  tm_shape(min) + 
+  tm_fill(col = "#810f7c") +
+  tm_shape(nor_america) + 
+  tm_fill('#9CD3AA') +
+  tm_shape(swim.sf) + 
+  tm_dots(size = 0.5) + 
+  tm_compass(position = "left") + 
+  tm_layout(main.title = "Migration Departure Points Relative to Range of Sea Ice Extents", main.title.position = "center",
+            legend.outside = TRUE) + 
+tm_add_legend(type = "fill", labels = c("minimum", "median", "maximum"), col = c("#810f7c","#8c96c6","#edf8fb"), border.col = "black", title = "Sea Ice Extent")
 
-
-  
+tm_add_legend(type = "symbol", labels = "Karner Blue current range", shape = 1, col = "black", size = 2, z = 2, border.lwd = 2, is.portrait = TRUE) +
