@@ -44,19 +44,20 @@ mcp <- st_transform(mcp, crs = 4326)
 
 inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") + 
   theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
-  geom_sf(data = mcp, color = "red", fill = NA, lwd = 1, show.legend = TRUE)  
+  geom_sf(data = mcp, color = "yellow", fill = NA, lwd = 2, show.legend = TRUE) 
 
 
 ggsave("arctic_birdseye.png", plot = inset, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
 
 main <- basemap(limits = c(-165, -140, 66, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
+  theme(legend.justification = "top") + 
   annotation_scale(location = "br") + 
-  annotation_north_arrow(location = "tl", which_north = "true") +
+  annotation_north_arrow(location = "tr", which_north = "true") +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank()) + 
-  geom_sf(data = mcp, color = "yellow", fill = NA, size = 3) +
-  geom_sf(data = arctic_circle_crop, linetype = "4A") + 
-  geom_sf(data = usca, fill = NA)
+  geom_sf(data = mcp, color = "yellow", fill = NA, size = 3, show.legend = "line") +
+  geom_sf(data = arctic_circle_crop, linetype = "4A", show.legend = "line") + 
+  geom_sf(data = usca, fill = NA) 
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
