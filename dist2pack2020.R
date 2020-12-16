@@ -12,11 +12,13 @@ library(rgdal)
 library(dplyr)
 library(lubridate)
 
+load('coxph.RData') #GPS data
+
 setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters")
 
 # load data
 
-load('coxph.RData') #GPS data
+
 swim <- subset(bears, start.swim == 1)
 swim <- distinct(swim)
 filelist <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/shapefiles", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
