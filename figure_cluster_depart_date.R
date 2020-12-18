@@ -8,6 +8,7 @@ library(lubridate)
 library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
+library(cowplot)
 
 load("land_bears_CoxPH.RData")
 
@@ -24,7 +25,6 @@ first <- min(start$ordinal)
 last <- max(start$ordinal)
 
 start$year <- as.numeric(start$year)
-start$md <- 
 
 # Remove years with < 2 observations
 
@@ -32,7 +32,7 @@ start <- start %>%
   filter(year != 2008) %>%
   filter( year != 2012) %>%
   filter(year != 2015) %>%
-  select(animal, year, ymd, start.swim)
+  select(animal, year, ymd, ordinal, start.swim)
 
 # Convert date to month-day
 
@@ -57,7 +57,7 @@ start2$year <- as.factor(start2$year)
 # Plot
 
 fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) + 
-  geom_dotplot() +
+  geom_dotplot(stackgroups = TRUE) +
   scale_color_brewer(palette = "Dark2") + 
   scale_fill_brewer(palette = "Dark2") + 
   xlab("\nDate of Departure from Ice") +
@@ -68,12 +68,30 @@ fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) +
     axis.text.y = element_blank(), 
     axis.ticks.y = element_blank(),
     axis.line.y = element_blank(),
-    legend.position = c(0.05,0.5),
-    #legend.text = element_text(size = 12),
-    #legend.title = element_text(size = 14),
-    #axis.title.x = element_text(vjust = -3)
-    #axis.text.x = element_text(size = )
+    legend.position = c(0.05,0.5)
 )
         
-ggsave('depart_date_cluster.png', fig, path = './figures')  
+#ggsave('depart_date_cluster.png', fig, path = './figures')  
 
+## Trend over time
+
+fit <- lm(ordinal ~ year, data = start) # linear regression
+summary(fit)
+
+new <- data.frame(year =  c(2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014))
+
+new$start <- predict(fit, newdata = new)
+new$year <- as.factor(new$year)
+
+# Create dataframe to predict over to show regression line on plot (otherwise intercept is nonsensical)
+
+start$year<- as.factor(start$year)
+
+plot_trend <- ggplot(data = start, aes(year, ordinal, fill = year, color = year)) + 
+  geom_point(size = 3, show.legend = FALSE) + 
+  xlab("Year") + 
+  ylab("Ordinal Date") + 
+  geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed")
+
+
+combine <- plot_grid(fig, plot_trend, labels = c('A', 'B'), label_size = 12)
