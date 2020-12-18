@@ -87,7 +87,7 @@ new$year <- as.factor(new$year)
 
 start$year<- as.factor(start$year)
 
-plot_trend <- ggplot(data = start, aes(year, ordinal, fill = year, color = year)) + 
+plot_trend <- ggplot(data = start, aes(year, ordinal)) + 
   geom_point(size = 3, show.legend = FALSE) + 
   xlab("Year") + 
   ylab("Ordinal Date") + 
