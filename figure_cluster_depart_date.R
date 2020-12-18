@@ -56,8 +56,24 @@ start2$year <- as.factor(start2$year)
 
 # Plot
 
-ggplot(data = start2, aes(x = md2000, col = year, fill = year)) + 
+fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) + 
   geom_dotplot() +
   scale_color_brewer(palette = "Dark2") + 
-  scale_fill_brewer(palette = "Dark2")
+  scale_fill_brewer(palette = "Dark2") + 
+  xlab("\nDate of Departure from Ice") +
+  theme_classic() +
+  theme(
+    text = element_text(size = 12),
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    axis.line.y = element_blank(),
+    legend.position = c(0.05,0.5),
+    #legend.text = element_text(size = 12),
+    #legend.title = element_text(size = 14),
+    #axis.title.x = element_text(vjust = -3)
+    #axis.text.x = element_text(size = )
+)
+        
+ggsave('depart_date_cluster.png', fig, path = './figures')  
 
