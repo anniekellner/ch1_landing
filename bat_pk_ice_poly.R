@@ -15,39 +15,36 @@ library(stringr)
 #load('ded_ids.RData')
 #ded <- ded[-c(1:3)] # remove folder names that already have polygons
 
-rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters/RCC", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+rl <- dir(path = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+
+head(rl)
 
 # remove elements as necessary
 #rl <- rl[-c(1:767)]
 
 rl2 <- str_remove(rl,".tif")
 
-rl3 <- character()
-for(i in 1:length(rl2)){
-  rl3[i] <- paste0(rl2[i], "/polygon")
-}
+# 12/19/2020: add bears 20525.2014, 20333.2008, 20413.2006, 20418.2005, 20520.2012
 
- # paste0 collapses the string so there is no extra whitespace
 
-#Create directories for each shapefile
-for(i in 1:length(rl2)){
-dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/shapefiles/new', rl2[i]))
-}
+
+
 
 # ------------------- Convert rasters to polygons ------------------- #
 
+setwd('D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC')
+
 bat_pack_ice_poly <- function(rl){
   for (i in 1:length(rl)) {
-    r <- raster(paste0("./rasters/RCC/", rl[i])) #read in raster
+    r <- raster(paste0("./", rl[i])) #read in raster
     gv <- getValues(r) # change values to vector so can get mode
     mode <- modal(gv, na.rm=TRUE) # find mode
     poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
     poly <- spTransform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
-    writeOGR(poly, dsn = 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/shapefiles/new', layer = rl[i], driver = 'ESRI Shapefile')
+    writeOGR(poly, dsn = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY2', layer = rl[i], driver = 'ESRI Shapefile')
     }
   }
   
-r <- raster(paste0("./rasters/", rl[i]))
 #run the function
 bat_pack_ice_poly(rl)
 
