@@ -71,7 +71,7 @@ fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) +
     legend.position = c(0.05,0.5)
 )
         
-#ggsave('depart_date_cluster.png', fig, path = './figures')  
+ggsave('depart_date_cluster.png', fig, path = './figures')  
 
 ## Trend over time
 
@@ -87,11 +87,11 @@ new$year <- as.factor(new$year)
 
 start$year<- as.factor(start$year)
 
-plot_trend <- ggplot(data = start, aes(year, ordinal)) + 
+plot_reg <- ggplot(data = start, aes(year, ordinal)) + 
   geom_point(size = 3, show.legend = FALSE) + 
   xlab("Year") + 
   ylab("Ordinal Date") + 
   geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed")
 
 
-combine <- plot_grid(fig, plot_trend, labels = c('A', 'B'), label_size = 12)
+ggsave('depart_date_regress.png', plot_reg, path = './figures', dpi = 300)
