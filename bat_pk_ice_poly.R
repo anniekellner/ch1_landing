@@ -15,7 +15,7 @@ library(stringr)
 #load('ded_ids.RData')
 #ded <- ded[-c(1:3)] # remove folder names that already have polygons
 
-rl <- dir(path = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+rl <- dir(path = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining', pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
 
 head(rl)
 
@@ -32,7 +32,7 @@ rl2 <- str_remove(rl,".tif")
 
 # ------------------- Convert rasters to polygons ------------------- #
 
-setwd('D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC')
+setwd('D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining')
 
 bat_pack_ice_poly <- function(rl){
   for (i in 1:length(rl)) {
@@ -54,62 +54,15 @@ bat_pack_ice_poly(rl)
 #Pairwise assessment to make sure R1-R2 are different; R1-P1 similar; R2-P2 similar
 
 
-r1 <- raster('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/rasters/RCC/asi-AMSR2-n3125-20130814-v5.4.tif')
-p1 <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim/shapefiles/new/asi-AMSR2-n3125-20130814-v5.4.tif.shp")
+r1 <- raster('D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining/asi-n3125-20090601-v5.4.tif')
+p1 <- st_read("D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY2/asi-n3125-20090601-v5.4.tif.shp")
 
 plot(r1)
 plot(st_geometry(p1))
 
-# Looks good!
-
-r2 <- raster('./RCC/pb_20529.2005/asi-n6250-20050820-v5.4.tif')
-p2 <- st_read('./POLY/pb_20529.2005/asi-n6250-20050820-v5.4/polygon.shp')
-
-plot(r2)
-plot(st_geometry(p2))
-
-# ------------------------------------------------------------------------------------------- #
-
-# BEcause I needed stopped running the third folder mid-run in 2019
-
-library(stringr)
-
-rl <- dir(path = "C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20525.2013", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
-rl <- rl[-c(3:32)]
-rl2 <- str_remove(rl,".tif")
-
-rl3 <- character()
-for(i in 1:length(rl2)){
-  rl3[i] <- paste0(rl2[i], "/polygon")
-}
 
 
-#Create directories for each shapefile
-for(i in 1:length(rl2)){
-  dir.create(paste0('C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY/', rl2[i]))
-}
 
-
-for (i in 1:length(rl)) {
-  for(j in 1:length(rl3)){
-    r <- raster(paste0("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/RCC/pb_20525.2013/", rl[i])) #read in raster
-    gv <- getValues(r) # change values to vector so can get mode
-    mode <- modal(gv, na.rm=TRUE) # find mode
-    poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
-    spTransform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
-    writeOGR(poly, dsn = 'C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/POLY', layer = rl3[j], driver = 'ESRI Shapefile')
-  }
-}
-
-# ------- TEST ---------------------------- #
-
-# See whether shapefiles look correct
-
-one <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-AMSR2-n3125-20120721-v5.4.shp")
-plot(st_geometry(one))
-
-two <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-AMSR2-n3125-20120704-v5.4.shp")
-plot(st_geometry(two))
 
 
 

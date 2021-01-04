@@ -8,6 +8,10 @@ library(lubridate)
 library(landscapemetrics)
 library(tidyr)
 library(dplyr)
+library(tmap)
+library(rasterVis)
+library(ggplot2)
+library(stars)
 
 rm(list = ls())
 
@@ -42,27 +46,44 @@ track$ord.year <- paste(track$year, track$ordinal, sep="")
 test_ras <- raster(rasterlist[1])
 test_bear <- track[1,]
 
-plot(test_ras)
-plot(test_bear, add = TRUE)
+plot(test_ras) 
+plot(st_geometry(test_bear), add = TRUE)
+
 
 # Make sure calculation makes sense
 
 pland <- data.frame()
 pland <- sample_lsm(test_ras, test_bear, shape = "circle", size = 30000, verbose = TRUE, what = "lsm_c_te") # works better!
 
+# Remove dates for which no MASIE data exists
+
+track <- track %>%
+  filter(!(ord.year == '2008274')) %>%
+  filter(!(ord.year == '2012274')) %>%
+  filter(!(ord.year == '2009181')) %>%
+  filter(!(ord.year == '2009212')) %>%
+  filter(!(ord.year == '2009243')) %>%
+  filter(!(ord.year == '2009273')) %>%
+  filter(!(ord.year == '2012250')) %>%
+  filter(!(ord.year == '2012252')) %>%
+  filter(!(ord.year == '2014184')) %>%
+  filter(!(ord.year == '2014241')) %>%
+  filter(!(year < 2006))
+
 
 # Recalculate TE and PLAND for all bears in Cox reg June 1 - Sept 30
 
-patch_stats <- data.frame()
+patch_stats2 <- data.frame()
 
-for (i in 1:nrow(track)) {
+system.time(
+  for (i in 1:nrow(track)) {
   file <- rasterlist[grep(track$ord.year[i], rasterlist)]
   raster <- raster(file)
   result <- sample_lsm(raster, track[i,], plot_id = track$id.datetime[i], shape = "circle", size = size, verbose = TRUE, 
                       what = c("lsm_c_pland", "lsm_c_te"))
-  patch_stats <- rbind(patch_stats, result)
+  patch_stats2 <- rbind(patch_stats2, result)
 }
-
+)
 # Format lsm data
 
 ps <- separate(patch_stats, col = "plot_id", into = c("id", "date", "time"), sep = " ", remove = FALSE)
