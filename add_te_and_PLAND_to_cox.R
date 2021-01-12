@@ -11,7 +11,7 @@ library(dplyr)
 library(tmap)
 library(rasterVis)
 library(ggplot2)
-library(stars)
+
 
 rm(list = ls())
 
@@ -84,30 +84,31 @@ system.time(
   patch_stats2 <- rbind(patch_stats2, result)
 }
 )
+# ----- FORMAT DATA -------------------------------------------------------------------------------------------------------------------------------- #
+
 # Format lsm data
 
-ps <- separate(patch_stats, col = "plot_id", into = c("id", "date", "time"), sep = " ", remove = FALSE)
-ps$datetime <- paste(ps$date, ps$time); ps$datetime <- as.POSIXct(ps$datetime) # add new column for datetime
-ps$date <- ymd(ps$date)
+load('./data/RData/patch_stats.RData')
 
-ps <- ps %>%
-  group_by(id) %>%
-  arrange(id, datetime) %>%
-  mutate(index = difftime(last(date), date, units = "days"))
+ps2 <- ps %>%
+  complete(plot_id, nesting(class, metric), fill = list(value = 0)) %>%
+  distinct()
 
-ps <- ps %>%
-  complete(index, class, fill = list(value = 0)) %>%
+ps2 <- separate(ps2, col = "plot_id", into = c("id", "date", "time"), sep = " ", remove = FALSE)
+ps2$datetime <- paste(ps2$date, ps2$time); ps2$datetime <- as.POSIXct(ps2$datetime) # add new column for datetime
+ps2$date <- ymd(ps2$date)
+
+ps3 <- ps2 %>%
+  group_by(date, class, metric) %>%
+  #summarise(mean_val = mean(value)) %>%
   filter(class == 3)
 
-ps_piv <- ps %>% pivot_wider(names_from = c(class), values_from = c(class, value)) # spread rows into columns by class
-ps_piv <- rename(ps_piv, id.datetime = plot_id)
+ps_piv <- ps3 %>% # spread rows into columns by class
+  pivot_wider(names_from = c(metric), values_from = value) %>%
+  rename(id.datetime = plot_id)
+
 
 full <- left_join(bears, ps_piv, by = "id.datetime") # join ice.df with lsm df's
 
-# Change ice value (3) to 0 if NA
 
-full$value_3[is.na(full$value_3)] <- 0
-full$class_3[is.na(full$class_3)] <- 3
-
-which(is.na(full$value_3)) # Not sure why so many NA's...need to figure out
 
