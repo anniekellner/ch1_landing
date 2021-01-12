@@ -13,11 +13,12 @@ library(lubridate)
 
 # Load Data
 
-load('land_bears_CoxPH.RData') #GPS data
+load('./data/RData/land_bears_CoxPH.RData') #GPS data
+bears <- full
 
 bears <- distinct(bears)
 
-filelist <- dir(path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY2", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+filelist <- dir(path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
 # Create spatial object
 
@@ -52,5 +53,7 @@ for (i in 1:nrow(sf)){
   sf <- st_transform(sf, st_crs(shp))
   dist[i] <- st_distance(sf[i,], shp)
 }
+
+save(dist, file = './data/RData/dist1.Rds')
 
 sf$dist2pack <- dist

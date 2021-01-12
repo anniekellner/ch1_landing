@@ -110,5 +110,5 @@ ps_piv <- ps3 %>% # spread rows into columns by class
 
 full <- left_join(bears, ps_piv, by = "id.datetime") # join ice.df with lsm df's
 
-
+save(full, file = './data/RData/land_bears_CoxPH.RData')
 
