@@ -19,6 +19,7 @@ library(survminer)
 library(tmap)
 library(raster)
 library(sf)
+library(zoo)
 
 rm(list = ls())
 
@@ -52,7 +53,10 @@ bears <- distinct(bears)
 # Add SIC-squared
 
 bears <- bears %>%
-  mutate(SICsq = SIC_30m_me^2) 
+  mutate(SICsq = SIC_30m_me^2) %>%
+  rename(datetime = datetime.x) %>%
+  rename(id = id.x) %>%
+  dplyr::select(animal, year, start.swim, SIC_30m_me:SIC_30m_min, id, datetime, id.datetime, SICsq, pland, te, dist2land)
 
 ```
 
@@ -80,22 +84,25 @@ wind <- distinct(wind)
 colnames(wind) <- c("datetime", "gps_lon", "gps_lat", "ht_above_ellips", "id", "Wind_U", "Wind_V") # wind vectors NCEP NARR FLX
 wind$datetime <- with_tz(wind$datetime, "US/Alaska")
 
-wind.join <- left_join(bears, wind, by = c("datetime","id", "gps_lon", "gps_lat"))
+wind.join <- left_join(bears, wind, by = c("id", "datetime"))
 
 rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
 
 wind.join <- cbind(wind.join, rwind)
 wind.join$yday <- yday(wind.join$datetime)
 
+```
+
+``` {r}
 # Find average
 
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(SICsq), mean(dist2land), max(start.swim), mean(speed), first(repro)) %>%
+    first(animal), mean(SICsq), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(dist2land), max(start.swim), mean(speed)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "SIC_mean", "SIC_max", "SIC_min", "SICsq", "MeanDist2land", "start.swim", "Windspeed", "repro") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "SICsq", "SICmean", "SICmax", "SICmin", "MeanDist2land", "start.swim", "Windspeed") 
 
 avg <- avg %>%
   group_by(id) %>%
@@ -108,17 +115,32 @@ avg <- avg %>%
 
 ```
 
+```{r Add sd}
+
+# Add rate of change and cumulative rate of change
+
+avg$sd7 <- rollapplyr(avg$SICmean, 7, sd, fill = NA)
+
+rollapplyr(cox_tdc$SIC_mean, 7, sd, fill = NA) #sd over 7 days
+
+
+```
+
+
 ```{r use tmerge function to create tdc dataframe}
 
 temp <- subset(avg, start.swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start.swim, animal, repro) 
+  dplyr::select(id, day, start.swim, animal) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
 
-cox_tdc <- tmerge(baseline, avg, id = id, SIC_mean = tdc(day, SIC_mean), SIC_max = tdc(day, SIC_max), SIC_min = tdc(day, SIC_min), SICsq = tdc(day, SICsq), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
+cox_cum_tdc <- tmerge(baseline, avg, id = id, SIC_mean = cumtdc(day, SICmean), SICmax = cumtdc(day, SICmax), SICmin = cumtdc(day, SICmin), SICsq = cumtdc(day, SICsq), sd7 = cumtdc(day, sd7), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
 
-save(cox_tdc, file = "Cox_TDC.RData")
+cox_tdc <- tmerge(baseline, avg, id = id, SICmean = tdc(day, SICmean), SICmax = tdc(day, SICmax), SICmin = tdc(day, SICmin), SICsq = tdc(day, SICsq), sd7 = tdc(day, sd7), Distance_to_land = tdc(day, MeanDist2land), Windspeed = tdc(day, Windspeed))
+
+
+#save(cox_tdc, file = "Cox_TDC.RData")
 
 ```
 
@@ -132,13 +154,13 @@ First I determined which measurement of Sea Ice Concentration is best
 * SIC_min   = minimum sea ice concentration within 30 km radius
 * SIC_sq    = mean sea ice concentration quadratic: SIC + SIC^2
 
-```{r Sea Ice Concentration AIC}
+```{r Sea Ice Concentration AIC tdc}
 
 # CoxPH (baseline hazard not specified)
 
-SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SIC_max, cluster = id, data = cox_tdc)
+SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SICmax, cluster = id, data = cox_tdc)
 #SIC_maxMax <- coxph(Surv(tstart, tstop, migrate) ~ SICmaxMax, , data = avg)
-SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = cox_tdc)
+SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SICmean, cluster = id, data = cox_tdc)
 
 SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
 
@@ -148,6 +170,39 @@ SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_t
 aicc <- AICc(SIC_mean, SIC_max, SIC_sq)
 
 create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 -> 0 and re-doing faulty numbers
+
+```
+
+```{r SIC cumtdc}
+
+SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SICmax, cluster = id, data = cox_cum_tdc)
+#SIC_maxMax <- coxph(Surv(tstart, tstop, migrate) ~ SICmaxMax, , data = avg)
+SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = cox_cum_tdc)
+
+SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_cum_tdc)
+
+#SIC_min <- coxph(Surv(tstart, tstop, migrate) ~ SIC_min, cluster = id, data = cox_tdc) # Does not converge
+#SIC_minMean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_minMean, data = cox_tdc)
+
+aicc <- AICc(SIC_mean, SIC_max, SIC_sq)
+
+create_AICc_table(aicc) # SICsq is best way to measure SIC after changing 120 -> 0 and re-doing faulty numbers
+
+```
+
+```{r Add sd and compare to SIC}
+
+# Added sd and cumulative sd to model list. SICsq (not cumulative) is VERY clearly the best model. However the direction of the effect overlaps 0, though leans negative (which makes sense) 
+
+SIC_sq <- coxph(Surv(tstart, tstop, migrate) ~ SICsq, cluster = id, data = cox_tdc)
+SIC_max <- coxph(Surv(tstart, tstop, migrate) ~ SICmax, cluster = id, data = cox_cum_tdc)
+sd_cum <- coxph(Surv(tstart, tstop, migrate) ~ sd7, cluster = id, data = cox_cum_tdc)
+sd <- coxph(Surv(tstart, tstop, migrate) ~ sd7, cluster = id, data = cox_tdc)
+
+
+aicc <- AICc(SIC_max, SIC_sq, sd_cum, sd)
+
+create_AICc_table(aicc) 
 
 ```
 
@@ -204,6 +259,33 @@ aicc <- AICc(speed_AFT, SIC_AFT, Speed_SIC_AFT, distance_AFT, distSpeed_AFT, dis
 create_AICc_table(aicc)
 
 ```
+
+```{r Moving window}
+
+# Test which moving window yields the strongest result
+
+# Look at the data: recordhow many days have high wind speeds before departure
+
+which(cox_tdc$migrate == 1)
+
+cox_tdc <- cox_tdc %>%
+  mutate(Windspeed_3prior = lag(rollmean(SICsq, 3, fill = NA, align = "right"))) %>%
+  mutate(Windspeed_3davg = rollmean(Windspeed, 3, fill = NA, align = "right")) %>%
+  mutate(Windspeed_5davg = rollmean(Windspeed, 5, fill = NA, align = "right")) %>%
+  mutate(Windspeed_7davg = rollmean(Windspeed, 7, fill = NA, align = "right")) 
+
+prior3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3prior, cluster= animal, data = cox_tdc)
+avg3 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_3davg, cluster= animal, data = cox_tdc)
+avg5 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_5davg, cluster= animal, data = cox_tdc)
+avg7 <- coxph(Surv(tstart, tstop, migrate) ~ Windspeed_7davg, cluster= animal, data = cox_tdc)
+
+aicc <- AICc(prior3, avg3, avg5, avg7)
+
+create_AICc_table(aicc)
+
+```
+
+3-day moving window is the best.
 
 Results are the same but model is more confusing and Nans are produced. 
 
