@@ -10,15 +10,24 @@ library(sf)
 library(rgdal)
 library(dplyr)
 library(lubridate)
+library(stringr)
 
 # Load Data
 
 load('./data/RData/land_bears_CoxPH.RData') #GPS data
+
 bears <- full
 
 bears <- distinct(bears)
 
+remove <- filter(bears, year == 2012 & month == 6 | ymd == '2012-07-01' | ymd == '2012-07-02') # observations that do not have associated shp's
+
+bears <- anti_join(bears, remove)
+
 filelist <- dir(path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
+
+filelist <- str_remove(filelist, ".tif")
+filelist <- unique(filelist)
 
 # Create spatial object
 
@@ -44,6 +53,8 @@ sf$date2 <- gsub("-", "", bears$ymd) # format for matching up with dates on GeoT
 
 # ---------   DISTANCE ANALYSIS   ------------------------------------------ #
 
+sf <- sf[18124:24157,]
+
 # Associate GPS point with polygon file name
 
 dist <- vector()
@@ -54,6 +65,8 @@ for (i in 1:nrow(sf)){
   dist[i] <- st_distance(sf[i,], shp)
 }
 
-save(dist, file = './data/RData/dist1.Rds')
+save(dist, file = './data/RData/dist2.RData')
+
+
 
 sf$dist2pack <- dist
