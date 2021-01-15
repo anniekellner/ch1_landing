@@ -46,6 +46,8 @@ colnames(bio2) <- c("animal", "ResidualMass", "age", "id")
 biolog <- rbind(bio1, bio2)
 biolog <- select(biolog, -animal)
 
+biolog <- biolog[!with(biolog, is.na(ResidualMass) & is.na(age)),]
+
 # ------------------------------------------------------------------------------------ #
 
 # Repro data 
@@ -61,7 +63,7 @@ bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Ye
 
 bears <- distinct(bears)
 
-bears <- semi_join(bears, biolog)
+bears <- left_join(bears, biolog)
 
 
 saveRDS(bears, file = './data/RData/land_bears_CoxPH.Rds')
