@@ -78,7 +78,7 @@ ice_pls_distland_pls_distpack <- ice_pls_distland <- coxph(Surv(tstart, tstop, m
 ice_x_wind <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3, cluster = animal, data = cox)
 ice_x_wind_pls_distland <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + dist_land3, cluster = animal, data = cox)
 ice_x_wind_pls_distpack <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + dist_ice3, cluster = animal, data = cox)
-ice_x_wind_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + rate, cluster = animal, data = cox)
+ice_x_wind_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + sd7, cluster = animal, data = cox)
 ice_x_wind_pls_distland_pls_distpack <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + dist_land3 + dist_ice3, cluster = animal, data = cox)
 ice_x_wind_pls_distland_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + dist_land3 + sd7, cluster = animal, data = cox)
 ice_x_wind_pls_distland_pls_distpack_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ pland3 * windspeed3 + dist_land3 + dist_ice3 + sd7, cluster = animal, data = cox)
@@ -106,7 +106,7 @@ edge_pls_distland_pls_distpack <- edge_pls_distland <- coxph(Surv(tstart, tstop,
 edge_x_wind <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3, cluster = animal, data = cox)
 edge_x_wind_pls_distland <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + dist_land3, cluster = animal, data = cox)
 edge_x_wind_pls_distpack <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + dist_ice3, cluster = animal, data = cox)
-edge_x_wind_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + rate, cluster = animal, data = cox)
+edge_x_wind_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + sd7, cluster = animal, data = cox)
 edge_x_wind_pls_distland_pls_distpack <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + dist_land3 + dist_ice3, cluster = animal, data = cox)
 edge_x_wind_pls_distland_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + dist_land3 + sd7, cluster = animal, data = cox)
 edge_x_wind_pls_distland_pls_distpack_pls_rate <- coxph(Surv(tstart, tstop, migrate) ~ te3 * windspeed3 + dist_land3 + dist_ice3 + sd7, cluster = animal, data = cox)
@@ -118,17 +118,47 @@ distpack <- coxph(Surv(tstart, tstop, migrate) ~ dist_ice3, cluster = animal, da
 distland <- coxph(Surv(tstart, tstop, migrate) ~ dist_land3, cluster = animal, data = cox)
 rate <- coxph(Surv(tstart, tstop, migrate) ~ sd7, cluster = animal, data = cox)
 
+# AICc
 
-
-
-
-
-
-
-
-
-
-
-aicc <- AICc(sic, sd, dist_ice, dist_land, windspeed, pland, te, te3, pland3, windspeed3)
+aicc <- AICc(ice,
+             ice_pls_wind, 
+             ice_pls_distland, 
+             ice_pls_distpack, 
+             ice_pls_rate, 
+             ice_pls_wind_pls_distland, 
+             ice_pls_wind_pls_distpack, 
+             ice_pls_wind_pls_rate, 
+             ice_pls_wind_pls_distland_pls_distpack, 
+             ice_pls_wind_pls_distland_pls_rate,
+             ice_pls_wind_pls_distland_pls_distpack_pls_rate, 
+             ice_pls_distland_pls_distpack,
+             ice_x_wind, 
+             ice_x_wind_pls_distland, 
+             ice_x_wind_pls_distpack,
+             ice_x_wind_pls_rate, 
+             ice_x_wind_pls_distland_pls_distpack, 
+             ice_x_wind_pls_distland_pls_rate, 
+             ice_x_wind_pls_distland_pls_distpack_pls_rate,
+             edge,
+             edge_pls_wind, 
+             edge_pls_distland, 
+             edge_pls_distpack, 
+             edge_pls_rate, 
+             edge_pls_wind_pls_distland, 
+             edge_pls_wind_pls_distpack, 
+             edge_pls_wind_pls_rate, 
+             edge_pls_wind_pls_distland_pls_distpack,   
+             edge_pls_wind_pls_distland_pls_rate, 
+             edge_pls_wind_pls_distland_pls_distpack_pls_rate, 
+             edge_pls_distland_pls_distpack, 
+             edge_x_wind,
+             edge_x_wind_pls_distland, 
+             edge_x_wind_pls_distpack, 
+             edge_x_wind_pls_rate, 
+             edge_x_wind_pls_distland_pls_distpack, 
+             edge_x_wind_pls_distland_pls_rate,
+             edge_x_wind_pls_distland_pls_distpack_pls_rate 
+             )
+             
 create_AICc_table(aicc)
 
