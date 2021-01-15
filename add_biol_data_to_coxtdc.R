@@ -13,12 +13,15 @@ rm(list = ls())
 # Prep data
 # Land bear df
 
-bears <- readRDS("./data/RData/land_bears_CoxPH.Rds")
+load('./data/RData/land_bears_CoxPH.RData')
+bears <- full
 
-bears2 <- bears %>%
-  select(id.x, animal, year, datetime.x, start.swim, go_into_den: yearling, pland, te, dist_to_ice, ymd, go_into_den:yearling)
+bears <- distinct(bears)
 
-colnames(bears2) <- c("id", "animal", "year", "datetime", "start.swim", "den", "coy", "yearling", "pland", "te", "dist_to_ice", "ymd")
+bears <- bears %>%
+  select(animal:yearling, pland, te) %>%
+  rename(datetime = datetime.x) %>%
+  rename(id = id.x)
 
 # Biological vars from .csv (T. Atwood)
 
@@ -41,30 +44,24 @@ bio2 <- bio2 %>%
 colnames(bio2) <- c("animal", "ResidualMass", "age", "id")
 
 biolog <- rbind(bio1, bio2)
+biolog <- select(biolog, -animal)
 
 # ------------------------------------------------------------------------------------ #
 
 # Repro data 
 
-bears2$repro <- 0
+bears$repro <- 0
 
-bears2 <- bears2 %>%
-  mutate(repro = replace(repro, den == 1, 1)) %>%
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
   mutate(repro = replace(repro, coy == 1, 2)) %>%
   mutate(repro = replace(repro, yearling == 1, 3))
 
-bears2$repro <- factor(bears2$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
+bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
 
-bears2 <- left_join(bears2, biolog)
+bears <- distinct(bears)
 
-bears <- left_join(bears, bears2)
+bears <- semi_join(bears, biolog)
 
-
-
-
-# CONCLUSION: No biological variables affect the TIMING of migration 
-
-# ------------------------------------------------------------------------------------------------------- #
- # COX REGRESSION WITH BIOLOGICAL VARIABLES #
 
 saveRDS(bears, file = './data/RData/land_bears_CoxPH.Rds')
