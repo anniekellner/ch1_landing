@@ -13,10 +13,12 @@ rm(list = ls())
 # Prep data
 # Land bear df
 
-load("land_bears_CoxPH.RData")
+bears <- readRDS("./data/RData/land_bears_CoxPH.Rds")
 
-bears <- bears %>%
-  select(id, animal:gps_lon, datetime, land, start.swim, X, Y, ymd, go_into_den:yearling)
+bears2 <- bears %>%
+  select(id.x, animal, year, datetime.x, start.swim, go_into_den: yearling, pland, te, dist_to_ice, ymd, go_into_den:yearling)
+
+colnames(bears2) <- c("id", "animal", "year", "datetime", "start.swim", "den", "coy", "yearling", "pland", "te", "dist_to_ice", "ymd")
 
 # Biological vars from .csv (T. Atwood)
 
@@ -44,50 +46,25 @@ biolog <- rbind(bio1, bio2)
 
 # Repro data 
 
-bears$repro <- 0
+bears2$repro <- 0
 
-bears <- bears %>%
-  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
+bears2 <- bears2 %>%
+  mutate(repro = replace(repro, den == 1, 1)) %>%
   mutate(repro = replace(repro, coy == 1, 2)) %>%
   mutate(repro = replace(repro, yearling == 1, 3))
 
-bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
+bears2$repro <- factor(bears2$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
 
-bears <- left_join(bears, biolog)
+bears2 <- left_join(bears2, biolog)
 
-# ---------------------------------------------------------------------------------------- #
+bears <- left_join(bears, bears2)
 
-# Coxph analysis with biological variables
 
-source('MyFunctions.R') # AICC
 
-bears <- bears %>% 
-  group_by(id, ymd) %>%
-  mutate(ordinal = yday(ymd)) %>%
-  dplyr::summarise(
-    first(animal), first(ordinal), max(start.swim), first(repro), first(age), first(ResidualMass), max(start.swim)
-  )
-
-colnames(bears) <- c("id", "ymd", "animal", "ordinal", "start.swim", "repro", "age", "resid_mass")
-
-# --  RUN MODELS ----------------------------------------------------------------------------------------------- #
-
-repro <- coxph(Surv(ordinal, start.swim) ~ repro, data = bears)
-age <- coxph(Surv(ordinal, start.swim) ~ age, data = bears)
-rm <- coxph(Surv(ordinal, start.swim) ~ resid_mass, data = bears)
-repro_age <- coxph(Surv(ordinal, start.swim) ~ repro + age, data = bears)
-repro_rm <- coxph(Surv(ordinal, start.swim) ~ repro + resid_mass, data = bears)
-age_rm <- coxph(Surv(ordinal, start.swim) ~ age + resid_mass, data = bears)
-repro_age_rm <- coxph(Surv(ordinal, start.swim) ~ repro + age + resid_mass, data = bears)
-
-aicc <- AICc(repro, age, rm, repro_age, repro_rm, age_rm, repro_age_rm)
-
-create_AICc_table(aicc)
-
-summary(age)
 
 # CONCLUSION: No biological variables affect the TIMING of migration 
 
 # ------------------------------------------------------------------------------------------------------- #
  # COX REGRESSION WITH BIOLOGICAL VARIABLES #
 
+saveRDS(bears, file = './data/RData/land_bears_CoxPH.Rds')
