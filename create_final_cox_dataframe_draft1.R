@@ -13,7 +13,16 @@ library(dplyr)
 
 bears <- readRDS('./data/RData/land_bears_CoxPH.Rds')
 
-# ----  ADD DISTANCE TO PACK ICE -------------------------------------- #
+# Repro
+
+bears$repro <- NA
+
+bears <- bears %>%
+  mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
+  mutate(repro = replace(repro, coy == 1, 2)) %>%
+  mutate(repro = replace(repro, yearling == 1, 3))
+
+bears$repro <- as.factor(bears$repro)
 
 # Wind
 

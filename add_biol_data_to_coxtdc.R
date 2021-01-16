@@ -52,14 +52,16 @@ biolog <- biolog[!with(biolog, is.na(ResidualMass) & is.na(age)),]
 
 # Repro data 
 
-bears$repro <- 0
+bears$repro <- NA
 
 bears <- bears %>%
   mutate(repro = replace(repro, go_into_den == 1, 1)) %>%
   mutate(repro = replace(repro, coy == 1, 2)) %>%
   mutate(repro = replace(repro, yearling == 1, 3))
 
-bears$repro <- factor(bears$repro, labels = c("Unknown", "Enter_Den", "COY", "Yearling"))
+bears$repro <- as.factor(bears$repro)
+
+#bears$repro <- factor(bears$repro, labels = c("Enter_Den", "COY", "Yearling"))
 
 bears <- distinct(bears)
 
