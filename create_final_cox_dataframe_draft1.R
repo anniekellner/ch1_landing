@@ -57,10 +57,10 @@ wind.join$yday <- yday(wind.join$datetime)
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year), mean(dist2land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(repro), first(age), first(ResidualMass)) %>%
+    first(animal), first(year),mean(SIC_30m_me), mean(dist2land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(repro), first(age), first(ResidualMass)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "SICsq", "SICmean", "SICmax", "SICmin", "MeanDist2land", "start.swim", "Windspeed", "pland", "te", "dist_to_ice") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack", "repro", "age", "rm") 
 
 # remove rows after start.swim == 1
 
@@ -71,11 +71,11 @@ avg <- avg %>%
 avg <- avg %>% 
   group_by(id) %>%
   mutate(across(everything(),
-                ~replace(., row_number() > match(1, start.swim), NA)))
+                ~replace(., row_number() > match(1, start_swim), NA)))
 
 # Add sd (rate of ice change)
 
-avg$sd3 <- rollapplyr(avg$SICmean, 3, sd, fill = NA) # 7 is most descriptive but 3 
+avg$sd7 <- rollapplyr(avg$SIC, 7, sd, fill = NA) # 7 is most descriptive but 3 
 
 # ---------- CORRELATION MATRIX ------- #
 
@@ -84,22 +84,19 @@ mat <- cor(correl, use = "pairwise.complete.obs")
 
 # -------   TMERGE TO CREATE TDC DATAFRAME -------------------------- #
 
-temp <- subset(avg, start.swim == 1)
+temp <- subset(avg, start_swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start.swim, animal) 
+  dplyr::select(id, day, start_swim, animal, year, repro, age, rm) 
 
-baseline <- tmerge(temp, temp, id = id, migrate = event(day, start.swim), tstart = 1, tstop = day)
+baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
 cox_tdc <- tmerge(baseline, avg, id = id, 
-                  SICmean = tdc(day, SICmean), 
-                  SICmax = tdc(day, SICmax), 
-                  SICmin = tdc(day, SICmin), 
-                  SICsq = tdc(day, SICsq), 
+                  SIC = tdc(day, SIC), 
                   sd7 = tdc(day, sd7), 
-                  Distance_to_land = tdc(day, MeanDist2land), 
-                  Windspeed = tdc(day, Windspeed), 
+                  dist_land = tdc(day, dist_land), 
+                  windspeed = tdc(day, speed), 
                   pland = tdc(day, pland), 
                   te = tdc(day, te), 
-                  dist_to_ice = tdc(day, dist_to_ice))
+                  dist_pack = tdc(day, dist_pack))
 
 saveRDS(cox_tdc, file = './data/RData/cox_tdc.Rds')
