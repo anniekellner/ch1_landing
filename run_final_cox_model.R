@@ -19,7 +19,7 @@ cox <- cox %>%
   mutate(dist_land3 = rollmean(dist_land, 3, fill = NA, align = "right")) %>%
   mutate(dist_ice3 = rollmean(dist_pack, 3, fill = NA, align = "right")) 
 
-global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + windspeed3 + te3 + dist_land3 + dist_ice3 + sd7 + repro + rm + year, 
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + windspeed3 + te3 + dist_land3 + dist_ice3 + sd7 + repro + rm + year + pland3*windspeed3, 
                       cluster = animal, data = cox) # no age because will not converge. Probably not enough information. 
 
 
