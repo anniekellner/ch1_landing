@@ -33,7 +33,7 @@ cox <- cox %>%
   mutate(dist_land3 = rollmean(dist_land, 3, fill = NA, align = "right")) %>%
   mutate(dist_ice3 = rollmean(dist_pack, 3, fill = NA, align = "right")) 
 
-cox <- na.omit(cox)
+cox <- na.omit(cox) # NA values giving me grief. Removed for now. 
 
 global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + windspeed3 + te3 + dist_land3 + dist_ice3 + sd7 + repro + rm + year + pland3*windspeed3, 
                       cluster = animal, data = cox, na.action = "na.fail") # no age because will not converge. Probably not enough information. 
@@ -41,5 +41,9 @@ global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + windspeed3 + te3 +
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc")
 
 
-#"Use of na.action = "na.omit" (R's default) or "na.exclude" in global.model must be avoided, 
+# From MuMIn: "Use of na.action = "na.omit" (R's default) or "na.exclude" in global.model must be avoided, 
 #as it results with sub-models fitted to different data sets, if there are missing values. Error is thrown if it is detected.
+
+tt <- t[1:10,]
+
+write.csv(tt, file = './data/derived-data/top_models.csv')
