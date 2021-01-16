@@ -11,22 +11,9 @@ library(dplyr)
 
 # ----- LOAD DATA ----------------------------------------------------- #
 
-load('./data/RData/land_bears_CoxPH.RData')
-bears1 <- distinct(full)
+bears <- readRDS('./data/RData/land_bears_CoxPH.Rds')
 
-bears2 <- readRDS('./data/RData/land_bears_CoxPH.Rds')
-
-bears <- left_join(bears1, bears2)
-
-# ----- ADD VARIABLES  ---------------------------------------- #
-
-# Add SIC-squared
-
-bears <- bears %>%
-  mutate(SICsq = SIC_30m_me^2) %>%
-  rename(datetime = datetime.x) %>%
-  rename(id = id.x) %>%
-  dplyr::select(animal, year, start.swim, SIC_30m_me:SIC_30m_min, id, datetime, id.datetime, SICsq, pland, te, dist2land, dist_to_ice)
+# ----  ADD DISTANCE TO PACK ICE -------------------------------------- #
 
 # Wind
 
@@ -49,10 +36,18 @@ wind <- distinct(wind)
 
 colnames(wind) <- c("datetime", "gps_lon", "gps_lat", "ht_above_ellips", "id", "Wind_U", "Wind_V") # wind vectors NCEP NARR FLX
 wind$datetime <- with_tz(wind$datetime, "US/Alaska")
+wind$id.datetime <- paste(wind$id, wind$datetime)
 
-wind.join <- left_join(bears, wind, by = c("id", "datetime"))
+wind.join <- inner_join(bears, wind)
+
+# Remove id.datetime duplicates
+
+wind.join <- wind.join %>%
+  group_by(id.datetime) %>%
+  slice_head()
 
 rwind <- uv2ds(wind.join$Wind_U, wind.join$Wind_V)
+rwind <- as.data.frame(rwind)
 
 wind.join <- cbind(wind.join, rwind)
 wind.join$yday <- yday(wind.join$datetime)
@@ -62,7 +57,7 @@ wind.join$yday <- yday(wind.join$datetime)
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), mean(SICsq), mean(SIC_30m_me), mean(SIC_30m_max), mean(SIC_30m_min), mean(dist2land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice)) %>%
+    first(animal), first(year), mean(dist2land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(repro), first(age), first(ResidualMass)) %>%
   ungroup()
 
 colnames(avg) <- c("id", "ordinal_day", "animal", "SICsq", "SICmean", "SICmax", "SICmin", "MeanDist2land", "start.swim", "Windspeed", "pland", "te", "dist_to_ice") 
@@ -80,7 +75,7 @@ avg <- avg %>%
 
 # Add sd (rate of ice change)
 
-avg$sd7 <- rollapplyr(avg$SICmean, 7, sd, fill = NA)
+avg$sd3 <- rollapplyr(avg$SICmean, 3, sd, fill = NA) # 7 is most descriptive but 3 
 
 # ---------- CORRELATION MATRIX ------- #
 
