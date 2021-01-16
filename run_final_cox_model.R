@@ -14,7 +14,7 @@ cox <- readRDS('./data/RData/cox_tdc.Rds')
 cox <- cox %>% 
   filter(!(year == 2005)) %>%
   select(-age) %>%
-  replace_na(list(rm = -6.897, sd7 = 2, repro = 1))
+  replace_na(list(rm = -6.897, sd7 = 2, repro = 1)) # rm = mean. sd7 = arbitrary. repro = arbitrary. Body condition is the only one that makes it into the top ten models so fix that one if needed?
 
 mean(cox$rm, na.rm = TRUE) # -6.897
 
