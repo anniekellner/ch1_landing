@@ -26,7 +26,7 @@ library(tidyr)
 flag = cox %>%
   group_by(id) %>%
   arrange(id, tstart) %>%
-  mutate(flag = ifelse(SIC<15,1,0))
+  mutate(flag = ifelse(pland <15 ,1,0))
 
 flag = flag %>%
   group_by(id) %>%
@@ -36,7 +36,7 @@ sum <- flag %>%
   group_by(id) %>%
   summarise(days = sum(flag)) 
 
-sum %>% 
+sum <- sum %>% 
   separate(id, c("pb", "animal", "year"))
 
 # add time
@@ -65,7 +65,18 @@ ggplot(flag, aes(tstart, days_under15, color=id, na.rm=TRUE)) + # needs color li
 
 # Histogram
 
-ggplot(data = )
+ggplot(data = sum, aes(days, fill = year)) +
+  geom_histogram(alpha = 0.2, bins = 6) + 
+  geom_density(alpha = 0.2, fill = "#FF6666")
+
+ggplot(data = sum, aes(days)) +
+  geom_histogram(aes(y = ..density..), binwidth = 2, color = "black", fill = "white") + 
+  geom_density(alpha = 0.2, fill = "#FF6666") +
+  scale_x_continuous(limits = c(0,20), expand = c(0,0)) + 
+  xlab("Days spent at < 15% sea ice cover")
+
+ggsave(filename = 'Days_below_15.png', path = './figures')
+
 
 #saved C:\Users\akell\Desktop\Spring 2019\Presentations\Alaska\days_15pct.pdf
 
@@ -76,7 +87,7 @@ last <- ice.calc %>%
   arrange(id, datetime) %>%
   slice(n())
 
-mean (last$cumtime.15) #18.91 days
-sd(last$cumtime.15) #8.75 days 
+mean(sum$days, na.rm = TRUE) # 6.44 days
+sd(sum$days, na.rm = TRUE) # 6.5 days 
 
 
