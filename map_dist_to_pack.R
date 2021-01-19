@@ -79,8 +79,8 @@ bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.3, 1.75), relative = TRUE)
 
 # Map
 
-tm_shape(max, bbox = bb.swim2) +
-  tm_fill("#edf8fb") + 
+map <- tm_shape(max, bbox = bb.swim2) +
+  tm_fill("#95BAC8") + 
   tm_shape(med) + 
   tm_fill(col = "#8c96c6") + 
   tm_shape(min) + 
@@ -92,5 +92,6 @@ tm_shape(max, bbox = bb.swim2) +
   tm_compass(position = "left") + 
   tm_layout(main.title = "Migration Departure Points Relative to Pack Ice", main.title.position = "center",
             legend.outside = TRUE) + 
-tm_add_legend(type = "fill", labels = c("minimum (2012)", "median (2005)", "maximum (2009)"), col = c("#810f7c","#8c96c6","#edf8fb"), border.col = "black", title = "Pack Ice Extent")
+tm_add_legend(type = "fill", labels = c("minimum (2012)", "median (2005)", "maximum (2009)"), col = c("#810f7c","#8c96c6","#95BAC8"), border.col = "black", title = "Pack Ice Extent")
 
+tmap_save(map, 'C:/Users/akell/Documents/PhD/Polar_Bears/Figures/pack.png')
