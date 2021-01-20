@@ -26,11 +26,11 @@ library(tidyr)
 flag = cox %>%
   group_by(id) %>%
   arrange(id, tstart) %>%
-  mutate(flag = ifelse(pland <15 ,1,0))
+  mutate(flag = ifelse(SIC <15 ,1,0))
 
 flag = flag %>%
   group_by(id) %>%
-  mutate(days_under15 = cumsum(flag))
+  mutate(days_under30 = cumsum(flag))
 
 sum <- flag %>%
   group_by(id) %>%
@@ -56,11 +56,11 @@ sum <- sum %>%
 
 # Number of days Spent in 15% SIC or less - all bears
 
-ggplot(flag, aes(tstart, days_under15, color=id, na.rm=TRUE)) + # needs color line
+ggplot(flag, aes(tstart, days_under30, color=id, na.rm=TRUE)) + # needs color line
   geom_line() + 
   xlab("Days before Departure") +
-  ylab('Cumulative # of days spent at < 15% SIC') +
-  ggtitle('Days before departure spent at < 15% SIC') +
+  ylab('Cumulative # of days spent at < 30% ice cover') +
+  ggtitle('Days before departure spent at < 30% ice cover') +
   theme_bw()
 
 # Histogram
@@ -70,10 +70,10 @@ ggplot(data = sum, aes(days, fill = year)) +
   geom_density(alpha = 0.2, fill = "#FF6666")
 
 ggplot(data = sum, aes(days)) +
-  geom_histogram(aes(y = ..density..), binwidth = 2, color = "black", fill = "white") + 
+  geom_histogram(aes(y = ..density..), binwidth = 4, color = "black", fill = "white") + 
   geom_density(alpha = 0.2, fill = "#FF6666") +
-  scale_x_continuous(limits = c(0,20), expand = c(0,0)) + 
-  xlab("Days spent at < 15% sea ice cover")
+  scale_x_continuous(limits = c(0,70), expand = c(0,0)) + 
+  xlab("Days spent at < 15% sea ice concentration")
 
 ggsave(filename = 'Days_below_15.png', path = './figures')
 
@@ -87,7 +87,7 @@ last <- ice.calc %>%
   arrange(id, datetime) %>%
   slice(n())
 
-mean(sum$days, na.rm = TRUE) # 6.44 days
-sd(sum$days, na.rm = TRUE) # 6.5 days 
+mean(sum$days, na.rm = TRUE) # 22.72 days
+sd(sum$days, na.rm = TRUE) # 13.15 days 
 
 
