@@ -50,13 +50,13 @@ filelist <- unique(filelist)
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 coords <- cbind(bears$X, bears$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data=bears, proj4string = projection) 
+sf <- st_as_sf(pb.spdf)
 
 # Create sf object and project to MASIE CRS
 
 shp <- st_read(filelist[1])
 st_crs(shp)
 
-sf <- st_as_sf(pb.spdf)
 sf <- st_transform(sf, st_crs(shp))
 
 # Visualize data to make sure projections line up
@@ -78,7 +78,7 @@ for (i in 1:nrow(sf)){
   sf$dist_to_ice[i] <- st_distance(sf[i,], shp)
 }
 
-save(dist, file = './data/RData/dist_012621.RData')
+saveRDS(sf, './data/RData/land_bears_cutoff_after_swim.Rds')
 
 # Check Dist1 and 2 data
 
