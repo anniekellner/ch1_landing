@@ -24,7 +24,7 @@ cox <- cox %>%
   mutate(dist_land3 = rollmean(dist_land, 3, fill = NA, align = "right")) %>%
   mutate(dist_ice3 = rollmean(dist_pack, 3, fill = NA, align = "right")) 
 
-fit <- coxph(Surv(tstart, tstop, migrate) ~  windspeed3 + dist_land3, 
+fit <- coxph(Surv(tstart, tstop, migrate) ~  windspeed3 + dist_land3 + pland3, 
                       cluster = animal, data = cox)
 
 fit2 <- coxph(Surv(tstart, tstop, migrate) ~ windspeed3 + dist_land3, 

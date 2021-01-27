@@ -41,7 +41,7 @@ bat_pack_ice_poly <- function(rl){
     mode <- modal(gv, na.rm=TRUE) # find mode
     poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
     poly <- spTransform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
-    writeOGR(poly, dsn = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY2', layer = rl[i], driver = 'ESRI Shapefile')
+    writeOGR(poly, dsn = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY', layer = rl[i], driver = 'ESRI Shapefile')
     }
   }
   
