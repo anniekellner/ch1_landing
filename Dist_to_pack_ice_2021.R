@@ -11,22 +11,38 @@ library(rgdal)
 library(dplyr)
 library(lubridate)
 library(stringr)
+library(readr)
 
 # Load Data
 
-load('./data/RData/land_bears_CoxPH.RData') #GPS data
-
-bears <- full
+bears <- readRDS('./data/RData/land_bears_CoxPH.Rds') #GPS data
 
 bears <- distinct(bears)
+bears <- bears[1:23349,] # last row is NA, not sure why
 
-remove <- filter(bears, year == 2012 & month == 6 | ymd == '2012-07-01' | ymd == '2012-07-02') # observations that do not have associated shp's
+#sub <- subset(bears, start.swim == 1)
 
-bears <- anti_join(bears, remove)
+# remove rows after start.swim == 1
+
+bears <- bears %>%
+  group_by(id) %>%
+  mutate(day = row_number()) 
+
+bears <- bears %>% 
+  group_by(id) %>%
+  mutate(across(everything(),
+                ~replace(., row_number() > match(1, start.swim), NA))) %>%
+  ungroup()
+
+bears <- bears %>% select(-id) # remove id row because was interfering with removal of all-NA rows
+
+bears <- bears %>% filter_all(any_vars(!is.na(.))) # filter rows that have > 1 columns with non-missing values
+
+bears$id = paste(bears$animal, bears$year, sep = '.')
 
 filelist <- dir(path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
-filelist <- str_remove(filelist, ".tif")
+#filelist <- str_remove(filelist, ".tif")
 filelist <- unique(filelist)
 
 # Create spatial object
@@ -51,6 +67,19 @@ plot(st_geometry(sf), add = TRUE)
 # Create column to match with MASIE raster
 sf$date2 <- gsub("-", "", bears$ymd) # format for matching up with dates on GeoTIFFs
 
+# Check what files are missing from Univ Bremen
+
+t <- str_remove(filelist, "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-")
+tt <- str_remove(t, "AMSR2-")
+ttt <- str_remove(tt, "n3125-")
+tttt <- str_remove(ttt, "-v5.4.shp")
+
+ss <- sf$date2
+ss <- unique(ss)
+
+missing <- setdiff(ss,tttt) 
+
+
 # ---------   DISTANCE ANALYSIS   ------------------------------------------ #
 
 sf <- sf[18124:24157,]
@@ -67,6 +96,9 @@ for (i in 1:nrow(sf)){
 
 save(dist, file = './data/RData/dist2.RData')
 
+# Check Dist1 and 2 data
 
+load("data/RData/dist1.RData")
 
 sf$dist2pack <- dist
+dist1 <- dist
