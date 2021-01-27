@@ -42,7 +42,7 @@ bears$id = paste(bears$animal, bears$year, sep = '.')
 
 filelist <- dir(path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY", pattern='.shp', all.files=TRUE, recursive = TRUE, full.names=TRUE)
 
-#filelist <- str_remove(filelist, ".tif")
+# <- str_remove(filelist, ".tif")
 filelist <- unique(filelist)
 
 # Create spatial object
@@ -67,34 +67,18 @@ plot(st_geometry(sf), add = TRUE)
 # Create column to match with MASIE raster
 sf$date2 <- gsub("-", "", bears$ymd) # format for matching up with dates on GeoTIFFs
 
-# Check what files are missing from Univ Bremen
-
-t <- str_remove(filelist, "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY/asi-")
-tt <- str_remove(t, "AMSR2-")
-ttt <- str_remove(tt, "n3125-")
-tttt <- str_remove(ttt, "-v5.4.shp")
-
-ss <- sf$date2
-ss <- unique(ss)
-
-missing <- setdiff(ss,tttt) 
-
-
 # ---------   DISTANCE ANALYSIS   ------------------------------------------ #
-
-sf <- sf[18124:24157,]
 
 # Associate GPS point with polygon file name
 
-dist <- vector()
 for (i in 1:nrow(sf)){
   file <- filelist[grep(sf$date2[i], filelist)]
   shp <- st_read(file)
   sf <- st_transform(sf, st_crs(shp))
-  dist[i] <- st_distance(sf[i,], shp)
+  sf$dist_to_ice[i] <- st_distance(sf[i,], shp)
 }
 
-save(dist, file = './data/RData/dist2.RData')
+save(dist, file = './data/RData/dist_012621.RData')
 
 # Check Dist1 and 2 data
 
