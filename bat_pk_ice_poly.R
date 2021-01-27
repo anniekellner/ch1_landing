@@ -36,12 +36,12 @@ setwd('D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining')
 
 bat_pack_ice_poly <- function(rl){
   for (i in 1:length(rl)) {
-    r <- raster(paste0("./", rl[i])) #read in raster
+    r <- raster(paste0("./", rl)) #read in raster
     gv <- getValues(r) # change values to vector so can get mode
     mode <- modal(gv, na.rm=TRUE) # find mode
     poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
     poly <- spTransform(poly, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
-    writeOGR(poly, dsn = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY', layer = rl[i], driver = 'ESRI Shapefile')
+    writeOGR(poly, dsn = 'D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/POLY', layer = rl, driver = 'ESRI Shapefile')
     }
   }
   
