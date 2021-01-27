@@ -18,20 +18,22 @@ library(raster)
 #dir.create(paste0('./SIC-TIFs/SIC_univ_Bremen/RCC/', ded[i]))
 #}
 
-setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
+#setwd("D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining")
 
-rl <- dir(path = "./rasters", pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
+path = "D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining"
+
+rl <- dir(path = path, pattern='.tif', all.files=TRUE, recursive = TRUE, full.names=FALSE)
 
 m <- c(1,15,0, 15,100,1, 100,255,0)
 rclmat <- matrix(m, ncol=3, byrow=TRUE)
 
 batch_reclass <- function(rl){
   for (i in 1:length(rl)) {
-    r <- raster(paste0("./rasters/", rl[i])) #read in raster
+    r <- raster(paste(path, rl, sep = '/')) #read in raster
     rc <- reclassify(r, rclmat) #reclassify such that SIC>15% = 1, else 0
     rcc <- clump(rc, directions=8) # clumping algorithm
-    writeRaster(rcc, filename = paste0("./rasters/RCC/", 
-                                       rl[i]), format="GTiff", overwrite=TRUE)
+    writeRaster(rcc, filename = paste0("D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/All/RCC/Remaining/", 
+                                       rl), format="GTiff", overwrite=TRUE)
   }
 }
 
