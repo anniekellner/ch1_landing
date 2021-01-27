@@ -80,9 +80,3 @@ for (i in 1:nrow(sf)){
 
 saveRDS(sf, './data/RData/land_bears_cutoff_after_swim.Rds')
 
-# Check Dist1 and 2 data
-
-load("data/RData/dist1.RData")
-
-sf$dist2pack <- dist
-dist1 <- dist
