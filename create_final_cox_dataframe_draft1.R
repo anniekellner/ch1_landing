@@ -8,10 +8,19 @@
 rm(list = ls())
 
 library(dplyr)
+library(sf)
+library(lubridate)
+library(rWind)
+library(zoo)
+library(survival)
+
+source('MyFunctions.R') # Turn Rds from sf object into dataframe
 
 # ----- LOAD DATA ----------------------------------------------------- #
 
 bears <- readRDS('./data/RData/land_bears_cutoff_after_swim.Rds')
+
+bears <- st_drop_geometry(bears)
 
 # Repro
 
@@ -66,10 +75,10 @@ wind.join$yday <- yday(wind.join$datetime)
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year),mean(SIC_30m_me), mean(dist2land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(repro), first(age), first(ResidualMass)) %>%
+    first(animal), first(year), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack", "repro", "age", "rm") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack") 
 
 # remove rows after start.swim == 1
 
@@ -84,28 +93,33 @@ avg <- avg %>%
 
 # Add sd (rate of ice change)
 
-avg$sd7 <- rollapplyr(avg$SIC, 7, sd, fill = NA) # 7 is most descriptive but 3 
+avg$sd7_SIC <- rollapplyr(avg$SIC, 7, sd, fill = NA) # 7 is most descriptive but 3 
+avg$sd7_pland <-  rollapplyr(avg$pland, 7, sd, fill = NA)
 
 # ---------- CORRELATION MATRIX ------- #
 
-correl <- avg[, 4:15]
+correl <- avg[, 5:13]
 mat <- cor(correl, use = "pairwise.complete.obs")
 
 # -------   TMERGE TO CREATE TDC DATAFRAME -------------------------- #
 
 temp <- subset(avg, start_swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start_swim, animal, year, repro, age, rm) 
+  dplyr::select(id, day, start_swim, animal, year) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
 cox_tdc <- tmerge(baseline, avg, id = id, 
                   SIC = tdc(day, SIC), 
-                  sd7 = tdc(day, sd7), 
+                  sd7_SIC = tdc(day, sd7_SIC), 
+                  sd7_pland = tdc(day, sd7_pland),
                   dist_land = tdc(day, dist_land), 
                   windspeed = tdc(day, speed), 
                   pland = tdc(day, pland), 
                   te = tdc(day, te), 
                   dist_pack = tdc(day, dist_pack))
 
-saveRDS(cox_tdc, file = './data/RData/cox_tdc.Rds')
+mig <- subset(cox_tdc, migrate == 1) # Check values for day of migration
+mig
+
+saveRDS(cox_tdc, file = './data/RData/cox_tdc_draft1.Rds')
