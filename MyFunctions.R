@@ -31,4 +31,14 @@ create_AICc_table <- function(aicc){
   return(aicc)
 }
 
+#' Drop geometry from sf object and return dataframe
+#' 
+#' @param x sf object
 
+st_drop_geometry <- function(x) {
+  if(inherits(x,"sf")) {
+    x <- st_set_geometry(x, NULL)
+    class(x) <- 'data.frame'
+  }
+  return(x)
+}
