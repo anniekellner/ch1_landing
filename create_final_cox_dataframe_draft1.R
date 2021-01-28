@@ -11,7 +11,7 @@ library(dplyr)
 
 # ----- LOAD DATA ----------------------------------------------------- #
 
-bears <- readRDS('./data/RData/land_bears_CoxPH.Rds')
+bears <- readRDS('./data/RData/land_bears_cutoff_after_swim.Rds')
 
 # Repro
 

@@ -2,6 +2,10 @@
 ##    TEST DISTANCE MEASUREMENTS ##############
 ###########################################
 
+library(ggplot2)
+library(plotly)
+library(dplyr)
+
 # DISTANCE TO PACK
 
 # Check ten randomly selected values against distance to pack measurements
@@ -37,3 +41,22 @@ ver <- sample(x, size = 10, replace = FALSE)
 # 3072 = TRUE
 # 4363 = TRUE
 # 10219 = TRUE
+
+# SIC 
+
+# covariance between pland and SIC: 0.71
+
+a <- mydata$SIC_30m_me
+b <- mydata$pland
+
+var(a,b, na.rm = TRUE)
+cor(a,b, use = "na.or.complete")
+
+# Find outliers in correlation plot
+
+p <- ggplot(data = mydata, aes(SIC_30m_me, pland, color = id.ymd)) + 
+  geom_point()
+
+ggplotly(p)
+
+sub <- filter(mydata, id == "pb_21368.2014")
