@@ -1,6 +1,8 @@
 ###########################################
-##    TEST DISTANCE TO PACK  ##############
+##    TEST DISTANCE MEASUREMENTS ##############
 ###########################################
+
+# DISTANCE TO PACK
 
 # Check ten randomly selected values against distance to pack measurements
 # Forgot to set.seed
@@ -26,3 +28,12 @@ set.seed(13)
 ver <- sample(x, size = 10, replace = FALSE)
 
 # 9152 = TRUE
+
+## DISTANCE TO LAND
+
+set.seed(118)
+ver <- sample(x, size = 10, replace = FALSE)
+
+# 3072 = TRUE
+# 4363 = TRUE
+# 10219 = TRUE
