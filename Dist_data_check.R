@@ -1,0 +1,28 @@
+###########################################
+##    TEST DISTANCE TO PACK  ##############
+###########################################
+
+# Check ten randomly selected values against distance to pack measurements
+# Forgot to set.seed
+
+mydata <- readRDS('./data/RData/land_bears_cutoff_after_swim.Rds')
+
+x <- 1:13447
+
+ver <- sample(x, size = 10, replace = FALSE)
+
+# 4270 = TRUE
+# 12935 = TRUE
+# 7655 = TRUE
+# 8399 = TRUE
+# 1352 = TRUE
+# 517 =  TRUE
+# 1380 = TRUE
+# 2000 = TRUE
+# 11827 = TRUE
+# 11719 = TRUE
+
+set.seed(13)
+ver <- sample(x, size = 10, replace = FALSE)
+
+# 9152 = TRUE
