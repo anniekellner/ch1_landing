@@ -12,6 +12,7 @@ library(dplyr)
 library(lubridate)
 library(stringr)
 library(readr)
+library(here)
 
 # Load Data
 
@@ -78,5 +79,5 @@ for (i in 1:nrow(sf)){
   sf$dist_to_ice[i] <- st_distance(sf[i,], shp)
 }
 
-saveRDS(sf, './data/RData/land_bears_cutoff_after_swim.Rds')
+saveRDS(mydata, 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Repos/ch1_landing/data/RData/land_bears_cutoff_after_swim.Rds')
 
