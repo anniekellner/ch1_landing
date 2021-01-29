@@ -12,8 +12,6 @@ rm(list = ls())
 
 cox <- readRDS('./data/RData/cox_tdc_draft1.Rds')
 
-mean(cox$rm, na.rm = TRUE) # -6.897
-
 apply(is.na(cox),2, which)
 
 #cox <- cox %>%
@@ -23,6 +21,7 @@ apply(is.na(cox),2, which)
 
 cox <- cox %>%
   group_by(id) %>%
+  mutate(SIC3 = rollmean(SIC, 3, fill = NA, align = "right")) %>%
   mutate(pland3 = rollmean(pland, 3, fill = NA, align = "right")) %>%
   mutate(windspeed3 = rollmean(windspeed, 3, fill = NA, align = "right")) %>%
   mutate(te3 = rollmean(te, 3, fill = NA, align = "right")) %>%
@@ -31,8 +30,8 @@ cox <- cox %>%
 
 cox <- na.omit(cox) # NA values giving me grief. Removed for now. 
 
-global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + windspeed3 + te3 + dist_land3 + dist_ice3 + sd7 + repro + rm + year + pland3*windspeed3, 
-                      cluster = animal, data = cox, na.action = "na.fail") # no age because will not converge. Probably not enough information. 
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ pland3 + SIC3 + windspeed3 + te3 + dist_land3 + dist_ice3 + sd7_pland + sd7_SIC + year + pland3*windspeed3, 
+                      cluster = animal, data = cox, na.action = "na.fail")
 
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc")
 
@@ -41,5 +40,11 @@ t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc")
 #as it results with sub-models fitted to different data sets, if there are missing values. Error is thrown if it is detected.
 
 tt <- t[1:10,]
+tt
+
+# Summarize top model
+
+fit <- coxph(Surv(tstart, tstop, migrate) ~ windspeed3, cluster = animal, data = cox)
+summary(fit)
 
 write.csv(tt, file = './data/derived-data/top_models.csv')
