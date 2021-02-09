@@ -75,10 +75,10 @@ wind.join$yday <- yday(wind.join$datetime)
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice)) %>%
+    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack") 
 
 # remove rows after start.swim == 1
 
@@ -105,7 +105,7 @@ mat <- cor(correl, use = "pairwise.complete.obs")
 
 temp <- subset(avg, start_swim == 1)
 temp <- temp %>%
-  dplyr::select(id, day, start_swim, animal, year) 
+  dplyr::select(id, day, start_swim, animal, year, ResidMass) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
