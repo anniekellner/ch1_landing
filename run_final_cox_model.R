@@ -35,9 +35,11 @@ t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = 
 tt <- t[1:10,]
 tt
 
+get.models(t, subset = delta < 4)
+
 # Summarize top model
 
-fit <- coxph(Surv(tstart, tstop, migrate) ~ windspeed3 + dist_land3_km, cluster = id, data = cox)
+fit <- coxph(Surv(tstart, tstop, migrate) ~ te, cluster = id, data = cox)
 summary(fit)
 
 write.csv(tt, file = './data/derived-data/top_models.csv')
