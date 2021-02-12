@@ -93,8 +93,41 @@ avg <- avg %>%
 
 # Add sd (rate of ice change)
 
-avg$sd7_SIC <- rollapplyr(avg$SIC, 7, sd, fill = NA) # 7 is most descriptive but 3 
-avg$sd7_pland <-  rollapplyr(avg$pland, 7, sd, fill = NA)
+# Find mean of first value for sd
+
+#sd <- avg %>%
+ # group_by(id) %>%
+  #slice_head(n = 7) %>%
+  #drop_na(SIC_sd7)
+
+#mean(sd$SIC_sd7)
+
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(SIC_sd7 = rollapplyr(SIC, 7, sd, fill = 4.59)) # 7 is most descriptive. 4.59 is mean of first values of sd7 
+
+# Add SICsq
+
+avg$SICsq <- avg$SIC^2
+
+# Change Distance values to km
+
+avg$dist_land <- avg$dist_land / 1000
+avg$dist_pack <- avg$dist_pack / 1000
+
+# Add 3-day moving window and mean value for missing ResidMass
+
+mean(avg$ResidMass, na.rm = TRUE)
+
+avg <- avg %>%
+  group_by(id) %>%
+  mutate(SICsq3 = rollapply(SICsq, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(speed3 = rollapply(speed, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(te3 = rollapply(te, 3, mean, align = "right", partial = TRUE)) %>%
+  replace_na(list(ResidMass = -6.917933)) # mean
+
 
 # ---------- CORRELATION MATRIX ------- #
 
@@ -109,17 +142,14 @@ temp <- temp %>%
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
-cox_tdc <- tmerge(baseline, avg, id = id, 
-                  SIC = tdc(day, SIC), 
-                  sd7_SIC = tdc(day, sd7_SIC), 
-                  sd7_pland = tdc(day, sd7_pland),
-                  dist_land = tdc(day, dist_land), 
-                  windspeed = tdc(day, speed), 
-                  pland = tdc(day, pland), 
-                  te = tdc(day, te), 
-                  dist_pack = tdc(day, dist_pack))
+ph <- tmerge(baseline, avg, id = id, 
+                  SICsq3 = tdc(day, SICsq3), 
+                  speed3 = tdc(day, speed3), 
+                  sd7 = tdc(day, SIC_sd7),
+                  dist_land3 = tdc(day, dist_land3), 
+                  dist_pack3 = tdc(day, dist_pack3))
 
-mig <- subset(cox_tdc, migrate == 1) # Check values for day of migration
+mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(cox_tdc, file = './data/RData/cox_tdc_draft1.Rds')
+saveRDS(ph, file = './data/RData/ph.Rds')
