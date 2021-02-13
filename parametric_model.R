@@ -4,47 +4,68 @@
 
 rm(list = ls())
 
-library(flexsurv)
+library(flexsurv) # using dev package from GitHub
 library(MuMIn)
 library(zoo)
 library(tidyr)
 library(dplyr)
 library(tidyverse)
 
-mydata <- readRDS('./data/RData/cox_tdc_draft1.Rds')
+ph <- readRDS('./data/RData/ph.Rds')
 
-# Add functionality for flexsurvreg so acts similarly to survreg
+source('MyFunctions.R') # create AICc table
 
-nobs.flexsurvreg <- function(object, ...) {object$N}
-
-coefTable.flexsurvreg <- function(model, ...) {
-  x <- as.data.frame(model$res[,c("est","se")])
-  colnames(x) <- c("Estimate", "Std. Error")
-  x
-}
+# Check SIC and make sure the models aren't crazy different when using 3-day moving window
+# Exclude year because do not have big enough sample size to include year as a factor 
 
 
+SIC <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3, data = ph, dist = "exp")
+speed <- flexsurvreg(Surv(tstart, tstop, migrate) ~ speed3, data = ph, dist = "exp")
+land <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_land3, data = ph, dist = "exp")
+pack <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_pack3, data = ph, dist = "exp")
+sd <- flexsurvreg(Surv(tstart, tstop, migrate) ~ sd7, data = ph, dist = "exp")
+#year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ year, data = ph, dist = "exp")
+
+SIC_speed <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + speed3, data = ph, dist = "exp")
+SIC_distland <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + dist_land3, data = ph, dist = "exp")
+SIC_distpack <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + dist_pack3, data = ph, dist = "exp")
+#SIC_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + year, data = ph, dist = "exp")
+
+speed_land <- flexsurvreg(Surv(tstart, tstop, migrate) ~ speed3 + dist_land3, data = ph, dist = "exp")
+speed_pack <- flexsurvreg(Surv(tstart, tstop, migrate) ~ speed3 + dist_pack3, data = ph, dist = "exp")
+speed_sd <- flexsurvreg(Surv(tstart, tstop, migrate) ~ speed3 + sd7, data = ph, dist = "exp")
+#speed_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ speed3 + year, data = ph, dist = "exp")
+
+land_pack <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_land3 + dist_pack3, data = ph, dist = "exp")
+#land_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_land3 + year, data = ph, dist = "exp")
+land_sd <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_land3 + sd7, data = ph, dist = "exp")
+#land_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_land3 + year, data = ph, dist = "exp")
+
+pack_sd <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_pack3 + sd7, data = ph, dist = "exp")
+#pack_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ dist_pack3 + year, data = ph, dist = "exp")
+
+#sd_year <- flexsurvreg(Surv(tstart, tstop, migrate) ~ sd7 + year, data = ph, dist = "exp")
+
+aicc <- AICc(SIC, SIC_distland, SIC_distpack, SIC_speed, speed, speed_land, speed_pack, speed_sd, land, land_pack, land_sd, pack, pack_sd, sd)
+
+create_AICc_table(aicc)
+
+
+
+
+exp <- flexsurvreg(Surv(tstart, tstop, migrate) ~ ResidMass, data = ph, dist = "exp")
+
+traceback(traceback(coefTable(exp)
 tidy(exp)
 
-# AICc
+summary(exp)
 
-global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ pland3 + SIC3 + windspeed3 + te3 + dist_land3_km + dist_ice3_km + sd7_SIC + year + ResidMass, 
-                      data = mydata, dist = "exp", na.action = "na.fail")
-
-t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(2,3))
-
-tt <- t[1:10,]
-tt
-
-exp <- flexsurvreg(Surv(tstart, tstop, migrate) ~ windspeed3 + dist_land3_km, data = mydata, dist = "exp")
-
-coefTable(exp)
-tidy(exp)
-
+sub <- subset(cox, dist_land3_km == 0)
 
 
 AICc(exp)
 
 
 
+print(warnings)
 
