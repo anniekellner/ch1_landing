@@ -36,39 +36,55 @@ un30 <- unnest(p30, cols = c(.pred))
 un50 <- unnest(p50, cols = c(.pred))
 un100 <- unnest(p100, cols = c(.pred))
 
-
-
 # Assign windspeed to each series of 1309 observations
 
-ws <- seq(0,15, length.out = )
+ws <- seq(0,15, length.out = 100)
 reps <- rep(ws, each = 1309)
 
-un$ws <- reps
+# Add to unnested dataframe
 
-s <- un %>%
-  group_by(ws, .time) %>%
-  distinct()
+un0$ws <- reps
+un15$ws <- reps
+un30$ws <- reps
+un50$ws <- reps
+un100$ws <- reps
 
-w <- s %>%
+s0 <- un0 %>%
   group_by(ws) %>%
-  summarise(s = mean(.pred))
+  slice_head %>%
+  rename(pred0 = .pred)
 
-qplot(data = s, x = .time, y = .pred, geom = "line")
+qplot(data = s0, x = ws, y = .pred, geom = "line")
 
-# Add columns to predict dataframe for different SIC's
+s15 <- un15 %>%
+  group_by(ws) %>%
+  slice_head %>%
+  rename(pred15 = .pred)
 
-p0 <- predict.flexsurvreg(fit, newdata = new_0, type = "survival", na.action = "na.pass", times = 1)
-p30 <- predict.flexsurvreg(fit, newdata = new_30, type = "survival", na.action = "na.pass", times = 1)
-p50 <- predict.flexsurvreg(fit, newdata = new_50, type = "survival", na.action = "na.pass", times = 1)
-p100 <- predict.flexsurvreg(fit, newdata = new_100, type = "survival", na.action = "na.pass", times = 1)
- 
-p$p0 <- p0[,2]
-p$p30 <- p30[,2]
-p$p50 <- p50[,2]
-p$p100 <- p100[,2]
+s30 <- un30 %>%
+  group_by(ws) %>%
+  slice_head %>%
+  rename(pred30 = .pred)
 
-test <- p %>%
-  mutate(p15_cum = .pred*lag(.pred))
+s50 <- un50 %>%
+  group_by(ws) %>%
+  slice_head %>%
+  rename(pred50 = .pred)
+
+s100 <- un100 %>%
+  group_by(ws) %>%
+  slice_head %>%
+  rename(pred100 = .pred)
+
+x <- left_join(s0, s15)
+x <- x %>%
+  left_join(s30)
+
+x <- x %>%
+  left_join(s50)
+
+x <- x %>%
+  left_join(s100)
 
 # Plot
 
