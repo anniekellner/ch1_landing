@@ -91,14 +91,10 @@ x.long <- x %>%
                names_to = "SIC",
                values_to = "HR")
 
-
-
 # Plot
 
-
-
-ggplot(data = x, aes(x = index)) + 
-  geom_line(aes(y = .pred), color = "red")
+ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) + 
+         geom_line()
 
 
 
