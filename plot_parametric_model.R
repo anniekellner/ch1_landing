@@ -86,9 +86,18 @@ x <- x %>%
 x <- x %>%
   left_join(s100)
 
+x.long <- x %>%
+  pivot_longer(cols = starts_with("pred"),
+               names_to = "SIC",
+               values_to = "HR")
+
+
+
 # Plot
 
-ggplot(data = p, aes(x = index)) + 
+
+
+ggplot(data = x, aes(x = index)) + 
   geom_line(aes(y = .pred), color = "red")
 
 
