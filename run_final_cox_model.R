@@ -40,6 +40,6 @@ get.models(t, subset = delta < 4)
 # Summarize top model
 
 fit <- coxph(Surv(tstart, tstop, migrate) ~ te, cluster = id, data = cox)
-summary(fit)
+
 
 write.csv(tt, file = './data/derived-data/top_models.csv')
