@@ -70,15 +70,21 @@ rwind <- as.data.frame(rwind)
 wind.join <- cbind(wind.join, rwind)
 wind.join$yday <- yday(wind.join$datetime)
 
+# Add wind direction
+
+wind.join <- wind.join %>%
+  mutate(wind_type = ifelse(dir > 135 & dir < 225, "Onshore",
+                            ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
+
 # ----  CREATE DF WITH DAILY AVERAGES  ------------- #
 
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice)) %>%
+    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(wind_type)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack", "dir") 
 
 # remove rows after start.swim == 1
 
@@ -147,9 +153,11 @@ ph <- tmerge(baseline, avg, id = id,
                   speed3 = tdc(day, speed3), 
                   sd7 = tdc(day, SIC_sd7),
                   dist_land3 = tdc(day, dist_land3), 
-                  dist_pack3 = tdc(day, dist_pack3))
+                  dist_pack3 = tdc(day, dist_pack3),
+             dir = tdc(day, dir))
+
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(ph, file = './data/RData/ph.Rds')
+saveRDS(ph, file = './data/RData/ph_Mar12.Rds')
