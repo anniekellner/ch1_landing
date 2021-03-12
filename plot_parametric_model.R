@@ -103,7 +103,8 @@ ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) +
          geom_line() + 
   labs(color = "Sea Ice Concentration") + 
   xlab("Wind Speed") + 
-  ylab("Hazard Rate (% per day)\n") 
+  ylab("Hazard Rate (% per day)\n") +
+  theme_bw()
 
 
 
