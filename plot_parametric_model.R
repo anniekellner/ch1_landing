@@ -6,10 +6,11 @@ library(flexsurv)
 library(ggplot2)
 library(data.table)
 
+rm(list = ls())
+
 source("fxn_predict_flexsurv.R") # function to use 'predict' with flexsurv object
 source("fxn_tidy_flexsurv.R")
 
-rm(list = ls())
 
 ph <- readRDS('./data/RData/ph.Rds')
 
@@ -54,7 +55,7 @@ s0 <- un0 %>%
   slice_head %>%
   rename(pred0 = .pred)
 
-qplot(data = s0, x = ws, y = .pred, geom = "line")
+qplot(data = s0, x = ws, y = pred0, geom = "line")
 
 s15 <- un15 %>%
   group_by(ws) %>%
@@ -91,10 +92,19 @@ x.long <- x %>%
                names_to = "SIC",
                values_to = "HR")
 
+# Reorder so legend appears in correct order in plot
+
+x.long$SIC <- factor(x.long$SIC, levels = c("pred0", "pred15", "pred30", "pred50", "pred100"), labels = c("0", "15", "30", "50", "100"))
+x.long$HR <- x.long$HR * 100
+
 # Plot
 
 ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) + 
-         geom_line()
+         geom_line() + 
+  labs(color = "Sea Ice Concentration") + 
+  xlab("Wind Speed") + 
+  ylab("Hazard Rate (% per day)\n") 
+
 
 
 
