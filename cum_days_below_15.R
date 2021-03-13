@@ -15,6 +15,7 @@ rm(list = ls())
 #load('all_v2.RData')
 cox <- readRDS('./data/RData/cox_tdc.Rds')
 
+library(plyr)
 library(dplyr)
 library(data.table)
 library(ggplot2)
@@ -23,57 +24,100 @@ library(tidyr)
 
 # Flag columns with <15% SIC
 
-flag = cox %>%
+flag15 = cox %>%
   group_by(id) %>%
   arrange(id, tstart) %>%
-  mutate(flag = ifelse(SIC <15 ,1,0))
+  mutate(flag15 = ifelse(SIC <15 ,1,0))
 
-flag = flag %>%
+flag15 = flag15 %>%
   group_by(id) %>%
-  mutate(days_under30 = cumsum(flag))
+  mutate(days_under15 = cumsum(flag15))
 
-sum <- flag %>%
+sum15 <- flag15 %>%
   group_by(id) %>%
-  summarise(days = sum(flag)) 
+  summarise(days = sum(flag15)) 
 
-sum <- sum %>% 
+sum15 <- sum15 %>% 
+  separate(id, c("pb", "animal", "year")) 
+
+sum15$conc <- 15
+
+# Days < 30%
+
+flag30 = cox %>%
+  group_by(id) %>%
+  arrange(id, tstart) %>%
+  mutate(flag30 = ifelse(SIC <30 ,1,0))
+
+flag30 = flag30 %>%
+  group_by(id) %>%
+  mutate(days_under30 = cumsum(flag30))
+
+sum30 <- flag %>%
+  group_by(id) %>%
+  summarise(days = sum(flag30)) 
+
+sum30 <- sum30 %>% 
   separate(id, c("pb", "animal", "year"))
 
-# add time
+sum30$conc <- 30
 
-#x= flag.15 %>%
-  #group_by(id) %>%
-  #arrange(id,datetime) %>%
-  #mutate(time.15 = ifelse(flag.15==0 | lag(flag.15)==0,
-         #0, difftime(datetime, lag(datetime), units='days'))) %>%
-  #mutate(cumtime.15 = cumsum(ifelse(is.na(time.15), 0, time.15)) + time.15*0) %>%
-  #mutate(pct.days.below15 = cumtime.15/30) %>%
- # mutate(index=difftime(last(ymd), ymd, units='days')) # so day 1 is day 1 for all bears, regardless of month/year
+# Days < 50
 
-#ice.calc <- as.data.frame(x)
-#save(ice.calc, file='ice_calc.RData')
-#-------------- GGPLOT ---------------------------------#
 
-# Number of days Spent in 15% SIC or less - all bears
+flag50 = cox %>%
+  group_by(id) %>%
+  arrange(id, tstart) %>%
+  mutate(flag50 = ifelse(SIC <50, 1, 0))
 
-ggplot(flag, aes(tstart, days_under30, color=id, na.rm=TRUE)) + # needs color line
-  geom_line() + 
-  xlab("Days before Departure") +
-  ylab('Cumulative # of days spent at < 30% ice cover') +
-  ggtitle('Days before departure spent at < 30% ice cover') +
-  theme_bw()
+flag50 = flag50 %>%
+  group_by(id) %>%
+  mutate(days_under50 = cumsum(flag50))
 
-# Histogram
+sum50 <- flag50 %>%
+  group_by(id) %>%
+  summarise(days = sum(flag50)) 
 
-ggplot(data = sum, aes(days, fill = year)) +
-  geom_histogram(alpha = 0.2, bins = 6) + 
-  geom_density(alpha = 0.2, fill = "#FF6666")
+sum50 <- sum50 %>% 
+  separate(id, c("pb", "animal", "year"))
 
-ggplot(data = sum, aes(days)) +
+sum50$conc <- 50
+
+# Combine results
+
+tot <- rbind(sum15, sum30)
+tot$conc <- as.factor(tot$conc)
+
+# Get group means
+
+mu <- ddply(tot, "conc", summarise, grp.mean = mean(days))
+
+# Plot
+
+gg <- ggplot(data = tot, aes(x = days, fill = conc)) + 
+  geom_density(alpha = 0.4) + 
+  geom_vline(data = tot, aes(xintercept))
+  scale_x_continuous(limits = c(0,70), expand = c(0,0)) + 
+
+
+
+
+
+gg15 <- ggplot(data = sum15, aes(days)) +
   geom_histogram(aes(y = ..density..), binwidth = 4, color = "black", fill = "white") + 
   geom_density(alpha = 0.2, fill = "#FF6666") +
   scale_x_continuous(limits = c(0,70), expand = c(0,0)) + 
-  xlab("Days spent at < 15% sea ice concentration")
+  xlab("Days spent at < 15% sea ice concentration") + 
+  ylab("Density")
+
+gg30 <- ggplot(data = sum, aes(days)) +
+  geom_histogram(aes(y = ..density..), binwidth = 4, color = "black", fill = "white") + 
+  geom_density(alpha = 0.2, fill = "#FF6666") +
+  scale_x_continuous(limits = c(0,70), expand = c(0,0)) + 
+  xlab("Days spent at < 15% sea ice concentration") + 
+  ylab("Density")
+
+
 
 ggsave(filename = 'Days_below_15.png', path = './figures')
 

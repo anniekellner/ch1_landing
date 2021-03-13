@@ -50,7 +50,7 @@ new_30 <- new_30 %>%
   mutate(lp = predict(fit, ., type = "lp", na.action = na.pass))
 
 new_50 <- new %>%
-  mutate(HR = predict(fit, ., type = "expected", na.action = na.pass))
+  mutate(HR = predict(fit, ., type = "risk", na.action = na.pass))
 
 ggplot(data = new_50) + 
   aes(x = windspeed3, y = HR) + 
