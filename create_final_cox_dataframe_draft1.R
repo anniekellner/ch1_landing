@@ -13,6 +13,7 @@ library(lubridate)
 library(rWind)
 library(zoo)
 library(survival)
+library(tidyr)
 
 source('MyFunctions.R') # Turn Rds from sf object into dataframe
 
@@ -112,9 +113,6 @@ avg <- avg %>%
   group_by(id) %>%
   mutate(SIC_sd7 = rollapplyr(SIC, 7, sd, fill = 4.59)) # 7 is most descriptive. 4.59 is mean of first values of sd7 
 
-# Add SICsq
-
-avg$SICsq <- avg$SIC^2
 
 # Change Distance values to km
 
@@ -127,7 +125,7 @@ mean(avg$ResidMass, na.rm = TRUE)
 
 avg <- avg %>%
   group_by(id) %>%
-  mutate(SICsq3 = rollapply(SICsq, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(SIC3 = rollapply(SIC, 3, mean, align = "right", partial = TRUE)) %>%
   mutate(speed3 = rollapply(speed, 3, mean, align = "right", partial = TRUE)) %>%
   mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
   mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
@@ -149,15 +147,16 @@ temp <- temp %>%
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
 ph <- tmerge(baseline, avg, id = id, 
-                  SICsq3 = tdc(day, SICsq3), 
+                  SIC3 = tdc(day, SIC3), 
                   speed3 = tdc(day, speed3), 
                   sd7 = tdc(day, SIC_sd7),
                   dist_land3 = tdc(day, dist_land3), 
                   dist_pack3 = tdc(day, dist_pack3),
-             dir = tdc(day, dir))
+             dir = tdc(day, dir),
+             ordinal_day = tdc(day, ordinal_day))
 
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(ph, file = './data/RData/ph_Mar12.Rds')
+saveRDS(ph, file = './data/RData/ph_Mar26.Rds')
