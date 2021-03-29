@@ -121,7 +121,9 @@ avg$dist_pack <- avg$dist_pack / 1000
 
 # Add 3-day moving window and mean value for missing ResidMass
 
-mean(avg$ResidMass, na.rm = TRUE)
+rm <- unique(avg$ResidMass)
+
+mean(rm, na.rm = TRUE)
 
 avg <- avg %>%
   group_by(id) %>%
@@ -130,7 +132,7 @@ avg <- avg %>%
   mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
   mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
   mutate(te3 = rollapply(te, 3, mean, align = "right", partial = TRUE)) %>%
-  replace_na(list(ResidMass = -6.917933)) # mean
+  replace_na(list(ResidMass = -8.384667)) # mean
 
 
 # ---------- CORRELATION MATRIX ------- #
@@ -152,8 +154,7 @@ ph <- tmerge(baseline, avg, id = id,
                   sd7 = tdc(day, SIC_sd7),
                   dist_land3 = tdc(day, dist_land3), 
                   dist_pack3 = tdc(day, dist_pack3),
-             dir = tdc(day, dir),
-             ordinal_day = tdc(day, ordinal_day))
+             dir = tdc(day, dir))
 
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration

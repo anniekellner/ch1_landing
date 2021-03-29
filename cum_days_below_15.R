@@ -29,13 +29,16 @@ flag15 = cox %>%
   arrange(id, tstart) %>%
   mutate(flag15 = ifelse(SIC <15 ,1,0))
 
-flag15 = flag15 %>%
+cum15 = flag15 %>%
   group_by(id) %>%
   mutate(days_under15 = cumsum(flag15))
 
-sum15 <- flag15 %>%
+sum15 <- cum15 %>%
   group_by(id) %>%
-  summarise(days = sum(flag15)) 
+  slice_tail()
+
+mean(sum15$days_under15)
+min(sum15$days_under15)
 
 sum15 <- sum15 %>% 
   separate(id, c("pb", "animal", "year")) 
@@ -49,11 +52,18 @@ flag30 = cox %>%
   arrange(id, tstart) %>%
   mutate(flag30 = ifelse(SIC <30 ,1,0))
 
-flag30 = flag30 %>%
+cum30 = flag30 %>%
   group_by(id) %>%
   mutate(days_under30 = cumsum(flag30))
 
-sum30 <- flag %>%
+sum30 <- cum30 %>%
+  group_by(id) %>%
+  slice_tail()
+
+min(sum30$days_under30)
+max(sum30$days_under30)
+sd(sum30$days_under30)
+  
   group_by(id) %>%
   summarise(days = sum(flag30)) 
 
@@ -70,12 +80,18 @@ flag50 = cox %>%
   arrange(id, tstart) %>%
   mutate(flag50 = ifelse(SIC <50, 1, 0))
 
-flag50 = flag50 %>%
+cum50 = flag50 %>%
   group_by(id) %>%
   mutate(days_under50 = cumsum(flag50))
 
-sum50 <- flag50 %>%
+sum50 <- cum50 %>%
   group_by(id) %>%
+  slice_tail()
+
+min(sum50$days_under50)
+max(sum50$days_under50)
+sd(sum50$days_under50)
+  
   summarise(days = sum(flag50)) 
 
 sum50 <- sum50 %>% 

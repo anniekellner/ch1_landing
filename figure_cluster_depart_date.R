@@ -10,14 +10,9 @@ library(ggplot2)
 library(RColorBrewer)
 library(cowplot)
 
-load("land_bears_CoxPH.RData")
+ph <- readRDS('./data/RData/ph_Mar26.Rds')
 
-start <- subset(bears, start.swim == 1)
-start <- distinct(start)
-
-start <- start[-16,]
-
-start$ordinal <- yday(start$datetime)
+start <- filter(ph, migrate == 1)
 
 table(start$year)
 
@@ -25,6 +20,8 @@ first <- min(start$ordinal)
 last <- max(start$ordinal)
 
 start$year <- as.numeric(start$year)
+
+start$ordinal_day <- yday(start$ordinal_day)
 
 # Remove years with < 2 observations
 
