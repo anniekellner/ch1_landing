@@ -12,38 +12,40 @@
 
 rm(list = ls())
 
-#load('all_v2.RData')
-cox <- readRDS('./data/RData/cox_tdc.Rds')
-
-library(plyr)
+#library(plyr)
 library(dplyr)
-library(data.table)
+#library(data.table)
 library(ggplot2)
 library(stringr)
 library(tidyr)
 
+#load('all_v2.RData')
+cox <- readRDS('./data/derived-data/avg.Rds') 
+
 # Flag columns with <15% SIC
 
-flag15 = cox %>%
+flag15 = cox %>% # flags columns with a 1 if SIC < 15
   group_by(id) %>%
-  arrange(id, tstart) %>%
+  arrange(id, day) %>%
   mutate(flag15 = ifelse(SIC <15 ,1,0))
 
-cum15 = flag15 %>%
+cum15 = flag15 %>% # creates columns that adds 1's by id
   group_by(id) %>%
   mutate(days_under15 = cumsum(flag15))
 
 sum15 <- cum15 %>%
   group_by(id) %>%
-  slice_tail()
+  summarise(days = sum(days_under15))
+
+
+sum15 <- sum15 %>% 
+  separate(id, c("pb", "animal", "year")) %>%
+  mutate(conc = "15")
+
+sum15$conc <- 15
 
 mean(sum15$days_under15)
 min(sum15$days_under15)
-
-sum15 <- sum15 %>% 
-  separate(id, c("pb", "animal", "year")) 
-
-sum15$conc <- 15
 
 # Days < 30%
 
@@ -64,8 +66,7 @@ min(sum30$days_under30)
 max(sum30$days_under30)
 sd(sum30$days_under30)
   
-  group_by(id) %>%
-  summarise(days = sum(flag30)) 
+
 
 sum30 <- sum30 %>% 
   separate(id, c("pb", "animal", "year"))
