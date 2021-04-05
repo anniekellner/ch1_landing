@@ -12,8 +12,8 @@ library(rgdal)
 
 load('coxph.RData') #GPS data
 
-#setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim") # Home Computer
-setwd("D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
+setwd("C:/Users/akell/Documents/PhD/Polar_Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim") # Home Computer
+#setwd("D:/Polar Bears/Data/SIC-TIFs/SIC_univ_Bremen/n3125/start_swim")
 
 swim <- subset(bears, start.swim == 1)
 swim <- distinct(swim)
@@ -46,7 +46,7 @@ max <- sf::st_transform(max, sf::st_crs(swim.sf))
 #poly <- rasterToPolygons(r, function(x){x==mode}, dissolve = TRUE) #raster to polygon
 #writeOGR(poly, dsn = './shapefiles', layer = 'asi-AMSR2-n3125-20120815-v5.4.tif.shp', driver = 'ESRI Shapefile')
 
-min <- st_read('./shapefiles/asi-AMSR2-n3125-20120815-v5.4.tif.shp.shp')
+min <- st_read('./shapefiles/asi-AMSR2-n3125-20120815-v5.4.shp')
 min <- sf::st_transform(min, '+proj=stere +lat_0=90 +lat_ts=60 +lon_0=-80 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m + datum=WGS84 +no_defs +towgs84=0,0,0')
 min <- sf::st_transform(min, sf::st_crs(swim.sf))
 
@@ -79,6 +79,9 @@ bb.swim2 <- tmaptools::bb(bb.swim, ylim = c(0.3, 1.75), relative = TRUE)
 
 # Map
 
+swim.sf <- swim.sf %>%
+  mutate(dummy = case_when(year == "2012" ~ "2012", year == "2005" ~ "2005", year == "2009" ~ "2009", TRUE ~ "Other"))
+
 map <- tm_shape(max, bbox = bb.swim2) +
   tm_fill("#95BAC8") + 
   tm_shape(med) + 
@@ -88,10 +91,15 @@ map <- tm_shape(max, bbox = bb.swim2) +
   tm_shape(nor_america) + 
   tm_fill('#9CD3AA') +
   tm_shape(swim.sf) + 
-  tm_dots(size = 0.3) + 
-  tm_compass(position = "left") + 
+  tm_symbols(size = 0.3, shape = "dummy", title.shape = "Year", col = "black", legend.shape.z = 3) + 
+  tm_compass(type = "4star", size = 2, position = c("left", "top"), bg.color = "white") + 
+  tm_scale_bar(position = c("right", "top"), bg.color = "white") +
   tm_layout(main.title = "Migration Departure Points Relative to Pack Ice", main.title.position = "center",
             legend.outside = TRUE) + 
-tm_add_legend(type = "fill", labels = c("minimum (2012)", "median (2005)", "maximum (2009)"), col = c("#810f7c","#8c96c6","#95BAC8"), border.col = "black", title = "Pack Ice Extent")
+tm_add_legend(type = "fill", labels = c("minimum (2012)", "median (2005)", "maximum (2009)"), 
+              col = c("#810f7c","#8c96c6","#95BAC8"), 
+              border.col = "black", 
+              title = "Pack Ice Extent", z = 1) + 
+  tm_add_legend(type = "fill", labels = "Alaska", col = '#9CD3AA')
 
 tmap_save(map, 'C:/Users/akell/Documents/PhD/Polar_Bears/Figures/pack.png')
