@@ -107,14 +107,15 @@ mu <- ddply(tot, "conc", summarise, grp.mean = mean(days))
 # Plot
 
 gg <- ggplot(data = tot, aes(x = days, fill = conc)) + 
-  geom_histogram(aes(y = ..density.., color = conc), binwidth = 4, fill = "white") +
+  geom_histogram(aes(y = ..density.., color = conc), binwidth = 10, fill = "white") +
   geom_density(alpha = 0.2) + 
   #geom_vline(data = mu, aes(xintercept = grp.mean, color = conc), linetype = "dashed")
-  scale_x_continuous(limits = c(0,80), expand = c(0,0)) +
+  scale_x_continuous(limits = c(0,100), expand = c(0,0)) +
   labs(fill = "Sea Ice Concentration", color = "") + 
-  guides(fill = guide_legend(order = 1), color = guide_legend(order = 2))
+  guides(fill = guide_legend(order = 1), color = guide_legend(order = 2)) 
+ 
 
-ggsave()
+ggsave(gg, file = './figures/days_on_ice.png')
 
 
 
