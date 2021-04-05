@@ -12,7 +12,7 @@
 
 rm(list = ls())
 
-#library(plyr)
+library(plyr)
 library(dplyr)
 #library(data.table)
 library(ggplot2)
@@ -30,79 +30,74 @@ flag15 = cox %>% # flags columns with a 1 if SIC < 15
   mutate(flag15 = ifelse(SIC <15 ,1,0))
 
 cum15 = flag15 %>% # creates columns that adds 1's by id
-  group_by(id) %>%
+  group_by(id, day) %>%
   mutate(days_under15 = cumsum(flag15))
 
-sum15 <- cum15 %>%
+sum15 <- cum15 %>% # Add flags
   group_by(id) %>%
   summarise(days = sum(days_under15))
 
-
-sum15 <- sum15 %>% 
+sum15 <- sum15 %>% # Separate id into three columns
   separate(id, c("pb", "animal", "year")) %>%
   mutate(conc = "15")
 
-sum15$conc <- 15
+# For descriptive purposes
 
 mean(sum15$days_under15)
 min(sum15$days_under15)
 
 # Days < 30%
 
-flag30 = cox %>%
+flag30 = cox %>% # flags columns with a 1 if SIC < 30
   group_by(id) %>%
-  arrange(id, tstart) %>%
+  arrange(id, day) %>%
   mutate(flag30 = ifelse(SIC <30 ,1,0))
 
-cum30 = flag30 %>%
-  group_by(id) %>%
+cum30 = flag30 %>% # creates columns that adds 1's by id
+  group_by(id, day) %>%
   mutate(days_under30 = cumsum(flag30))
 
-sum30 <- cum30 %>%
+sum30 <- cum30 %>% # Add flags
   group_by(id) %>%
-  slice_tail()
+  summarise(days = sum(days_under30))
 
-min(sum30$days_under30)
-max(sum30$days_under30)
-sd(sum30$days_under30)
+sum30 <- sum30 %>% # Separate id into three columns
+  separate(id, c("pb", "animal", "year")) %>%
+  mutate(conc = "30")
+
+min(sum30$days)
+max(sum30$days)
+sd(sum30$days)
   
-
-
-sum30 <- sum30 %>% 
-  separate(id, c("pb", "animal", "year"))
-
-sum30$conc <- 30
 
 # Days < 50
 
-
-flag50 = cox %>%
+flag50 = cox %>% # flags columns with a 1 if SIC < 50
   group_by(id) %>%
-  arrange(id, tstart) %>%
-  mutate(flag50 = ifelse(SIC <50, 1, 0))
+  arrange(id, day) %>%
+  mutate(flag50 = ifelse(SIC <50 ,1,0))
 
-cum50 = flag50 %>%
-  group_by(id) %>%
+cum50 = flag50 %>% # creates columns that adds 1's by id
+  group_by(id, day) %>%
   mutate(days_under50 = cumsum(flag50))
 
-sum50 <- cum50 %>%
+sum50 <- cum50 %>% # Add flags
   group_by(id) %>%
-  slice_tail()
+  summarise(days = sum(days_under50))
+
+sum50 <- sum50 %>% # Separate id into three columns
+  separate(id, c("pb", "animal", "year")) %>%
+  mutate(conc = "50")
 
 min(sum50$days_under50)
 max(sum50$days_under50)
 sd(sum50$days_under50)
   
-  summarise(days = sum(flag50)) 
-
-sum50 <- sum50 %>% 
-  separate(id, c("pb", "animal", "year"))
-
-sum50$conc <- 50
 
 # Combine results
 
 tot <- rbind(sum15, sum30)
+tot <- rbind(tot, sum50)
 tot$conc <- as.factor(tot$conc)
 
 # Get group means
@@ -112,11 +107,14 @@ mu <- ddply(tot, "conc", summarise, grp.mean = mean(days))
 # Plot
 
 gg <- ggplot(data = tot, aes(x = days, fill = conc)) + 
-  geom_density(alpha = 0.4) + 
-  geom_vline(data = tot, aes(xintercept))
-  scale_x_continuous(limits = c(0,70), expand = c(0,0)) + 
+  geom_histogram(aes(y = ..density.., color = conc), binwidth = 4, fill = "white") +
+  geom_density(alpha = 0.2) + 
+  #geom_vline(data = mu, aes(xintercept = grp.mean, color = conc), linetype = "dashed")
+  scale_x_continuous(limits = c(0,80), expand = c(0,0)) +
+  labs(fill = "Sea Ice Concentration", color = "") + 
+  guides(fill = guide_legend(order = 1), color = guide_legend(order = 2))
 
-
+ggsave()
 
 
 
