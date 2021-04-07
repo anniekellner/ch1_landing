@@ -9,19 +9,22 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 library(cowplot)
+library(sf)
 
-ph <- readRDS('./data/RData/ph_Mar26.Rds')
+ph <- readRDS('./data/RData/land_bears_cutoff_after_swim.Rds')
 
-start <- filter(ph, migrate == 1)
+source('MyFunctions.R')
+
+start <- filter(ph, start.swim == 1)
 
 table(start$year)
+
+start$ordinal <- yday(start$datetime)
 
 first <- min(start$ordinal)
 last <- max(start$ordinal)
 
 start$year <- as.numeric(start$year)
-
-start$ordinal_day <- yday(start$ordinal_day)
 
 # Remove years with < 2 observations
 
@@ -54,7 +57,7 @@ start2$year <- as.factor(start2$year)
 # Plot
 
 fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) + 
-  geom_dotplot(stackgroups = TRUE) +
+  geom_dotplot(stackgroups = TRUE, binpositions = "all") +
   scale_color_brewer(palette = "Dark2") + 
   scale_fill_brewer(palette = "Dark2") + 
   xlab("\nDate of Departure from Ice") +
