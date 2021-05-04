@@ -6,6 +6,9 @@ rm(list = ls())
 
 library(ggOceanMaps) # loads ggplot2  # https://github.com/MikkoVihtakari/ggOceanMaps
 library(sf)
+library(dplyr)
+library(sp)
+
 
 # To cite:
 
@@ -19,15 +22,34 @@ library(sf)
 #>     url = {https://mikkovihtakari.github.io/ggOceanMaps},
 #>   }
 
+# ------ LOAD DATA --------------------- #
+
+load('coxph.RData') #GPS data
+swim <- subset(bears, start.swim == 1)
+swim <- distinct(swim)
+
+# Projections 
+
+projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar <- "+proj=stere +lat_0=90 +lat_ts=71 +lon_0=-152.5 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+
+
+coords <- cbind(swim$X, swim$Y)
+pb.spdf <- SpatialPointsDataFrame(coords = coords, data=swim, proj4string = polar)
+swim.sf <- st_as_sf(pb.spdf)
+
+plot(st_geometry(swim.sf))
+
+swim.sf <- st_transform(swim.sf, crs = polar)
+
+# --- SPATIAL DATA  --------------------------- #
+
 box <- c(xmin = -165, xmax = -140, ymin = 66, ymax = 75)
-
-
 
 geog_lines <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/ne_10m_geographic_lines/ne_10m_geographic_lines.shp")
 arctic_circle <- geog_lines[4,]
 arctic_circle_crop <- st_crop(arctic_circle, box)
-
 
 
 #arctic_circle <- st_transform(arctic_circle, crs = polar)
@@ -50,14 +72,55 @@ inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") +
 ggsave("arctic_birdseye.png", plot = inset, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
 
 main <- basemap(limits = c(-165, -140, 66, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
-  theme(legend.justification = "top") + 
-  annotation_scale(location = "br") + 
-  annotation_north_arrow(location = "tr", which_north = "true") +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank()) + 
-  geom_sf(data = mcp, color = "yellow", fill = NA, size = 3, show.legend = "line") +
-  geom_sf(data = arctic_circle_crop, linetype = "4A", show.legend = "line") + 
-  geom_sf(data = usca, fill = NA) 
+    theme(legend.justification = "top") + 
+    annotation_scale(location = "br") + 
+    annotation_north_arrow(location = "tr", which_north = "true") +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          legend.key = element_blank()) +
+    geom_sf(data = usca, fill = NA) +
+    geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
+    geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 3, show.legend = "polygon") + 
+    geom_sf(data = swim.sf, aes(color = "Departure Points"), show.legend = "point") +
+    scale_linetype_manual(values = c("Arctic Circle" = "dashed"), name = NULL, 
+                          guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
+    scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), name = NULL, 
+                       guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 16), color = c("yellow", "black")))) 
+  
+ 
+  
+  
+  
+  
+  
+    geom_sf(data = arctic_circle_crop, mapping = aes(linetype = "Arctic Circle"), show.legend = TRUE) +
+    geom_sf(data = swim.sf, aes(color = "Departure Points"), show.legend = "point") +
+    geom_sf(data = mcp, aes(color = "95% MCP", linetype = "95% MCP"), show.legend = TRUE) +
+    scale_linetype_manual(values = c("Arctic Circle" = "dashed", "95% MCP" = "solid"), 
+                          guide = guide_legend(override.aes = list(fill=NA))) +
+    scale_color_manual(values = c("Departure Points" = "black", "95% MCP" = "yellow"), 
+                       guide = guide_legend(override.aes = list(fill = NA, linetype = "blank"))) 
+
+
+
+  
+  
+
+  
+  
+  scale_linetype_manual(values = c("95% MCP" = "solid", "Arctic Circle" = "dashed"))
+
+
+   + 
+  scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), 
+                     guide = guide_legend(override.aes = list(linetype = NA))) + 
+  
+          
+          linetype = "4A"
+          color = "yellow", fill = "NA", size = 3, ) +
+  
+  
+  geom_sf(data = swim.sf, mapping = aes(color = ""), color = "black")
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
