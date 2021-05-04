@@ -86,41 +86,7 @@ main <- basemap(limits = c(-165, -140, 66, 75), rotate = TRUE, bathymetry = TRUE
                           guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
     scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), name = NULL, 
                        guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 16), color = c("yellow", "black")))) 
-  
- 
-  
-  
-  
-  
-  
-    geom_sf(data = arctic_circle_crop, mapping = aes(linetype = "Arctic Circle"), show.legend = TRUE) +
-    geom_sf(data = swim.sf, aes(color = "Departure Points"), show.legend = "point") +
-    geom_sf(data = mcp, aes(color = "95% MCP", linetype = "95% MCP"), show.legend = TRUE) +
-    scale_linetype_manual(values = c("Arctic Circle" = "dashed", "95% MCP" = "solid"), 
-                          guide = guide_legend(override.aes = list(fill=NA))) +
-    scale_color_manual(values = c("Departure Points" = "black", "95% MCP" = "yellow"), 
-                       guide = guide_legend(override.aes = list(fill = NA, linetype = "blank"))) 
-
-
-
-  
-  
-
-  
-  
-  scale_linetype_manual(values = c("95% MCP" = "solid", "Arctic Circle" = "dashed"))
-
-
-   + 
-  scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), 
-                     guide = guide_legend(override.aes = list(linetype = NA))) + 
-  
-          
-          linetype = "4A"
-          color = "yellow", fill = "NA", size = 3, ) +
-  
-  
-  geom_sf(data = swim.sf, mapping = aes(color = ""), color = "black")
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
+
