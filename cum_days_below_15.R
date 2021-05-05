@@ -29,7 +29,7 @@ cox <- readRDS('./data/derived-data/avg.Rds')
 flag15 = cox %>% # flags columns with a 1 if SIC < 15
   group_by(id) %>%
   arrange(id, day) %>%
-  mutate(flag15 = ifelse(SIC <15 ,1,0))
+  mutate(flag15 = ifelse(SIC < 15 ,1,0))
 
 cum15 = flag15 %>% # creates columns that adds 1's by id
   group_by(id, day) %>%
@@ -47,13 +47,14 @@ sum15 <- sum15 %>% # Separate id into three columns
 
 mean(sum15$days)
 min(sum15$days)
-
+max(sum15$days)
+sd(sum15$days)
 # Days < 30%
 
 flag30 = cox %>% # flags columns with a 1 if SIC < 30
   group_by(id) %>%
   arrange(id, day) %>%
-  mutate(flag30 = ifelse(SIC <30 & SIC > 15 ,1,0))
+  mutate(flag30 = ifelse(SIC < 30 & SIC >= 15 ,1,0))
 
 cum30 = flag30 %>% # creates columns that adds 1's by id
   group_by(id, day) %>%
@@ -67,6 +68,7 @@ sum30 <- sum30 %>% # Separate id into three columns
   separate(id, c("pb", "animal", "year")) %>%
   mutate(conc = "15 - 30")
 
+mean(sum30$days)
 min(sum30$days)
 max(sum30$days)
 sd(sum30$days)
@@ -77,7 +79,7 @@ sd(sum30$days)
 flag50 = cox %>% # flags columns with a 1 if SIC < 50
   group_by(id) %>%
   arrange(id, day) %>%
-  mutate(flag50 = ifelse(SIC <50 & SIC > 30 ,1,0))
+  mutate(flag50 = ifelse(SIC <50 & SIC >= 30 ,1,0))
 
 cum50 = flag50 %>% # creates columns that adds 1's by id
   group_by(id, day) %>%
@@ -90,6 +92,11 @@ sum50 <- cum50 %>% # Add flags
 sum50 <- sum50 %>% # Separate id into three columns
   separate(id, c("pb", "animal", "year")) %>%
   mutate(conc = "30 - 50")
+
+mean(sum50$days)
+min(sum50$days)
+max(sum50$days)
+sd(sum50$days)
 
 # Days >50
 
@@ -110,12 +117,17 @@ sum100 <- sum100 %>% # Separate id into three columns
   separate(id, c("pb", "animal", "year")) %>%
   mutate(conc = "> 50")
 
+mean(sum100$days)
+min(sum100$days)
+max(sum100$days)
+sd(sum100$days)
+
 # Combine results
 
 tot <- rbind(sum15, sum30)
 tot <- rbind(tot, sum50)
 tot <- rbind(tot, sum100)
-tot$conc <- as.factor(tot$conc)
+tot$conc <- factor(tot$conc, levels = c("> 50", "30 - 50", "15 - 30", " < 15"))
 
 # Get group means
 
@@ -127,11 +139,14 @@ gg <- ggplot(data = tot, aes(x = days, fill = conc)) +
   geom_density(alpha = 0.2) + 
   geom_vline(data = mu, aes(xintercept = grp.mean, color = conc), linetype = "dashed", show.legend = FALSE) +
   scale_x_continuous(limits = c(0,100), expand = c(0,0)) +
-  labs(fill = "Sea Ice Concentration", color = "") + 
-  guides(fill = guide_legend(order = 1)) 
+  scale_fill_discrete(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%")) +
+  scale_y_continuous(limits = c(0, 0.15), expand = c(0,0)) + 
+  xlab("Days") + 
+  ylab("Density")
+
  
 
-#ggsave(gg, file = './figures/days_on_ice.png')
+ggsave(gg, file = './figures/days_on_ice.png')
 
 # ------------  MEAN ICE OVER ENTIRE SHELF  -------------------------------------------------------- #
 
