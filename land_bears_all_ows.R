@@ -21,6 +21,7 @@ land.bear.ids <- unique(land.bears$id) # list of bears that spend >=7 days on la
 
 
 land.bears.ows <- subset(ows, id %in% land.bear.ids) # land bears with data during ows
+land.bears.ows <- droplevels(land.bears.ows)
 
 first.entry <- land.bears.ows %>% # Find first entry to see whether on land or ice
   group_by(id) %>%
@@ -50,7 +51,7 @@ tm_shape(lb) +
   tm_facets(by = "id", free.coords = TRUE) +
   tmap_options(limits = c(facets.view = 27))
 
-land.bears.all.ows <- filter(land.bears.all.ows, land.bears.all.ows$id != 'pb_20449.2014') # remove bear with very little data (based on visual inspection)
+#land.bears.all.ows <- filter(land.bears.all.ows, land.bears.all.ows$id != 'pb_20449.2014') # remove bear with very little data (based on visual inspection)
 
 # Others should possibly be removed, as well, depending on how analysis plays out. Return to this. 
 
