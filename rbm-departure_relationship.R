@@ -40,3 +40,15 @@ combine$Date <- mdy(combine$Date)
 
 combine  <- combine %>%
   mutate(time_diff = difftime(depart.date, Date, unit = "days"))
+
+# Add missing RBM's
+
+rbm2 <- read.csv('./data/raw-data/Residual_body_masses_additional_bears_20210102.csv')
+rbm2 <- select(rbm2, 1:3)
+colnames(rbm2) <- c("animal", "year", "ResidualMass")
+rbm2$BearID <- paste(rbm2$animal, rbm2$year, sep = '.')
+rbm2 <- select(rbm2, BearID, ResidualMass)
+
+weights <- select(weights, BearID, ResidualMass)
+
+AllRBM <- rbind(weights, rbm2)
