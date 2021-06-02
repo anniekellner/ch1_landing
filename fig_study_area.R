@@ -31,12 +31,10 @@ swim <- distinct(swim)
 # Projections 
 
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
-polar <- "+proj=stere +lat_0=90 +lat_ts=71 +lon_0=-152.5 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-
+polar <- CRS("+proj=stere +lat_0=90 +lat_ts=71 +lon_0=-152.5 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
 
 coords <- cbind(swim$X, swim$Y)
-pb.spdf <- SpatialPointsDataFrame(coords = coords, data=swim, proj4string = polar)
+pb.spdf <- SpatialPointsDataFrame(coords = coords, data=swim, proj4string = projection)
 swim.sf <- st_as_sf(pb.spdf)
 
 plot(st_geometry(swim.sf))
@@ -54,7 +52,7 @@ arctic_circle_crop <- st_crop(arctic_circle, box)
 
 #arctic_circle <- st_transform(arctic_circle, crs = polar)
 #arctic_circle <- st_crop()
-
+ 
 borders <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/cb_2018_us_nation_5m/cb_2018_us_nation_5m.shp")
 usca <- st_crop(borders, box)
 # CREATE BOX FOR STUDY AREA
@@ -71,21 +69,21 @@ inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") +
 
 ggsave("arctic_birdseye.png", plot = inset, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
 
-main <- basemap(limits = c(-165, -140, 66, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
+main <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
     theme(legend.justification = "top") + 
     annotation_scale(location = "br") + 
-    annotation_north_arrow(location = "tr", which_north = "true") +
+    annotation_north_arrow(location = "tl", which_north = "true") +
     theme(axis.title.x = element_blank(),
           axis.title.y = element_blank(),
           legend.key = element_blank()) +
-    geom_sf(data = usca, fill = NA) +
-    geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
-    geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 3, show.legend = "polygon") + 
-    geom_sf(data = swim.sf, aes(color = "Departure Points"), show.legend = "point") +
-    scale_linetype_manual(values = c("Arctic Circle" = "dashed"), name = NULL, 
-                          guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
-    scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), name = NULL, 
-                       guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 16), color = c("yellow", "black")))) 
+    #geom_sf(data = usca, fill = NA) +
+    #geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
+    geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 2, show.legend = "polygon") + 
+    geom_sf(data = swim.sf, aes(color = "Departure Points"), size = 4, shape = 3, show.legend = "point") +
+    #scale_linetype_manual(values = c("Arctic Circle" = "dashed"), name = NULL, 
+                          #guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
+    scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "red"), name = NULL, 
+                       guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 3), color = c("yellow", "red")))) 
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
