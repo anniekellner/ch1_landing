@@ -79,11 +79,11 @@ main <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE
     #geom_sf(data = usca, fill = NA) +
     #geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
     geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 2, show.legend = "polygon") + 
-    geom_sf(data = swim.sf, aes(color = "Departure Points"), size = 4, shape = 3, show.legend = "point") +
+    geom_sf(data = swim.sf, aes(color = "Departure Points"), size = 4, shape = 18, show.legend = "point") +
     #scale_linetype_manual(values = c("Arctic Circle" = "dashed"), name = NULL, 
                           #guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
-    scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "red"), name = NULL, 
-                       guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 3), color = c("yellow", "red")))) 
+    scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "#CA33FF"), name = NULL, 
+                       guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 18), color = c("yellow", "#CA33FF")))) 
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
