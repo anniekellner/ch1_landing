@@ -12,6 +12,8 @@ library(tidyverse)
 
 ph <- readRDS('./data/RData/ph_Mar26.Rds')
 
+source("fxn_tidy_flexsurv.R")
+
 #source('MyFunctions.R') # create AICc table
 
 global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3 + dist_pack3 + sd7 + ResidMass + SIC3*speed3 + dir, 
@@ -21,13 +23,17 @@ t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = 
 
 tt <- t[1:10,]
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + speed3 + dist_pack3, 
+fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
+
+fit
+
 
 write.csv(tt, file = './data/derived-data/top_models.csv')
 
 top <- get.models(t, subset = 1:10)
 
+top
 # ------    CREATE NEW DATA TO PREDICT OVER ---------------- #
 
 source("fxn_predict_flexsurv.R") # run script for predict function on flexsurv object
