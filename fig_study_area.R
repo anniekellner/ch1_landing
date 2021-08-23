@@ -15,6 +15,10 @@ library(tmaptools)
 #library(RColorBrewer)
 library(ggplot2)
 
+
+M <- leaflet() %>% setView(lng = -148, lat = 70, zoom = 12)
+M %>% addTiles()
+
 devtools::install_github("MikkoVihtakari/ggOceanMapsData") # required by ggOceanMaps
 devtools::install_github("MikkoVihtakari/ggOceanMaps")
 
@@ -35,7 +39,24 @@ library(osmdata)
 #>     url = {https://mikkovihtakari.github.io/ggOceanMaps},
 #>   }
 
-# ------ LOAD DATA --------------------- #
+# ------ LOAD SPATIAL DATA  --------------------- #
+
+# Create bathymetry layer
+
+bathy <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0")  
+
+
+
+# DEM
+
+dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_052520/ans_dem_8bit.tif')
+
+ext <- extent(-308644, 534700, 2212133, 2398000)
+dem_crop <- crop(dem, ext)
+dem_ll <- projectRaster(dem_crop, crs = 4326)
+
+bathy + geom_raster(data = dem_ll, aes(colour = c('#52BE80', '#85C1E9')))
+geom_raster(data = dem_polar, aes(colour = c('#52BE80', '#85C1E9')))
 
 # Projections 
 
@@ -72,14 +93,13 @@ swim.sf <- st_transform(swim.sf, crs = polar)
 
 # --- SPATIAL DATA  --------------------------- #
 
-# Create bathymetry layer
 
+bathy + geom_raster() 
 
 # Crop DEM
 
-dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_052520/ans_dem_8bit.tif')
-ext <- extent(-308644, 534700, 2212133, 2398000)
-dem_crop <- crop(dem, ext)
+
+
 
 # reclassify so just land and water
 
