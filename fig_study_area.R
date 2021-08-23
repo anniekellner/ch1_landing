@@ -8,7 +8,18 @@ library(ggOceanMaps) # loads ggplot2  # https://github.com/MikkoVihtakari/ggOcea
 library(sf)
 library(dplyr)
 library(sp)
+library(raster)
+library(rgdal)
+library(tmap)
+library(tmaptools)
+#library(RColorBrewer)
+library(ggplot2)
 
+devtools::install_github("MikkoVihtakari/ggOceanMapsData") # required by ggOceanMaps
+devtools::install_github("MikkoVihtakari/ggOceanMaps")
+
+library(ggOceanMaps)
+# It does not work to convert the DEM to a polygon. It is a nightmare. Breaks R. 
 
 # To cite:
 
@@ -24,14 +35,30 @@ library(sp)
 
 # ------ LOAD DATA --------------------- #
 
-load('coxph.RData') #GPS data
-swim <- subset(bears, start.swim == 1)
-swim <- distinct(swim)
-
 # Projections 
 
 projection <- CRS("+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs") #find this in spatialreference.org
 polar <- CRS("+proj=stere +lat_0=90 +lat_ts=71 +lon_0=-152.5 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+# Include landing points
+
+load("all_v2.RData") # to get landing points
+
+# Landing points
+
+end.swim <- all.v2 %>%
+  dplyr::filter(end.swim == 1) %>%
+  dplyr::select(animal, year, month, day, hour, minute, second, gps_lat, gps_lon, datetime, start.swim, end.swim, id, X, Y, ymd, id.datetime)
+
+end.swim <- distinct(end.swim)
+end.swim <- st_as_sf(end.swim, coords = c('X','Y'), crs = polar)
+
+# Starting points
+
+load('coxph.RData') #GPS data
+swim <- subset(bears, start.swim == 1)
+swim <- distinct(swim)
+
 
 coords <- cbind(swim$X, swim$Y)
 pb.spdf <- SpatialPointsDataFrame(coords = coords, data=swim, proj4string = projection)
@@ -42,6 +69,67 @@ plot(st_geometry(swim.sf))
 swim.sf <- st_transform(swim.sf, crs = polar)
 
 # --- SPATIAL DATA  --------------------------- #
+
+# Create bathymetry layer
+
+test <- getNOAA.bathy(lon1 = -150, lon2 = 141, lat1 = 70, lat2 = 75, resolution = 15)
+
+plot(test, land = TRUE,
+     deep = c(-4000, -2000,0),
+     step = c(-2000, -1000, 0),
+     shallow = c())
+
+# Crop DEM
+
+dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_052520/ans_dem_8bit.tif')
+ext <- extent(-308644, 534700, 2212133, 2398000)
+dem_crop <- crop(dem, ext)
+
+# reclassify so just land and water
+
+m <- c(0,26,1, 27,27,0, 28,101,1)
+rclmat <- matrix(m, ncol = 3, byrow = TRUE)
+
+dem_rcl <- reclassify(dem_crop, rclmat) # 1 = land; 27 = sea
+#writeRaster(dem_rcl, 'C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/dem_ras_reclass.tif') # to view in QGIS
+
+dem_polar <- projectRaster(dem_rcl, crs = polar) # reproject to polar stereographic
+
+palette_explorer()
+
+tm_shape(dem_polar) + 
+  tm_raster(palette = "GnBu", n = 5, legend.show = FALSE) + 
+  tm_shape(swim.sf) + 
+  tm_symbols(col = "red")
+
+
+
+# Shp with 5k buffer
+
+buf <- st_read('./data/Spatial/AK_CA_5kbuff/AK_CA_5kbuff.shp')
+buf <- st_transform(buf, crs = polar)
+
+rect <- st_read('./data/Spatial/Rectangle/rectangle.shp')
+rect <- st_transform(rect, crs = polar)
+
+# Make sure geometries align in space
+plot(st_geometry(buf))
+plot(rect, add = TRUE)
+
+buf_crop <- st_crop(buf, rect)
+
+#---- tmap-------- #
+tmap_mode('plot')
+
+palette_explorer()
+
+
+tm_shape(dem_polar) + 
+  tm_raster(palette = "GnBu")
+
+
+
+# ---- Arctic Circle ------ #
 
 box <- c(xmin = -165, xmax = -140, ymin = 66, ymax = 75)
 
@@ -55,12 +143,7 @@ arctic_circle_crop <- st_crop(arctic_circle, box)
  
 borders <- st_read("C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots/cb_2018_us_nation_5m/cb_2018_us_nation_5m.shp")
 usca <- st_crop(borders, box)
-# CREATE BOX FOR STUDY AREA
 
-# Create lines for Arctic Circle and US-Canada border
-
-mcp <- st_read("./Shapefiles/95ca_ows_land_bears.shp")
-mcp <- st_transform(mcp, crs = 4326)
 
 inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") + 
   theme(legend.position = "none", panel.border = element_rect(colour = "black", fill = NA, size = 2)) + 
