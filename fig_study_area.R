@@ -19,6 +19,8 @@ devtools::install_github("MikkoVihtakari/ggOceanMapsData") # required by ggOcean
 devtools::install_github("MikkoVihtakari/ggOceanMaps")
 
 library(ggOceanMaps)
+library(osmdata)
+
 # It does not work to convert the DEM to a polygon. It is a nightmare. Breaks R. 
 
 # To cite:
@@ -72,12 +74,6 @@ swim.sf <- st_transform(swim.sf, crs = polar)
 
 # Create bathymetry layer
 
-test <- getNOAA.bathy(lon1 = -150, lon2 = 141, lat1 = 70, lat2 = 75, resolution = 15)
-
-plot(test, land = TRUE,
-     deep = c(-4000, -2000,0),
-     step = c(-2000, -1000, 0),
-     shallow = c())
 
 # Crop DEM
 
@@ -94,6 +90,15 @@ dem_rcl <- reclassify(dem_crop, rclmat) # 1 = land; 27 = sea
 #writeRaster(dem_rcl, 'C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/dem_ras_reclass.tif') # to view in QGIS
 
 dem_polar <- projectRaster(dem_rcl, crs = polar) # reproject to polar stereographic
+
+# --- tmap --------- #
+
+bb <- getbb(place_name = 'southern Beaufort Sea')
+
+x <- opq(bbox=bb) %>%
+  add_osm_feature(key = "water")
+
+osm <- tmaptools::read_osm(bb(q), type = 'stamen-watercolor')
 
 palette_explorer()
 
@@ -152,14 +157,19 @@ inset <- basemap(limits = 60, bathymetry = TRUE, land.col = "#9ECBA0") +
 
 ggsave("arctic_birdseye.png", plot = inset, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
 
-main <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
+bathy <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
     theme(legend.justification = "top") + 
     annotation_scale(location = "br") + 
     annotation_north_arrow(location = "tl", which_north = "true") +
     theme(axis.title.x = element_blank(),
           axis.title.y = element_blank(),
           legend.key = element_blank()) +
-    #geom_sf(data = usca, fill = NA) +
+    geom_raster(data = dem_polar, aes(colour = c('#52BE80', '#85C1E9')))
+
+bathy + geom_raster(data = dem_polar)
+  
+  
+  geom_sf(data = usca, fill = NA) +
     #geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
     geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 2, show.legend = "polygon") + 
     geom_sf(data = swim.sf, aes(color = "Departure Points"), size = 4, shape = 18, show.legend = "point") +
