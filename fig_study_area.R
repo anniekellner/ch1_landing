@@ -53,7 +53,11 @@ dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_05
 
 ext <- extent(-308644, 534700, 2212133, 2398000)
 dem_crop <- crop(dem, ext)
-dem_ll <- projectRaster(dem_crop, crs = 4326)
+
+
+ggplot() + 
+  geom_raster(data = dem_crop)
+
 
 bathy + geom_raster(data = dem_ll, aes(colour = c('#52BE80', '#85C1E9')))
 geom_raster(data = dem_polar, aes(colour = c('#52BE80', '#85C1E9')))
@@ -200,4 +204,59 @@ bathy + geom_raster(data = dem_polar)
 
 
 ggsave("study_area.png", plot = main, path = "C:/Users/akell/Documents/PhD/Polar_Bears/R-Plots")
+
+# -----------------------------------------------------------------------
+
+rm(list = ls())
+
+library(ggOceanMaps)
+library(raster)
+#library(rasterViz)
+library(rgdal)
+library(RColorBrewer)
+library(dplyr)
+library(sf)
+
+bathy <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0")  
+
+dem <- raster('C:/Users/akell/Documents/ArcGIS/North_Slope_DEM/DEM_052520/DEM_052520/ans_dem_8bit.tif')
+ext <- extent(-308644, 534700, 2212133, 2398000)
+dem_crop <- crop(dem, ext)
+
+#writeRaster(dem_crop, './data/Spatial/test.tif')
+
+dem_spdf <- as(dem_crop, "SpatialPixelsDataFrame")
+coords <- dem_spdf@coords
+
+dem_sf <- st_as_sf(dem_spdf, coords = coords, crs = '+proj=aea +lat_0=50 +lon_0=-154 +lat_1=55 +lat_2=65 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs')
+
+crs(dem_spdf)
+
+
+dem_sf <- st_as_sf()
+
+mapcolors <- c('#b2df8a', '#a6cee3')
+
+ggplot() + 
+  geom_tile(data = dem_df, aes(x=x, y=y, fill = value2)) + 
+  scale_fill_manual(values = mapcolors) + 
+ 
+  
+  
+  main <- basemap(limits = c(-165, -140, 66, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
+  theme(legend.justification = "top") + 
+  annotation_scale(location = "br") + 
+  annotation_north_arrow(location = "tr", which_north = "true") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.key = element_blank()) +
+  geom_sf(data = usca, fill = NA) +
+  geom_sf(data = arctic_circle_crop, aes(linetype = "Arctic Circle")) +
+  geom_sf(data = mcp, aes(color = "95% MCP"), fill = NA, size = 3, show.legend = "polygon") + 
+  geom_sf(data = swim.sf, aes(color = "Departure Points"), show.legend = "point") +
+  scale_linetype_manual(values = c("Arctic Circle" = "dashed"), name = NULL, 
+                        guide = guide_legend(override.aes = list(fill=NA, shape = NA))) + 
+  scale_color_manual(values = c("95% MCP" = "yellow", "Departure Points" = "black"), name = NULL, 
+                     guide = guide_legend(override.aes = list(linetype = c("blank", "blank"), fill = c(NA, NA), shape = c(22, 16), color = c("yellow", "black")))) 
+
 
