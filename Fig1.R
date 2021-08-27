@@ -11,6 +11,7 @@ library(ggplot2)
 library(ggsn)
 library(dplyr)
 library(sp)
+library(svglite)
 
 # Projections
 
@@ -79,19 +80,17 @@ centroid_starting <- st_coordinates(swim.sf) %>%
 
 # Create map
 
-main <- basemap(limits = c(-165, -140, 69, 75), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
+main <- basemap(limits = c(-165, -140, 70, 73), rotate = TRUE, bathymetry = TRUE, bathy.style = "poly_blues", land.col = "#9ECBA0") + 
   theme(legend.justification = "top") + 
-  annotation_north_arrow(location = "tl", which_north = "true") +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         legend.key = element_blank()) +
   geom_sf(data = buf_crop, fill = "purple", alpha = 0.5) + 
   geom_sf(data = land, fill = "#9ecba0") + 
-  annotation_scale(location = 'br') +
-  #ggsn::scalebar(land, dist = 100, dist_unit = 'km', transform = TRUE) + 
+  annotation_scale(location = 'bl') +
   geom_sf(data = end.sf, color = "#EA801B") + 
   geom_sf(data = swim.sf, color = "red") + 
   geom_sf(data = centroid_landing, shape = 23, size = 3, color = "#EA801B") +
   geom_sf(data = centroid_starting, shape = 23, size = 3, color = "red")
- 
 
+ggsave("Fig1_R.svg", plot = main, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Dissertation/Chapter 1/Figures')
