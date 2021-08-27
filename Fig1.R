@@ -94,3 +94,17 @@ main <- basemap(limits = c(-165, -140, 70, 73), rotate = TRUE, bathymetry = TRUE
   geom_sf(data = centroid_starting, shape = 23, size = 3, color = "red")
 
 ggsave("Fig1_R.svg", plot = main, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Dissertation/Chapter 1/Figures')
+
+# -------------------------------------------------------------------------------------------------------------------------- #
+# Which arrival is missing
+
+ids.start <- unique(swim$id)
+ids.end <- unique(end.df$id)
+
+setdiff(ids.start, ids.end) # pb_20525.2014, pb_20333.2008
+
+missing_arr1 <- subset(all.v2, id == "pb_20333.2008" & month == 8 & day == 30 & hour == 12)
+
+all.v2[11585,]["end.swim"] <- 1
+
+
