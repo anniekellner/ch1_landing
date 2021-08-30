@@ -78,7 +78,7 @@ ggsave('depart_date_cluster.png', fig, path = './figures')
 fit <- lm(ordinal ~ year, data = start) # linear regression
 summary(fit)
 
-new <- data.frame(year =  c(2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014))
+new <- data.frame(year =  c(2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015))
 
 new$start <- predict(fit, newdata = new)
 new$year <- as.factor(new$year)
@@ -86,12 +86,15 @@ new$year <- as.factor(new$year)
 # Create dataframe to predict over to show regression line on plot (otherwise intercept is nonsensical)
 
 start$year<- as.factor(start$year)
+start$ymd <- ymd(start$ymd)
 
-plot_reg <- ggplot(data = start, aes(year, ordinal)) + 
-  geom_point(size = 3, show.legend = FALSE) + 
+plot_reg <- ggplot(data = start, aes(x = year, y = ordinal)) + 
+  geom_point(aes(color = year), size = 3, show.legend = FALSE) + 
+  scale_y_continuous(breaks = seq(168, 273, by = 14)) +
   xlab("Year") + 
-  ylab("Ordinal Date") + 
-  geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed")
+  ylab("Day of the Year") + 
+  geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed") + 
+  theme_bw()
 
 
 ggsave('depart_date_regress.png', plot_reg, path = './figures', dpi = 300)
