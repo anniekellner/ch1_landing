@@ -38,7 +38,7 @@ buf_crop <- st_crop(buf_proj, dem_poly)
 
 # Landing Points
 
-load("all_v2.RData") # to get landing points
+all.v2 <- readRDS('./data/derived-data/all_v2.Rds') # to get landing points
 
 end.swim <- all.v2 %>%
   dplyr::filter(end.swim == 1) %>%
@@ -99,12 +99,14 @@ ggsave("Fig1_R.svg", plot = main, path = 'C:/Users/akell/OneDrive - Colostate/Ph
 # Which arrival is missing
 
 ids.start <- unique(swim$id)
-ids.end <- unique(end.df$id)
+ids.end <- unique(end.sf$id)
 
 setdiff(ids.start, ids.end) # pb_20525.2014, pb_20333.2008
 
 missing_arr1 <- subset(all.v2, id == "pb_20333.2008" & month == 8 & day == 30 & hour == 12)
 
 all.v2[11585,]["end.swim"] <- 1
+
+saveRDS(all.v2, file = './data/derived-data/all_v2.Rds')
 
 

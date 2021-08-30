@@ -1,7 +1,7 @@
 rm(list = ls())
 
-load('all.RData')
-new <- read.table(file='C:/Users/akell/Desktop/Spring 2019/Research/arrival_land_committed.csv', header = TRUE)
+load('all_v2.RData')
+new <- read.table(file='C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Analyses/Old/Migration/Data/arrival_land_committed.csv', header = TRUE)
 library(dplyr)
 
 # Prep new.arrive for merging
@@ -14,7 +14,7 @@ new$tt <- paste(new$Animal, new$datetime)
 tt2 <- new$tt
 
 # merge
-all$animal.datetime <- paste(all$animal, all$datetime)
+all.v2$animal.datetime <- paste(all$animal, all$datetime)
 all$new.arrival <- ifelse(all$animal.datetime %in% tt2, 1, 0)  
 
 # test
