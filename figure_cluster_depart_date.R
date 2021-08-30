@@ -90,7 +90,7 @@ start$ymd <- ymd(start$ymd)
 
 plot_reg <- ggplot(data = start, aes(x = year, y = ordinal)) + 
   geom_point(aes(color = year), size = 3, show.legend = FALSE) + 
-  scale_y_continuous(breaks = seq(168, 273, by = 14)) +
+  scale_y_continuous(limits = c(182, 274), breaks = c(182, 213, 244, 274)) +
   xlab("Year") + 
   ylab("Day of the Year") + 
   geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed") + 
