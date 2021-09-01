@@ -75,26 +75,44 @@ ggsave('depart_date_cluster.png', fig, path = './figures')
 
 ## Trend over time
 
-fit <- lm(ordinal ~ year, data = start) # linear regression
+start <- st_drop_geometry(start)
+start$year <- as.Date(as.character(start$year), format = "%Y")
+start$year <- year(start$year)
+
+start2 <- start %>%
+  dplyr::select(animal, year, ordinal) %>%
+  mutate(diff = year - 2005)
+
+
+fit <- lm(ordinal ~ diff + diff, data = start2) # linear regression
 summary(fit)
 
 new <- data.frame(year =  c(2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015))
+new <- data.frame(diff = seq(0,10,1))
 
 new$start <- predict(fit, newdata = new)
-new$year <- as.factor(new$year)
+#new$year <- as.factor(new$year)
 
 # Create dataframe to predict over to show regression line on plot (otherwise intercept is nonsensical)
 
-start$year<- as.factor(start$year)
-start$ymd <- ymd(start$ymd)
+#start$year<- as.factor(start$year)
+#start$ymd <- ymd(start$ymd)
 
-plot_reg <- ggplot(data = start, aes(x = year, y = ordinal)) + 
-  geom_point(aes(color = year), size = 3, show.legend = FALSE) + 
+plot_reg <- ggplot(data = start2, aes(x = diff, y = ordinal)) + 
+  geom_point(size = 3, show.legend = FALSE) + 
   scale_y_continuous(limits = c(182, 274), breaks = c(182, 213, 244, 274)) +
   xlab("Year") + 
   ylab("Day of the Year") + 
-  geom_line(data = new, aes(year, start), group = 1, color = "black", linetype = "dashed") + 
+  geom_line(data = new, aes(diff, start), group = 1, color = "black", linetype = "dashed") + 
   theme_bw()
 
 
 ggsave('depart_date_regress.png', plot_reg, path = './figures', dpi = 300)
+
+# Does the data meet the assumptions for linear regression?
+
+# Test for normality
+
+swim$ordinal <- yday(swim$ymd)
+
+shapiro.test(swim$ordinal) # data does not deviate from a normal distribution

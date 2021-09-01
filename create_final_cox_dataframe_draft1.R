@@ -38,9 +38,9 @@ bears$repro <- as.factor(bears$repro)
 
 # Combine three separate Movebank spreadsheets (data obtained in separate requests)
 
-wind1 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_07032020.csv") 
-wind2 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_10082020.csv")
-wind3 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Data/Movebank/Movebank_10192020.csv")
+wind1 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_07032020.csv") 
+wind2 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_10082020.csv")
+wind3 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_10192020.csv")
 
 wind1 <- dplyr::select(wind1, timestamp, location.long, location.lat, ht.above.ellipsoid, id, NCEP.NARR.FLX.U.Wind.at.10.m.above.Ground, NCEP.NARR.FLX.V.Wind.at.10.m.above.Ground) # eliminate other environmental variables like Chinook parameter
 
@@ -137,7 +137,7 @@ avg <- avg %>%
 
 # ---------- CORRELATION MATRIX ------- #
 
-correl <- avg[, 5:13]
+correl <- avg[, 5:12]
 mat <- cor(correl, use = "pairwise.complete.obs")
 
 # -------   TMERGE TO CREATE TDC DATAFRAME -------------------------- #
