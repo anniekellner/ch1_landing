@@ -25,73 +25,50 @@ fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_pack3,
 
 # Create new dataframes
 
-new_0 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 0, dist_pack3 = 38.06) 
+new_1 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 1, dist_pack3 = 38.06) 
 new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 15, dist_pack3 = 38.06) 
 new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 30, dist_pack3 = 38.06)
 new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 50, dist_pack3 = 38.06)
 new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 100, dist_pack3 = 38.06)
 
-p0 <- predict.flexsurvreg(fit, newdata = new_0, type = "hazard", na.action = "na.pass")
-p15 <- predict.flexsurvreg(fit, newdata = new_15, type = "hazard", na.action = "na.pass")
-p30 <- predict.flexsurvreg(fit, newdata = new_30, type = "hazard", na.action = "na.pass")
-p50 <- predict.flexsurvreg(fit, newdata = new_50, type = "hazard", na.action = "na.pass")
-p100 <- predict.flexsurvreg(fit, newdata = new_100, type = "hazard", na.action = "na.pass")
+p1 <- predict.flexsurvreg(fit, newdata = new_1, type = "hazard", times = 1, na.action = "na.pass")
+p15 <- predict.flexsurvreg(fit, newdata = new_15, type = "hazard", times = 1, na.action = "na.pass")
+p30 <- predict.flexsurvreg(fit, newdata = new_30, type = "hazard", times = 1, na.action = "na.pass")
+p50 <- predict.flexsurvreg(fit, newdata = new_50, type = "hazard", times = 1, na.action = "na.pass")
+p100 <- predict.flexsurvreg(fit, newdata = new_100, type = "hazard", times = 1, na.action = "na.pass")
 
-un0 <- unnest(p0, cols = c(.pred))
-un15 <- unnest(p15, cols = c(.pred))
-un30 <- unnest(p30, cols = c(.pred))
-un50 <- unnest(p50, cols = c(.pred))
-un100 <- unnest(p100, cols = c(.pred))
-
-# Assign windspeed to each series of 1309 observations
+# Assign windspeed to each new dataframe
 
 ws <- seq(0,15, length.out = 100)
-reps <- rep(ws, each = 1309)
 
-# Add to unnested dataframe
+p1$ws <- ws
+p15$ws <- ws
+p30$ws <- ws
+p50$ws <- ws
+p100$ws <- ws
 
-un0$ws <- reps
-un15$ws <- reps
-un30$ws <- reps
-un50$ws <- reps
-un100$ws <- reps
 
-s0 <- un0 %>%
-  group_by(ws) %>%
-  slice_head() %>%
-  rename(pred0 = .pred)
+#qplot(data = p1, x = ws, y = .pred, geom = "line")
 
-qplot(data = s0, x = ws, y = pred0, geom = "line")
+# Rename .pred column (survival prediction)
 
-s15 <- un15 %>%
-  group_by(ws) %>%
-  slice_head %>%
-  rename(pred15 = .pred)
+p1 <- rename(p1, pred1 = .pred)
+p15 <- rename(p15, pred15 = .pred)
+p30 <- rename(p30, pred30 = .pred)
+p50 <- rename(p50, pred50 = .pred)
+p100 <- rename(p100, pred100 = .pred)
 
-s30 <- un30 %>%
-  group_by(ws) %>%
-  slice_head %>%
-  rename(pred30 = .pred)
 
-s50 <- un50 %>%
-  group_by(ws) %>%
-  slice_head %>%
-  rename(pred50 = .pred)
-
-s100 <- un100 %>%
-  group_by(ws) %>%
-  slice_head %>%
-  rename(pred100 = .pred)
-
-x <- left_join(s0, s15)
-x <- x %>%
-  left_join(s30)
+x <- left_join(p1, p15)
 
 x <- x %>%
-  left_join(s50)
+  left_join(p30)
 
 x <- x %>%
-  left_join(s100)
+  left_join(p50)
+
+x <- x %>%
+  left_join(p100)
 
 x.long <- x %>%
   pivot_longer(cols = starts_with("pred"),
@@ -100,15 +77,18 @@ x.long <- x %>%
 
 # Reorder so legend appears in correct order in plot
 
-x.long$SIC <- factor(x.long$SIC, levels = c("pred0", "pred15", "pred30", "pred50", "pred100"), labels = c("0", "15", "30", "50", "100"))
+x.long$SIC <- factor(x.long$SIC, levels = c("pred1", "pred15", "pred30", "pred50", "pred100"), labels = c("1", "15", "30", "50", "100"))
 #x.long$HR <- x.long$HR * 100 # Initial thinking was *100
+
+x.long$expHR <- exp(x.long$HR) # Assuming the hazard estimated by the predict.flexsurv corresponds to est and not exp(est)
 
 # Plot
 
-ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) + 
-         geom_line() + 
+ggplot(data = x.long, aes(x = ws, y = expHR, col = SIC)) + 
+         geom_line(size = 1) + 
+  scale_x_continuous(limits = c(0, 15), expand = c(0,0)) +
   labs(color = "Sea Ice Concentration") + 
-  xlab("Wind Speed") + 
+  xlab("3-Day Mean Wind Speed (m/s)") + 
   ylab("Hazard Rate") +
   theme_bw()
 
