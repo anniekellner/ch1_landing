@@ -5,6 +5,8 @@
 library(flexsurv)
 library(ggplot2)
 library(data.table)
+library(tidyr)
+library(dplyr)
 
 rm(list = ls())
 
@@ -12,18 +14,22 @@ source("fxn_predict_flexsurv.R") # function to use 'predict' with flexsurv objec
 source("fxn_tidy_flexsurv.R")
 
 
-ph <- readRDS('./data/RData/ph.Rds')
+#ph <- readRDS('./data/RData/ph.Rds')
+ph <- readRDS('./data/RData/ph_Mar26.Rds')
+mean(ph$dist_pack3)
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + speed3 + dist_pack3, 
+# Fit model
+
+fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_pack3, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
 
 # Create new dataframes
 
-new_0 <- data.frame(speed3 = seq(0,15, length.out = 100), SICsq3 = 0, dist_pack3 = 38.06) 
-new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SICsq3 = 225, dist_pack3 = 38.06) 
-new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SICsq3 = 900, dist_pack3 = 38.06)
-new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SICsq3 = 2500, dist_pack3 = 38.06)
-new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SICsq3 = 10000, dist_pack3 = 38.06)
+new_0 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 0, dist_pack3 = 38.06) 
+new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 15, dist_pack3 = 38.06) 
+new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 30, dist_pack3 = 38.06)
+new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 50, dist_pack3 = 38.06)
+new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 100, dist_pack3 = 38.06)
 
 p0 <- predict.flexsurvreg(fit, newdata = new_0, type = "hazard", na.action = "na.pass")
 p15 <- predict.flexsurvreg(fit, newdata = new_15, type = "hazard", na.action = "na.pass")
@@ -52,7 +58,7 @@ un100$ws <- reps
 
 s0 <- un0 %>%
   group_by(ws) %>%
-  slice_head %>%
+  slice_head() %>%
   rename(pred0 = .pred)
 
 qplot(data = s0, x = ws, y = pred0, geom = "line")
@@ -95,7 +101,7 @@ x.long <- x %>%
 # Reorder so legend appears in correct order in plot
 
 x.long$SIC <- factor(x.long$SIC, levels = c("pred0", "pred15", "pred30", "pred50", "pred100"), labels = c("0", "15", "30", "50", "100"))
-x.long$HR <- x.long$HR * 100
+#x.long$HR <- x.long$HR * 100 # Initial thinking was *100
 
 # Plot
 
@@ -103,7 +109,7 @@ ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) +
          geom_line() + 
   labs(color = "Sea Ice Concentration") + 
   xlab("Wind Speed") + 
-  ylab("Hazard Rate (% per day)\n") +
+  ylab("Hazard Rate") +
   theme_bw()
 
 
