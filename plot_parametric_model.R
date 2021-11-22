@@ -20,16 +20,16 @@ mean(ph$dist_pack3)
 
 # Fit model
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_pack3, 
+fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
 
 # Create new dataframes
 
-new_1 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 1, dist_pack3 = 38.06) 
-new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 15, dist_pack3 = 38.06) 
-new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 30, dist_pack3 = 38.06)
-new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 50, dist_pack3 = 38.06)
-new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 100, dist_pack3 = 38.06)
+new_1 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 1, dist_land3 = 38.06) 
+new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 15, dist_land3 = 38.06) 
+new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 30, dist_land3 = 38.06)
+new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 50, dist_land3 = 38.06)
+new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 100, dist_land3 = 38.06)
 
 p1 <- predict.flexsurvreg(fit, newdata = new_1, type = "hazard", times = 1, na.action = "na.pass")
 p15 <- predict.flexsurvreg(fit, newdata = new_15, type = "hazard", times = 1, na.action = "na.pass")
@@ -84,12 +84,12 @@ x.long$expHR <- exp(x.long$HR) # Assuming the hazard estimated by the predict.fl
 
 # Plot
 
-ggplot(data = x.long, aes(x = ws, y = expHR, col = SIC)) + 
+ggplot(data = x.long, aes(x = ws, y = HR, col = SIC)) + 
          geom_line(size = 1) + 
   scale_x_continuous(limits = c(0, 15), expand = c(0,0)) +
   labs(color = "Sea Ice Concentration") + 
   xlab("3-Day Mean Wind Speed (m/s)") + 
-  ylab("Hazard Rate") +
+  ylab("Hazard") +
   theme_bw()
 
 
