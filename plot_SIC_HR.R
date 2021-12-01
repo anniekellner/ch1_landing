@@ -22,14 +22,14 @@ set.seed(13)
 
 new <- data.frame(SIC3 = seq(0,100, by = 5))
 
-p <- predict.flexsurvreg(fit, newdata = new, type = "survival",times = 1, na.action = "na.pass")
+# To compare survival rates run 'survival' model 
+
+p <- predict.flexsurvreg(fit, newdata = new, type = "hazard",times = 1, na.action = "na.pass")
 
 SIC <- seq(0,100, by = 5)
 
 
-# To compare survival rates run 'survival' model 
-
-p <- predict.flexsurvreg(fit, newdata = new, type = "survival",times = 1, na.action = "na.pass")
+#p <- predict.flexsurvreg(fit, newdata = new, type = "survival",times = 1, na.action = "na.pass")
 
 p$SIC <- SIC
 
@@ -43,6 +43,20 @@ ggplot(data = p, aes(x = SIC, y = proportion_migrating)) +
   ylim(0,6) +
   xlab("Sea Ice Concentration (%)") + 
   ylab("Percentage of bears leaving ice per day") +
+  theme_bw(base_size = 12)
+
+# Hazard - same as flipside of survival
+
+p$.pred <- p$.pred*100
+
+ggplot(data = p, aes(x = SIC, y = .pred)) + 
+  geom_path() + 
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = seq(0,100, 10)) +
+  #scale_x_discrete(breaks = c(100,90,80,70,60,50,40,30,20,10,0)) +
+  ylim(0,6) +
+  xlab("Sea Ice Concentration (%)") + 
+  ylab("Hazard Rate (% per day)") +
   theme_bw(base_size = 12)
 
 ggsave('figures/SIC_HR.png')
