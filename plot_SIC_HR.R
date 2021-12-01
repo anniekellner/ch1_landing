@@ -1,52 +1,48 @@
-##############################################################
-##    PLOT: SEA ICE CONCENTRATION WHEN WIND HELD AT MEAN  ####
-##############################################################
+###########################################################################
+##    PLOT: SEA ICE CONCENTRATION WHEN WIND AND DISTANCE NOT INCLUDED  ####
+###########################################################################
 
 library(flexsurv)
 library(ggplot2)
 library(data.table)
+library(dplyr)
 
 rm(list = ls())
 
 source("fxn_predict_flexsurv.R") # function to use 'predict' with flexsurv object
 
-ph <- readRDS('./data/RData/ph.Rds')
+ph <- readRDS('./data/RData/ph_Mar26.Rds')
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SICsq3 + speed3 + dist_pack3, 
+fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
 
 # Create new dataframe
 
-mean(ph$speed3)
+set.seed(13)
 
-new <- data.frame(SICsq3 = seq(0,10000, length.out = 20), speed3 = 3.38, dist_pack3 = 38.06)
+new <- data.frame(SIC3 = seq(0,100, by = 5))
 
-p <- predict.flexsurvreg(fit, newdata = new, type = "hazard", na.action = "na.pass")
-p <- unnest(p, cols = c(.pred))
+p <- predict.flexsurvreg(fit, newdata = new, type = "survival",times = 1, na.action = "na.pass")
 
-# Assign SICsq to each series of 1309 observations
+SIC <- seq(0,100, by = 5)
 
-SIC <- seq(0,100, length.out = 20)
-reps <- rep(SIC, each = 1309)
 
-# Add to unnested dataframe
+# To compare survival rates run 'survival' model 
 
-p$SIC <- reps
+p <- predict.flexsurvreg(fit, newdata = new, type = "survival",times = 1, na.action = "na.pass")
+
+p$SIC <- SIC
 
 p <- p %>%
-  group_by(SIC) %>%
-  slice_head 
+  mutate(proportion_migrating = (1 - .pred) * 100)
 
-p$.pred <- p$.pred * 100
-
-ggplot(data = p, aes(x = SIC, y = .pred)) + 
-  geom_line() + 
-  geom_point() +
+ggplot(data = p, aes(x = SIC, y = proportion_migrating)) + 
+  geom_path() + 
+  geom_point(size = 3) +
   scale_x_reverse(breaks = c(100,90,80,70,60,50,40,30,20,10,0)) +
+  ylim(0,6) +
   xlab("Sea Ice Concentration (%)") + 
-  ylab("Hazard Rate (% per day)\n") +
-  theme_bw()
+  ylab("Percentage of bears leaving ice per day") +
+  theme_bw(base_size = 12)
 
 ggsave('figures/SIC_HR.png')
-
-
