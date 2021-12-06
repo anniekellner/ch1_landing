@@ -50,13 +50,13 @@ ggplot(data = p, aes(x = SIC, y = proportion_migrating)) +
 p$.pred <- p$.pred*100
 
 ggplot(data = p, aes(x = SIC, y = .pred)) + 
-  geom_path() + 
   geom_point(size = 3) +
-  scale_x_continuous(breaks = seq(0,100, 10)) +
+  scale_x_continuous(breaks = seq(0,100, 10), expand = c(0,0)) +
   #scale_x_discrete(breaks = c(100,90,80,70,60,50,40,30,20,10,0)) +
-  ylim(0,6) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,12)) +
+  coord_cartesian(clip = "off") + # so that points don't fall off plot
   xlab("Sea Ice Concentration (%)") + 
   ylab("Hazard Rate (% per day)") +
-  theme_bw(base_size = 12)
+  theme_classic(base_size = 20)
 
-ggsave('figures/SIC_HR.png')
+ggsave('figures/SIC_HR_Cherryscale.svg')
