@@ -82,10 +82,10 @@ wind.join <- wind.join %>%
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), min(SIC_30m_min), mean(dist_to_land), max(start.swim), mean(speed), max(speed), mean(dist_to_ice), first(wind_type)) %>%
+    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), mean(dist_to_land), max(start.swim), mean(speed), mean(pland), mean(te), mean(dist_to_ice), first(wind_type)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "SIC_min", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "dir") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC", "dist_land", "start_swim", "speed", "pland", "te", "dist_pack", "dir") 
 
 # remove rows after start.swim == 1
 
@@ -111,7 +111,7 @@ avg <- avg %>%
 
 avg <- avg %>%
   group_by(id) %>%
-  mutate(SIC_sd7 = rollapplyr(SIC_mean, 7, sd, fill = 4.59)) # 7 is most descriptive. 4.59 is mean of first values of sd7 
+  mutate(SIC_sd7 = rollapplyr(SIC, 7, sd, fill = 4.59)) # 7 is most descriptive. 4.59 is mean of first values of sd7 
 
 
 # Change Distance values to km
@@ -127,19 +127,17 @@ mean(rm, na.rm = TRUE)
 
 avg <- avg %>%
   group_by(id) %>%
-  #mutate(SIC3 = rollapply(SIC, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(speed3_mean = rollapply(speed_mean, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(speed3_max_max = rollapply(Speed_max, 3, max, align = "right", partial = TRUE)) %>%
-  mutate(speed3_max_mean = rollapply(Speed_max, 3, mean, align = "right", partial = TRUE)) %>%
-  #mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
-  #mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
-  #mutate(te3 = rollapply(te, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(SIC3 = rollapply(SIC, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(speed3 = rollapply(speed, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
+  mutate(te3 = rollapply(te, 3, mean, align = "right", partial = TRUE)) %>%
   replace_na(list(ResidMass = -8.384667)) # mean
 
 
 # ---------- CORRELATION MATRIX ------- #
 
-correl <- avg[, c(5:12,15,16)]
+correl <- avg[, 5:12]
 mat <- cor(correl, use = "pairwise.complete.obs")
 
 # -------   TMERGE TO CREATE TDC DATAFRAME -------------------------- #
@@ -151,17 +149,15 @@ temp <- temp %>%
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
 ph <- tmerge(baseline, avg, id = id, 
-                  SIC_mean = tdc(day, SIC_mean), 
-                  speed3_mean = tdc(day, speed3_mean), 
-                  speed3_max_max = tdc(day, speed3_max_max),
-                  speed3_max_mean = tdc(day, speed3_max_mean),
+                  SIC3 = tdc(day, SIC3), 
+                  speed3 = tdc(day, speed3), 
                   sd7 = tdc(day, SIC_sd7),
-                  dist_land = tdc(day, dist_land), 
-                  dist_pack = tdc(day, dist_pack),
+                  dist_land3 = tdc(day, dist_land3), 
+                  dist_pack3 = tdc(day, dist_pack3),
              dir = tdc(day, dir))
 
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(ph, file = './data/RData/ph_Dec7.Rds')
+saveRDS(ph, file = './data/RData/ph_Mar26.Rds')
