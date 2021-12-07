@@ -15,21 +15,24 @@ source("fxn_tidy_flexsurv.R")
 
 
 #ph <- readRDS('./data/RData/ph.Rds')
-ph <- readRDS('./data/RData/ph_Mar26.Rds')
-mean(ph$dist_pack3)
+ph <- readRDS('./data/RData/ph_Dec7.Rds')
+
+min(ph$speed3_max_mean)
+max(ph$speed3_max_mean)
+
 
 # Fit model
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3, 
+fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_pack, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
 
 # Create new dataframes
 
-new_1 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 1, dist_land3 = 38.06) 
-new_15 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 15, dist_land3 = 38.06) 
-new_30 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 30, dist_land3 = 38.06)
-new_50 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 50, dist_land3 = 38.06)
-new_100 <- data.frame(speed3 = seq(0,15, length.out = 100), SIC3 = 100, dist_land3 = 38.06)
+new_1 <- data.frame(speed3_max_mean = seq(0,13, length.out = 100), SIC_mean = 1, dist_pack = mean(ph$dist_pack)) 
+new_15 <- data.frame(speed3_max_mean = seq(0,13, length.out = 100), SIC_mean = 15, dist_pack = mean(ph$dist_pack)) 
+new_30 <- data.frame(speed3_max_mean = seq(0,13, length.out = 100), SIC_mean = 30, dist_pack = mean(ph$dist_pack))
+new_50 <- data.frame(speed3_max_mean = seq(0,13, length.out = 100), SIC_mean = 50, dist_pack = mean(ph$dist_pack))
+new_100 <- data.frame(speed3_max_mean = seq(0,13, length.out = 100), SIC_mean = 100, dist_pack = mean(ph$dist_pack))
 
 p1 <- predict.flexsurvreg(fit, newdata = new_1, type = "hazard", times = 1, na.action = "na.pass")
 p15 <- predict.flexsurvreg(fit, newdata = new_15, type = "hazard", times = 1, na.action = "na.pass")
@@ -39,7 +42,7 @@ p100 <- predict.flexsurvreg(fit, newdata = new_100, type = "hazard", times = 1, 
 
 # Assign windspeed to each new dataframe
 
-ws <- seq(0,15, length.out = 100)
+ws <- seq(0,13, length.out = 100)
 
 p1$ws <- ws
 p15$ws <- ws
