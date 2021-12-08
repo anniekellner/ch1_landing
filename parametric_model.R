@@ -10,23 +10,20 @@ library(tidyr)
 library(dplyr)
 library(tidyverse)
 
-ph <- readRDS('./data/RData/ph_Mar26.Rds')
+ph <- readRDS('./data/RData/ph_Dec7.Rds')
 
 source("fxn_tidy_flexsurv.R")
 
 #source('MyFunctions.R') # create AICc table
 
-global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3 + dist_pack3 + sd7 + ResidMass + SIC3*speed3 + dir, 
+global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + SIC_mean*speed3_max_mean + dir, 
                       dist = "exp", method = "Nelder-Mead", data = ph, na.action = "na.fail")
 
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(1,3))
 
 tt <- t[1:10,]
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3, 
-                   data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
-
-fit
+#test <- get.models(t, subset = delta < 4)
 
 
 write.csv(tt, file = './data/derived-data/top_models.csv')
