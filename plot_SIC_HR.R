@@ -11,16 +11,20 @@ rm(list = ls())
 
 source("fxn_predict_flexsurv.R") # function to use 'predict' with flexsurv object
 
-ph <- readRDS('./data/RData/ph_Mar26.Rds')
+ph <- readRDS('./data/RData/cox_tdc_draft1.Rds')
 
-fit <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3, 
+fit_SIC3 <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + windspeed3, 
                    data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
+fit_SIC_1_3 <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC + windspeed3, 
+                       data = ph, dist = "exp", method = "Nelder-Mead", na.action = "na.fail")
+
+
 
 # Create new dataframe
 
 set.seed(13)
 
-new <- data.frame(SIC3 = seq(0,100, by = 5))
+new <- data.frame(SIC3 = seq(0,100, by = 5), windspeed3 = 3.38, dist_land3 = mean(ph$dist_land3_km))
 
 # To compare survival rates run 'survival' model 
 
@@ -40,7 +44,7 @@ ggplot(data = p, aes(x = SIC, y = proportion_migrating)) +
   geom_path() + 
   geom_point(size = 3) +
   scale_x_reverse(breaks = c(100,90,80,70,60,50,40,30,20,10,0)) +
-  ylim(0,6) +
+  #ylim(0,6) +
   xlab("Sea Ice Concentration (%)") + 
   ylab("Percentage of bears leaving ice per day") +
   theme_bw(base_size = 12)

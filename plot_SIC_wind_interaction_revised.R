@@ -41,11 +41,11 @@ p12 <- predict.flexsurvreg(fit, newdata = new_12, type = "hazard", times = 1, na
 
 SIC <- seq(0,100, length.out = 100)
 
-p0$SIC <- SIC
-p3$SIC <- SIC
-p6$SIC <- SIC
-p9$SIC <- SIC
-p12$SIC <- SIC
+p1$SIC <- SIC
+p15$SIC <- SIC
+p30$SIC <- SIC
+p50$SIC <- SIC
+p100$SIC <- SIC
 
 # Rename prediction column
 
