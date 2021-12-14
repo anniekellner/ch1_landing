@@ -13,12 +13,10 @@ rm(list = ls())
 source("fxn_predict_flexsurv.R") # function to use 'predict' with flexsurv object
 source("fxn_tidy_flexsurv.R")
 
-
-#ph <- readRDS('./data/RData/ph.Rds')
 ph <- readRDS('./data/RData/ph_Dec7.Rds')
 
-min(ph$speed3_max_mean)
-max(ph$speed3_max_mean)
+#min(ph$speed3_max_mean)
+#max(ph$speed3_max_mean)
 
 
 # Fit model

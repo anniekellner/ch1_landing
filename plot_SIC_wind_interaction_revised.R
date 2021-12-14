@@ -77,8 +77,10 @@ x.long$Windspeed <- factor(x.long$Windspeed, levels = c("pred0", "pred3", "pred6
 
 ggplot(data = x.long, aes(x = SIC, y = HR, col = Windspeed)) + 
   geom_line(size = 1) + 
-  scale_x_continuous(limits = c(0, 100), expand = c(0,0)) +
+  scale_x_reverse(breaks = c(100, 75, 50, 25, 0)) +
   labs(color = "3-day average max windspeed (m/s)") + 
   xlab("Sea ice concentration (%)") + 
-  ylab("Hazard") +
+  ylab("Hazard Rate") +
   theme_bw()
+
+ggsave('./figures/SIC_wind_interaction.svg')
