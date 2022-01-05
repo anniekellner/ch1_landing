@@ -22,8 +22,9 @@ global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max
 
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(1,3))
 
-sw(subset(t, delta <= 4)) # Variable weights - SI
+sw(t) # sum of weights
 
+t[1]
 
 
 #model.avg(t, subset = delta <=4) 3 #model-averaged coefficients
