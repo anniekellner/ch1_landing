@@ -1,0 +1,79 @@
+---
+title: "Testing PH Assumptions"
+author: "Annie Kellner"
+date: "1/5/2022"
+output: html_document
+---
+
+http://www.sthda.com/english/wiki/cox-model-assumptions
+
+```{r load-packages}
+library(survival)
+library(survminer)
+```
+
+```{r load-data}
+ph <- readRDS('./data/RData/ph_Dec7.Rds')
+```
+
+*Schoenfeld residuals* check proportional hazards assumption
+*Martingale residuals* assess nonlinearity
+*Deviance residuals* examine influential observations. These are symmetric transformations of Martingale residuals. 
+
+Compute the global model:
+
+```{r fit-model}
+
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + dir, 
+                      cluster = animal, data = ph)
+
+global.model
+```
+
+#### Schoenfeld Residuals
+
+In principle, Schoenfeld residuals are independent of time. A plot that shows a non-random pattern is evidence of violation of the PH assumption. The *cox.zph()* function correlates the corresponding set of scaled Schoenfeld residuals with time, to test for interdependence between residuals and time. It also performs a global test for the model as a whole. 
+
+```{r}
+test.ph <- cox.zph(global.model)
+test.ph
+```
+
+```{r}
+ggcoxzph(test.ph)
+```
+It appears that wind speed and direction interact with time. 
+
+#### Test for influential observations
+
+'''type = "dfbeta"``` plots estimated changes in regression coefficients  upon deleting each observation in turn
+
+```{r}
+ggcoxdiagnostics(global.model, type = "dfbeta" , linear.predictions = FALSE, ggtheme = theme_bw())
+```
+
+### Deviance residuals - these should be roughly symmetrically distributed about zero with a sd of 1
+
+```{r}
+ggcoxdiagnostics(global.model, type = "deviance", linear.predictions = FALSE, ggtheme = theme_bw())
+```
+
+* Positive values correspond to individuals that "died too soon" compared to expected survival times
+* Negative values correspond to individuals that "lived too long"
+
+*Most are below 0 but within 1 sd*
+
+#### Non-Linearity: Martingale residuals
+
+Martingale residuals help assess the functional form of the covariates
+
+```{r}
+ggcoxfunctional(Surv(tstart, tstop, migrate) ~ sqrt(SIC_mean), data = ph)
+
+
+fcoxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + dir, 
+                      cluster = animal, data = ph)
+```
+
+
+
