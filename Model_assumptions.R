@@ -13,7 +13,7 @@ library(sf)
 
 source('MyFunctions.R')
 
-ph <- readRDS('./data/RData/ph_Mar25.Rds')
+ph <- readRDS('./data/RData/ph_Dec7.Rds')
 
 #ph$SIC3 <- sqrt(ph$SICsq3) # Do not use square of SIC for ease of interpretation
 #ph$dist_land3 <- ph$dist_land3 * 1000 # For some reason had been divided by 1000 twice
@@ -21,8 +21,8 @@ ph <- readRDS('./data/RData/ph_Mar25.Rds')
 
 #saveRDS(ph, file = './data/RData/ph_Mar25.Rds') # SIC without being squared, multiplied distance metrics by 1000
 
-global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC3 + speed3 + dist_land3 + dist_pack3 + sd7 + ResidMass + SIC3*speed3 + dir, 
-                      cluster = animal, data = ph, na.action = "na.fail")
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + dir, 
+                      data = ph, na.action = "na.fail")
 
 top <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3, 
                       dist = "exp", data = ph, na.action = "na.fail")
@@ -34,6 +34,7 @@ top <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3 + speed3,
 sr <- cox.zph(global.model)
 
 sr
+plot(sr)
 
 ggcoxzph(sr)
 
@@ -55,8 +56,9 @@ ggcoxdiagnostics(global.model, type = "deviance", linear.predictions = FALSE, gg
 fit.SIC3 <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC3, 
                         data = ph, dist = "exp", na.action = "na.fail")
 
-mart <- residuals(fit.SIC3, type = "martingale")
+mart <- residuals(global.model, type = "martingale")
 plot(mart)
+
 
 # Time as a covariate
 
