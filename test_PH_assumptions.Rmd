@@ -17,15 +17,15 @@ ph <- readRDS('./data/RData/ph_Dec7.Rds')
 ```
 
 *Schoenfeld residuals* check proportional hazards assumption
-*Martingale residuals* assess nonlinearity
+*Martingale residuals* assess non-linearity
 *Deviance residuals* examine influential observations. These are symmetric transformations of Martingale residuals. 
 
 Compute the global model:
 
 ```{r fit-model}
 
-global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + dir, 
-                      cluster = animal, data = ph)
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean, 
+                      cluster = id, data = ph)
 
 global.model
 ```
@@ -68,11 +68,11 @@ ggcoxdiagnostics(global.model, type = "deviance", linear.predictions = FALSE, gg
 Martingale residuals help assess the functional form of the covariates
 
 ```{r}
-ggcoxfunctional(Surv(tstart, tstop, migrate) ~ sqrt(SIC_mean), data = ph)
 
+fit_SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = ph)
 
-fcoxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_land + dist_pack + sd7 + ResidMass + dir, 
-                      cluster = animal, data = ph)
+ggcoxfunctional(fit_SIC_mean, data = ph)
+
 ```
 
 
