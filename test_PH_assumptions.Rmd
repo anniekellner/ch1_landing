@@ -24,7 +24,7 @@ Compute the global model:
 
 ```{r fit-model}
 
-global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean, 
+global.model <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max_mean + dist_pack, 
                       cluster = id, data = ph)
 
 global.model
@@ -38,6 +38,8 @@ In principle, Schoenfeld residuals are independent of time. A plot that shows a 
 test.ph <- cox.zph(global.model)
 test.ph
 ```
+
+If all variables are included, the global model and several variables are significant. However with a limited set, they are not. This is probably an issue with power and sample size rather than a true interaction with time. Also the problem is negated by capping the models to three variables per model. 
 
 ```{r}
 ggcoxzph(test.ph)
@@ -69,7 +71,7 @@ Martingale residuals help assess the functional form of the covariates
 
 ```{r}
 
-fit_SIC_mean <- coxph(Surv(tstart, tstop, migrate) ~ SIC_mean, cluster = id, data = ph)
+fit_SIC_mean <- coxph(Surv(tstop, migrate) ~ SIC_mean, cluster = id, data = ph)
 
 ggcoxfunctional(fit_SIC_mean, data = ph)
 
