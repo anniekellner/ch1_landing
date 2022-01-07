@@ -28,7 +28,7 @@ sw(t) # sum of weights
 t[1]
 
 
-#model.avg(t, subset = delta <=4) 3 #model-averaged coefficients
+model.avg(t)  #model-averaged coefficients
 
 tt <- t[1:10,]
 
