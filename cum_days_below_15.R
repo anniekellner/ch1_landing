@@ -142,11 +142,10 @@ gg <- ggplot(data = tot, aes(x = days, fill = conc)) +
   scale_fill_discrete(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%")) +
   scale_y_continuous(limits = c(0, 0.15), expand = c(0,0)) + 
   xlab("Days") + 
-  ylab("Density")
+  ylab("Density") + 
+  theme_classic()
 
- 
-
-ggsave(gg, file = './figures/days_on_ice.png')
+ggsave("Fig2A.svg", plot = gg, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Chapter1/Dissertation/Figures')
 
 # ------------  MEAN ICE OVER ENTIRE SHELF  -------------------------------------------------------- #
 
@@ -228,6 +227,7 @@ gg_shelf_ice <- ggplot(data = shelf.long, aes(x = year, y = days, fill = concent
   scale_fill_discrete(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%")) + 
   scale_y_continuous(limits = c(0, 125), expand = c(0,0)) +
   ylab("Days in the Open Water Season") + 
-  xlab("Year") 
+  xlab("Year") +
+  theme_classic()
 
-ggsave(gg_shelf_ice, filename = './figures/mean_shelf_ice.png')
+ggsave("Fig2B.svg", plot = gg_shelf_ice, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Chapter1/Dissertation/Figures')
