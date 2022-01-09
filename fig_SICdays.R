@@ -4,6 +4,10 @@
 
 # Draft 4 Fig 2: showing how many days bears spend at varying SIC's
 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
 rm(list = ls())
 
 cox <- readRDS('./data/derived-data/avg.Rds') 
@@ -60,5 +64,8 @@ gg_SIC <- ggplot(data = all.long, aes(x = year, y = days, fill = concentration))
   scale_fill_discrete(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%")) + 
   ylab("Days") + 
   xlab("Year") 
+
+gg_SIC
+
 
 ggsave(gg_SIC, filename = './figures/days_at_SIC_by_year.png')
