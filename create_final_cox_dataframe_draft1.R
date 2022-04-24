@@ -38,9 +38,9 @@ bears$repro <- as.factor(bears$repro)
 
 # Combine three separate Movebank spreadsheets (data obtained in separate requests)
 
-wind1 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_07032020.csv") 
-wind2 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_10082020.csv")
-wind3 <- read.csv("C:/Users/akell/OneDrive - Colostate/PhD/Polar_Bears/Chapter1/Data/Movebank/Movebank_10192020.csv")
+wind1 <- read.csv("./data/raw-data/Movebank_07032020.csv") 
+wind2 <- read.csv("./data/raw-data/Movebank_10082020.csv")
+wind3 <- read.csv("./data/raw-data/Movebank_10192020.csv")
 
 wind1 <- dplyr::select(wind1, timestamp, location.long, location.lat, ht.above.ellipsoid, id, NCEP.NARR.FLX.U.Wind.at.10.m.above.Ground, NCEP.NARR.FLX.V.Wind.at.10.m.above.Ground) # eliminate other environmental variables like Chinook parameter
 
@@ -75,14 +75,34 @@ wind.join$yday <- yday(wind.join$datetime)
 
 wind.join <- wind.join %>%
   mutate(wind_type = ifelse(dir > 135 & dir < 225, "Onshore",
-                            ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind")))
+                            ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind"))) 
+
+# Per Reviewer 2's suggestion, see if cos and sin transformations improve fxn of wind dir in model (see Warton and Aarts 2013, Fisher 1993)
+
+wind.join2 <- wind.join %>%
+  mutate(wind_cos = cos(dir*2*pi/360)) %>%
+  mutate(wind_sin = sin(dir*2*pi/360))
+
+
 
 # ----  CREATE DF WITH DAILY AVERAGES  ------------- #
 
 avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
-    first(animal), first(year), first(ResidualMass), mean(SIC_30m_me), min(SIC_30m_min), mean(dist_to_land), max(start.swim), mean(speed), max(speed), mean(dist_to_ice), first(wind_type)) %>%
+    first(animal), 
+    first(year), 
+    first(ResidualMass), 
+    mean(SIC_30m_me), 
+    min(SIC_30m_min), 
+    mean(dist_to_land), 
+    max(start.swim), 
+    mean(speed), 
+    max(speed), 
+    mean(dist_to_ice), 
+    first(wind_type), 
+    first(wind_cos), 
+    first(wind_sin)) %>%
   ungroup()
 
 colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "SIC_min", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "dir") 
