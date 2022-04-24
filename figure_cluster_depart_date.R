@@ -26,7 +26,7 @@ last <- max(start$ordinal)
 
 start$year <- as.numeric(start$year)
 
-# Remove years with < 2 observations
+# Separate years with < 2 observations
 
 start <- start %>%
   filter(year != 2008) %>%
@@ -58,8 +58,8 @@ start2$year <- as.factor(start2$year)
 
 fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) + 
   geom_dotplot(stackgroups = TRUE, binpositions = "all") +
-  scale_color_brewer(palette = "Dark2") + 
-  scale_fill_brewer(palette = "Dark2") + 
+  scale_color_brewer(palette = "Set3") + 
+  scale_fill_brewer(palette = "Set3") + 
   xlab("\nDate of Departure from Ice") +
   theme_classic() +
   theme(
@@ -71,7 +71,7 @@ fig <- ggplot(data = start2, aes(x = md2000, col = year, fill = year)) +
     legend.position = c(0.05,0.5)
 )
         
-ggsave('depart_date_cluster.png', fig, path = './figures')  
+ggsave('depart_date_cluster.svg', fig, path = './figures')  
 
 ## Trend over time
 
