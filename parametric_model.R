@@ -23,7 +23,7 @@ global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max
 
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(1,4), subset = (wind_sin | !wind_cos) && (wind_cos | ! wind_sin))
 
-t[1]
+t[1:10]
 
 
 model.avg(t)  #model-averaged coefficients
