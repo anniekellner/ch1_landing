@@ -2,8 +2,7 @@
 ##    CREATE DATAFRAME FOR FINAL COX MODEL   #####################
 ##################################################################
 
-# January 14, 2021
-# The final Cox model before submitting first draft to GW and SB
+# Revised per Ecosphere reviewer suggestions 4/25/22
 
 rm(list = ls())
 
@@ -87,7 +86,7 @@ wind.join2 <- wind.join %>%
 
 # ----  CREATE DF WITH DAILY AVERAGES  ------------- #
 
-avg <- wind.join %>% # Compute daily average
+avg <- wind.join2 %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
     first(animal), 
@@ -105,7 +104,7 @@ avg <- wind.join %>% # Compute daily average
     first(wind_sin)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "SIC_min", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "dir") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "SIC_min", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "dir", "wind_cos", "wind_sin") 
 
 # remove rows after start.swim == 1
 
@@ -139,51 +138,59 @@ avg <- avg %>%
 avg$dist_land <- avg$dist_land / 1000
 avg$dist_pack <- avg$dist_pack / 1000
 
-# Add 3-day moving window and mean value for missing ResidMass
+## Add imputed values for ResidMass (see multiple_imputations.R)
 
-rm <- unique(avg$ResidMass)
+rm <- avg %>% select(ResidMass)
 
-mean(rm, na.rm = TRUE)
-
-avg <- avg %>%
+rm <- rm %>% # which are NA
   group_by(id) %>%
-  #mutate(SIC3 = rollapply(SIC, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(speed3_mean = rollapply(speed_mean, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(speed3_max_max = rollapply(Speed_max, 3, max, align = "right", partial = TRUE)) %>%
-  mutate(speed3_max_mean = rollapply(Speed_max, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(dist_pack3 = rollapply(dist_pack, 3, mean, align = "right", partial = TRUE)) %>%
-  mutate(dist_land3 = rollapply(dist_land, 3, mean, align = "right", partial = TRUE)) %>%
-  #mutate(te3 = rollapply(te, 3, mean, align = "right", partial = TRUE)) %>%
-  replace_na(list(ResidMass = -8.384667)) # mean
+  slice_head()
+
+# Add imputed values to rm df
+  
+rm[1,2] <- -41.6
+rm[7,2] <- 51.1
+rm[10,2] <- -26.9
+
+# Join with avg df
+
+avg <- select(avg, -ResidMass)
+
+avg2 <- left_join(avg, rm)
+  
+
+## Add 3-day moving window for wind
+
+avg2 <- avg2 %>%
+  group_by(id) %>%
+  mutate(speed3_mean = rollapply(speed_mean, 3, mean, align = "right", partial = TRUE)) 
 
 
 # ---------- CORRELATION MATRIX ------- #
 
-correl <- avg[, c(5:12,15,16)]
+correl <- avg2[, c(5:11,13:18)]
 mat <- cor(correl, use = "pairwise.complete.obs")
 
 # -------   TMERGE TO CREATE TDC DATAFRAME -------------------------- #
 
-temp <- subset(avg, start_swim == 1)
+temp <- subset(avg2, start_swim == 1)
 temp <- temp %>%
   dplyr::select(id, day, start_swim, animal, year, ResidMass) 
 
 baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart = 1, tstop = day)
 
-ph <- tmerge(baseline, avg, id = id, 
+ph <- tmerge(baseline, avg2, id = id, 
                   SIC_mean = tdc(day, SIC_mean), 
                   speed3_mean = tdc(day, speed3_mean), 
-                  speed3_max_max = tdc(day, speed3_max_max),
-                  speed3_max_mean = tdc(day, speed3_max_mean),
                   sd7 = tdc(day, SIC_sd7),
                   dist_land = tdc(day, dist_land), 
                   dist_pack = tdc(day, dist_pack),
-                  dist_land3 = tdc(day, dist_land3),
-                  dist_pack3 = tdc(day, dist_pack3),
-             dir = tdc(day, dir))
+                  dir = tdc(day, dir),
+                  wind_cos = tdc(day, wind_cos),
+                  wind_sin = tdc(day, wind_sin))
 
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(ph, file = './data/RData/ph_Dec7.Rds')
+saveRDS(ph, file = './data/RData/ph_Apr25_2022.Rds')
