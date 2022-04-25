@@ -93,7 +93,7 @@ avg <- wind.join2 %>% # Compute daily average
     first(year), 
     first(ResidualMass), 
     mean(SIC_30m_me), 
-    min(SIC_30m_min), 
+    #min(SIC_30m_min), 
     mean(dist_to_land), 
     max(start.swim), 
     mean(speed), 
@@ -104,7 +104,7 @@ avg <- wind.join2 %>% # Compute daily average
     first(wind_sin)) %>%
   ungroup()
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "SIC_min", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "dir", "wind_cos", "wind_sin") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "wind_dir", "wind_cos", "wind_sin") 
 
 # remove rows after start.swim == 1
 
@@ -163,7 +163,7 @@ avg2 <- left_join(avg, rm)
 
 avg2 <- avg2 %>%
   group_by(id) %>%
-  mutate(speed3_mean = rollapply(speed_mean, 3, mean, align = "right", partial = TRUE)) 
+  mutate(speed3_max = rollapply(Speed_max, 3, mean, align = "right", partial = TRUE)) 
 
 
 # ---------- CORRELATION MATRIX ------- #
@@ -181,11 +181,11 @@ baseline <- tmerge(temp, temp, id = id, migrate = event(day, start_swim), tstart
 
 ph <- tmerge(baseline, avg2, id = id, 
                   SIC_mean = tdc(day, SIC_mean), 
-                  speed3_mean = tdc(day, speed3_mean), 
+                  speed3_max = tdc(day, speed3_max), 
                   sd7 = tdc(day, SIC_sd7),
                   dist_land = tdc(day, dist_land), 
                   dist_pack = tdc(day, dist_pack),
-                  dir = tdc(day, dir),
+                  wind_dir = tdc(day, wind_dir),
                   wind_cos = tdc(day, wind_cos),
                   wind_sin = tdc(day, wind_sin))
 
