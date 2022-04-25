@@ -2,6 +2,12 @@
 ##    TRY MULTIPLE IMPUTATION   ##############################
 ##############################################################
 
+# Can run once and get 3 values to replace NA's in ResidMass
+# Probably supposed to run more than once (default m = 5)
+
+# Values from m = 1
+# -41.6, 51.1, -26.9
+
 library(dplyr)
 library(mice)
 
