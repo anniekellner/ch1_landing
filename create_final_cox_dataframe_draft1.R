@@ -76,17 +76,10 @@ wind.join <- wind.join %>%
   mutate(wind_type = ifelse(dir > 135 & dir < 225, "Onshore",
                             ifelse(dir > 335 | dir < 45, "Offshore", "Crosswind"))) 
 
-# Per Reviewer 2's suggestion, see if cos and sin transformations improve fxn of wind dir in model (see Warton and Aarts 2013, Fisher 1993)
-
-wind.join2 <- wind.join %>%
-  mutate(wind_cos = cos(dir*2*pi/360)) %>%
-  mutate(wind_sin = sin(dir*2*pi/360))
-
-
 
 # ----  CREATE DF WITH DAILY AVERAGES  ------------- #
 
-avg <- wind.join2 %>% # Compute daily average
+avg <- wind.join %>% # Compute daily average
   group_by(id, yday) %>%
   dplyr::summarise(
     first(animal), 
@@ -96,15 +89,14 @@ avg <- wind.join2 %>% # Compute daily average
     #min(SIC_30m_min), 
     mean(dist_to_land), 
     max(start.swim), 
-    mean(speed), 
+    #mean(speed), 
     max(speed), 
     mean(dist_to_ice), 
-    first(wind_type), 
-    first(wind_cos), 
-    first(wind_sin)) %>%
-  ungroup()
+    names(which.max(table(wind_type)))) 
 
-colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "dist_land", "start_swim", "speed_mean", "Speed_max", "dist_pack", "wind_dir", "wind_cos", "wind_sin") 
+colnames(avg) <- c("id", "ordinal_day", "animal", "year", "ResidMass", "SIC_mean", "dist_land", "start_swim", "Speed_max", "dist_pack", "wind_dir") 
+head(avg)
+
 
 # remove rows after start.swim == 1
 
@@ -165,6 +157,7 @@ avg2 <- avg2 %>%
   group_by(id) %>%
   mutate(speed3_max = rollapply(Speed_max, 3, mean, align = "right", partial = TRUE)) 
 
+head(avg2)
 
 # ---------- CORRELATION MATRIX ------- #
 
@@ -185,12 +178,10 @@ ph <- tmerge(baseline, avg2, id = id,
                   sd7 = tdc(day, SIC_sd7),
                   dist_land = tdc(day, dist_land), 
                   dist_pack = tdc(day, dist_pack),
-                  wind_dir = tdc(day, wind_dir),
-                  wind_cos = tdc(day, wind_cos),
-                  wind_sin = tdc(day, wind_sin))
+                  wind_dir = tdc(day, wind_dir))
 
 
 mig <- subset(ph, migrate == 1) # Check values for day of migration
 mig
 
-saveRDS(ph, file = './data/RData/ph_Apr25_2022.Rds')
+saveRDS(ph, file = './data/RData/ph_Apr26_2022.Rds')
