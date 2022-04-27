@@ -57,3 +57,6 @@ repro <- drop_na(repro) # removed half of all observations
 table(repro$repro, repro$bear_type)
 count(repro, bear_type)
 
+# Save repro data
+
+saveRDS(repro, './data/derived-data/repro.Rds')
