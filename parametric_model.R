@@ -26,8 +26,10 @@ t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = 
 
 t[1:10]
 
+t[2]
 
 model.avg(t)  #model-averaged coefficients
+sw(t) # variable weights
 
 tt <- t[1:10,] # all model with AICc < 4
 
