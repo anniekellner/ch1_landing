@@ -81,6 +81,7 @@ ggplot(data = x.long, aes(x = SIC, y = HR, col = Windspeed)) +
   labs(color = "3-day average max windspeed (m/s)") + 
   xlab("Sea ice concentration (%)") + 
   ylab("Hazard Rate") +
-  theme_bw()
+  theme_classic() +
+  theme(legend.position = "none")
 
 ggsave('./figures/SIC_wind_interaction.svg')
