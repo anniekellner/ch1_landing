@@ -9,8 +9,7 @@ rm(list = ls())
 
 # Load original csv - import from raw-data
 
-csv <- usgs_pbear_gps_ccde16_v20170131
-rm(usgs_pbear_gps_ccde16_v20170131)
+csv <-read.csv('./data/raw-data/usgs_pbear_gps_ccde16_v20170131.csv')
 
 csv$id <- paste(csv$animal, csv$year, sep = '.')
 
