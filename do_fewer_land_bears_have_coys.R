@@ -19,6 +19,7 @@ table(chi$bear_type, chi$repro)
 # Run chi-squared test with three categories (den, coy, yearling)
 
 chisq.test(chi$bear_type, chi$repro) # not significant
+fisher.test(chi$bear_type, chi$repro)
 
 # Run with two categories (coy, not coy)
 
