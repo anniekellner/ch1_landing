@@ -23,6 +23,7 @@ global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max
                       dist = "exp", method = "Nelder-Mead", data = ph, cl = 0.95, na.action = "na.fail")
 
 null.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ 1, dist = "exp", data = ph, cl = 0.95, na.action = "na.fail")
+AICc(null.model)
 
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(1,3))
 
