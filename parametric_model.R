@@ -22,10 +22,12 @@ source("flexsurvreg_fxns.R") # to make coefficients show up when using flexsurvr
 global.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ SIC_mean + speed3_max + dist_land + dist_pack + sd7 + ResidMass + wind_dir, 
                       dist = "exp", method = "Nelder-Mead", data = ph, cl = 0.95, na.action = "na.fail")
 
+null.model <- flexsurvreg(Surv(tstart, tstop, migrate) ~ 1, dist = "exp", data = ph, cl = 0.95, na.action = "na.fail")
+
 t <- dredge(global.model, beta = FALSE, evaluate = TRUE, rank = "AICc", m.lim = c(1,3))
 
 t[1:10]
-
+t[29]
 t[2]
 
 model.avg(t)  #model-averaged coefficients
