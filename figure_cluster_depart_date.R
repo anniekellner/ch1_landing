@@ -83,10 +83,6 @@ start2 <- start %>%
   dplyr::select(animal, year, ordinal) %>%
   mutate(diff = year - 2005)
 
-
-fit <- lm(ordinal ~ diff + diff, data = start2) # linear regression
-summary(fit)
-
 new <- data.frame(year =  c(2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015))
 new <- data.frame(diff = seq(0,10,1))
 
@@ -103,7 +99,7 @@ plot_reg <- ggplot(data = start2, aes(x = diff, y = ordinal)) +
   scale_y_continuous(limits = c(182, 274), breaks = c(182, 213, 244, 274)) +
   xlab("Year") + 
   ylab("Day of the Year") + 
-  geom_line(data = new, aes(diff, start), group = 1, color = "black", linetype = "dashed") + 
+  #geom_line(data = new, aes(diff, start), group = 1, color = "black", linetype = "dashed") + 
   theme_bw()
 
 
