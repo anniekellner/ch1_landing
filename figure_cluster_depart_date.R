@@ -85,15 +85,13 @@ start2 <- start %>%
 
 start2$year<- as.factor(start2$year)
 
-plot_reg <- ggplot(data = start2, aes(x = year, y = ordinal)) + 
+fig3 <- ggplot(data = start2, aes(x = year, y = ordinal)) + 
   geom_point(size = 2) + 
-  scale_y_continuous(limits = c(195, 265)) +#, breaks = c(182, 213, 244, 274)) +
-  xlab("Year") + 
-  ylab("Ordinal Date of Departure") + 
+  xlab("\nYear") +
+  ylab("Ordinal Date of Departure\n") + 
   theme_classic()
 
-
-ggsave('depart_date_regress.png', plot_reg, path = './figures', dpi = 300)
+ggsave('Fig3_R2.png', fig3, path = './figures', dpi = 300)
 
 # Does the data meet the assumptions for linear regression?
 
