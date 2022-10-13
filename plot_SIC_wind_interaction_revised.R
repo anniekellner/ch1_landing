@@ -8,6 +8,7 @@ library(ggplot2)
 library(data.table)
 library(tidyr)
 library(dplyr)
+library(RColorBrewer)
 
 rm(list = ls())
 
@@ -77,11 +78,13 @@ x.long$Windspeed <- factor(x.long$Windspeed, levels = c("pred0", "pred3", "pred6
 
 ggplot(data = x.long, aes(x = SIC, y = HR, col = Windspeed)) + 
   geom_line(size = 1) + 
-  scale_x_reverse(breaks = c(100, 75, 50, 25, 0)) +
+  scale_color_brewer(breaks = c(100, 75, 50, 25, 0), type = "seq", palette = "YlOrBr") +
+  scale_x_reverse() +
+  #scale_x_reverse(breaks = c(100, 75, 50, 25, 0)) +
   labs(color = "3-day average max windspeed (m/s)") + 
   xlab("Sea ice concentration (%)") + 
   ylab("Hazard Rate") +
   theme_classic() +
   theme(legend.position = "none")
 
-ggsave('./figures/SIC_wind_interaction.svg')
+#ggsave('./figures/SIC_wind_interaction.svg')
