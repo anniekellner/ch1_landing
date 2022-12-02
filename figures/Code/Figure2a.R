@@ -15,6 +15,7 @@ library(ggplot2)
 library(stringr)
 library(tidyr)
 library(lubridate)
+library(viridis)
 
 #load('all_v2.RData')
 cox <- readRDS('./data/derived-data/avg.Rds') 
@@ -132,12 +133,12 @@ mu <- ddply(tot, "conc", summarise, grp.mean = mean(days))
 
 gg <- ggplot(data = tot, aes(x = days, fill = conc)) + 
   geom_density(alpha = 0.2) + 
-  geom_vline(data = mu, aes(xintercept = grp.mean, color = conc), linetype = "dashed", show.legend = FALSE) +
+  geom_vline(data = mu, aes(xintercept = grp.mean, color = conc), linetype = "dashed", show.legend = FALSE) + # vline colors are wrong but can change in AI
   scale_x_continuous(limits = c(0,100), expand = c(0,0)) +
-  scale_fill_discrete(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%")) +
+  scale_fill_viridis(name = "Concentration",labels = c("> 50%", "30 - 50%", "15 - 30%", "< 15%"), discrete = TRUE) +
   scale_y_continuous(limits = c(0, 0.15), expand = c(0,0)) + 
   xlab("Days") + 
   ylab("Density") + 
   theme_classic()
 
-ggsave("Fig2A.svg", plot = gg, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Chapter1/Dissertation/Figures')
+#ggsave("Fig2A.pdf", plot = gg, path = 'C:/Users/akell/OneDrive - Colostate/PhD/Chapter1/Dissertation/Figures')
